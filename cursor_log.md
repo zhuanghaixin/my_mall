@@ -153,3 +153,102 @@ touch src/assets/images/login-bg.svg
 - 检查LoginLayout.vue中引用的背景图片路径
 - 确保router中定义的组件都存在且正确导入
 - 检查Element Plus图标是否正确安装和引入
+
+## 实现管理端登录接口
+
+### 主要目的
+实现商城小程序后端的管理端登录接口。
+
+### 完成的主要任务
+- 创建了JWT工具模块用于令牌生成和验证
+- 实现了管理员模型及数据库配置
+- 实现了管理员登录接口和身份验证中间件
+- 创建了路由和全局错误处理
+- 添加了自动创建初始管理员账号的功能
+
+### 关键决策和解决方案
+- 使用JWT进行用户身份验证
+- 密码通过bcrypt加密存储
+- 基于角色的权限控制
+- 统一错误处理机制
+
+### 使用的技术栈
+- Node.js
+- Express
+- Sequelize
+- MySQL
+- JWT
+- Bcrypt
+
+### 修改了哪些文件
+- 新建：`mall-server/src/utils/jwtToken.js`
+- 新建：`mall-server/src/models/admin.js`
+- 新建：`mall-server/src/models/index.js`
+- 新建：`mall-server/src/db/index.js`
+- 新建：`mall-server/src/controllers/adminController.js`
+- 新建：`mall-server/src/middlewares/authMiddleware.js`
+- 新建：`mall-server/src/routes/adminRoutes.js`
+- 新建：`mall-server/src/routes/index.js`
+- 新建：`mall-server/src/middlewares/index.js`
+- 修改：`mall-server/src/middlewares/errorHandler.js`
+- 修改：`mall-server/src/index.js`
+- 修改：`mall-server/src/app.js`
+
+## 解决数据库连接问题
+
+### 主要目的
+解决Node.js后端服务器与MySQL数据库的连接问题。
+
+### 完成的主要任务
+1. 诊断并排查MySQL连接失败原因
+2. 创建测试脚本验证数据库连接参数
+3. 调整Sequelize配置解决身份验证问题
+4. 修复环境变量加载和配置问题
+5. 添加数据库连接重试机制增强稳定性
+6. 修复旧版Node.js语法兼容性问题
+
+### 关键决策和解决方案
+- 发现MySQL连接时使用`localhost`与使用`127.0.0.1`的身份验证方式不同
+- 创建了专门的测试脚本验证不同连接参数下的可用性
+- 强制Sequelize配置使用IP地址而非域名，解决了身份验证问题
+- 在入口文件中正确指定环境变量文件路径，确保加载正确的配置
+- 替换了不兼容的ES6+语法（可选链操作符），提高了兼容性
+- 添加了连接失败的重试机制和详细的错误日志
+
+### 使用的技术栈
+- Node.js
+- Express
+- Sequelize
+- MySQL
+- dotenv (环境变量)
+
+### 修改了哪些文件
+- 修改：`mall-server/src/db/index.js` - 调整数据库连接配置
+- 修改：`mall-server/src/middlewares/errorHandler.js` - 修复可选链语法错误
+- 修改：`mall-server/src/index.js` - 改进环境变量加载方式
+- 新建：`mall-server/src/utils/testDbConnection.js` - 创建数据库连接测试工具
+- 新建：`mall-server/password-test.js` - 创建密码测试脚本
+- 修改：`mall-server/.env.development` - 调整数据库连接参数
+
+### 解决方案步骤
+```bash
+# 1. 测试数据库连接情况
+node password-test.js
+
+# 2. 确保使用127.0.0.1而非localhost
+# 在.env.development中设置:
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+
+# 3. 确保环境变量正确加载
+# 在index.js中使用:
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
+
+# 4. 启动服务器验证连接
+npm run dev
+```
+
+### 注意事项
+- 在不同的MySQL版本中，使用`localhost`和`127.0.0.1`可能会导致不同的认证行为
+- 旧版Node.js不支持某些现代JavaScript语法，需要进行兼容性调整
+- 在生产环境中，建议为应用程序创建专用的数据库用户而非使用root账号
