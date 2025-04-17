@@ -63,10 +63,21 @@ const Admin = db.define('Admin', {
     lastLoginTime: {
         type: DataTypes.DATE,
         allowNull: true
+    },
+    createdAt: {
+        type: DataTypes.DATE,
+        field: 'created_at',
+        defaultValue: DataTypes.NOW
+    },
+    updatedAt: {
+        type: DataTypes.DATE,
+        field: 'updated_at',
+        defaultValue: DataTypes.NOW
     }
 }, {
     tableName: 'admins',
     timestamps: true,
+    underscored: true,
     hooks: {
         // 保存前加密密码
         beforeSave: async (admin) => {

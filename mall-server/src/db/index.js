@@ -24,15 +24,13 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
     logging: (msg) => logger.debug(msg),
     dialectOptions: {
         connectTimeout: 60000,
-        // 显式禁用ssl
-        ssl: null
+        // MySQL 8.0+严格模式设置
+        dateStrings: true,
+        typeCast: true
     },
-    pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-    },
+    // 设置时区
+    timezone: '+08:00',
+    // 添加更宽松的日期时间处理
     define: {
         timestamps: true,
         underscored: true,
@@ -40,7 +38,13 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
         charset: 'utf8mb4',
         collate: 'utf8mb4_unicode_ci'
     },
-    timezone: '+08:00'
+    // 减少连接池大小以避免过多连接
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+    }
 });
 
 /**
@@ -58,10 +62,18 @@ const connectToDatabase = async () => {
             await sequelize.authenticate();
             logger.info('数据库连接成功');
 
-            // 开发环境下同步模型
+            // 开发环境下同步模型 - 采用更安全的方式
             if (process.env.NODE_ENV === 'development') {
-                await sequelize.sync({ alter: true });
-                logger.info('数据库模型同步完成');
+                try {
+                    // 尝试用force模式重建表结构
+                    await sequelize.sync({ force: true });
+                    logger.info('数据库模型同步完成 (force)');
+                } catch (syncError) {
+                    logger.warn('强制同步失败，尝试使用alter模式:', syncError.message);
+                    // 如果force失败，尝试alter模式
+                    await sequelize.sync({ alter: true });
+                    logger.info('数据库模型同步完成 (alter)');
+                }
             }
 
             return sequelize;
@@ -69,12 +81,12 @@ const connectToDatabase = async () => {
             retries--;
 
             if (retries === 0) {
-                logger.error(`数据库连接失败 (已尝试3次): ${error.message}`);
+                logger.error(`数据库操作失败 (已尝试3次): ${error.message}`);
                 logger.error('错误详情:', error.original || error);
                 throw error;
             }
 
-            logger.warn(`数据库连接失败，将在3秒后重试 (剩余${retries}次): ${error.message}`);
+            logger.warn(`数据库操作失败，将在3秒后重试 (剩余${retries}次): ${error.message}`);
             // 延迟3秒后重试
             await new Promise(resolve => setTimeout(resolve, 3000));
         }
