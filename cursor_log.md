@@ -541,3 +541,67 @@ http://localhost:3000/api/admin/login
 - `mall-admin/src/api/request.ts` - API请求配置
 - `mall-server/src/app.js` - 后端API和Swagger配置
 - `mall-server/.env.development` - 后端环境配置
+
+## 解决JWT令牌生成失败问题
+
+### 会话日期和时间
+2023年9月23日
+
+### 会话的主要目的
+解决管理员登录时JWT令牌生成失败的问题
+
+### 完成的主要任务
+1. 排查JWT令牌生成失败的原因
+2. 检查环境变量配置
+3. 添加缺失的JWT配置参数
+4. 重启服务器测试登录功能
+
+### 问题描述
+用户在使用正确的API地址登录时收到以下错误：
+```json
+{
+  "status": "error",
+  "message": "令牌生成失败",
+  "error": {
+    "statusCode": 500,
+    "status": "error"
+  },
+  "stack": "Error: 令牌生成失败\n    at generateToken (/Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/mall-server/src/utils/jwtToken.js:22:15)\n    at /Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/mall-server/src/controllers/adminController.js:175:19\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
+  "errorCode": ""
+}
+```
+
+### 问题分析与解决方案
+1. **问题根因**：
+   - 通过检查`jwtToken.js`文件和环境变量配置，发现登录失败是因为缺少JWT相关的环境变量配置
+   - 虽然在`.env`文件中存在JWT配置，但在`.env.development`中缺少这些配置
+   - JWT令牌生成需要`JWT_SECRET`（密钥）和`JWT_EXPIRES_IN`（过期时间）参数
+
+2. **解决步骤**：
+   1. 在`.env.development`文件中添加JWT配置：
+      ```
+      # JWT配置
+      JWT_SECRET=dev_secret_key_for_jwt_token_2023
+      JWT_EXPIRES_IN=7d
+      ```
+   2. 重启开发服务器，使新的环境变量生效
+   3. 重新测试管理员登录功能
+
+3. **代码分析**：
+   - `jwtToken.js`中的`generateToken`函数使用`process.env.JWT_SECRET`和`process.env.JWT_EXPIRES_IN`作为默认参数
+   - 当这些环境变量不存在时，尝试使用`undefined`值生成令牌会导致失败
+   - `jwt.sign()`函数需要有效的密钥才能生成令牌
+
+4. **最佳实践**：
+   - 所有环境变量都应在各环境配置文件中明确设置
+   - 关键安全参数（如JWT密钥）在生产环境应使用强随机值
+   - 使用环境变量前应进行存在性检查或提供默认值
+
+### 使用的技术栈
+- Node.js
+- Express
+- JWT (JSON Web Token)
+- dotenv (环境变量)
+
+### 修改的文件
+- `mall-server/.env.development` - 添加JWT配置

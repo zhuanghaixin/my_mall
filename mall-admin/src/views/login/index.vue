@@ -36,8 +36,8 @@ const loading = ref(false)
 
 // 登录表单
 const loginForm = reactive({
-  username: 'admin',
-  password: 'admin123'
+  username: 'dev_admin',
+  password: 'dev_pass123'
 })
 
 // 表单验证规则
