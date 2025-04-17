@@ -280,3 +280,51 @@ npm run dev
 
 ### 修改的文件
 未进行文件修改，仅进行了代码审查和分析
+
+## 集成Swagger API文档功能
+
+### 会话日期和时间
+2023年9月21日
+
+### 会话的主要目的
+为mall-server项目集成Swagger文档功能，提供API在线文档和测试能力
+
+### 完成的主要任务
+1. 安装了Swagger相关依赖包
+2. 创建了Swagger配置文件
+3. 在Express应用中集成Swagger UI
+4. 为现有API添加了Swagger文档注释
+5. 创建了项目首页引导用户访问文档
+6. 配置了静态文件服务
+
+### 关键决策和解决方案
+- 使用swagger-jsdoc从代码注释自动生成API规范
+- 使用swagger-ui-express提供文档UI界面
+- 采用JSDoc风格注释为API添加文档
+- 创建了完整的API模型和示例数据
+- 配置了Bearer Token认证方式
+- 为每个接口提供了详细的请求和响应说明
+
+### 使用的技术栈
+- Node.js
+- Express
+- Swagger (OpenAPI 3.0)
+- JSDoc
+- HTML/CSS
+
+### 修改的文件
+- 新建：`mall-server/src/utils/swagger.js` - Swagger配置文件
+- 修改：`mall-server/src/app.js` - 集成Swagger UI
+- 修改：`mall-server/src/controllers/adminController.js` - 添加API文档注释
+- 修改：`mall-server/src/routes/adminRoutes.js` - 添加路由文档注释
+- 修改：`mall-server/src/routes/index.js` - 添加健康检查接口文档
+- 新建：`mall-server/public/index.html` - 创建项目首页
+- 创建：`mall-server/public/uploads/` - 上传文件目录
+- 修改：`mall-server/package.json` - 添加Swagger依赖
+
+### 访问方式
+在服务器启动后，可通过以下URL访问文档：
+- API文档界面：http://localhost:8080/api-docs
+- API规范JSON：http://localhost:8080/api-docs.json
+- 项目首页：http://localhost:8080/
+- 健康检查接口：http://localhost:8080/api/health

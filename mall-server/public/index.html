@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商城小程序API服务</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #3498db;
+            margin-top: 25px;
+        }
+
+        .api-link {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .api-link:hover {
+            background-color: #2980b9;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .note {
+            background-color: #fffde7;
+            padding: 15px;
+            border-left: 4px solid #ffd600;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>商城小程序API服务</h1>
+
+        <p>欢迎使用商城小程序API服务。本服务提供了完整的RESTful API接口，用于支持微信小程序商城和管理后台的开发。</p>
+
+        <a href="/api-docs" class="api-link">查看API文档</a>
+
+        <h2>API文档说明</h2>
+        <p>API文档使用Swagger UI构建，提供了以下功能：</p>
+        <ul>
+            <li>所有API端点的详细说明</li>
+            <li>请求和响应示例</li>
+            <li>在线接口测试工具</li>
+            <li>认证和授权方式说明</li>
+        </ul>
+
+        <h2>主要接口</h2>
+        <ul>
+            <li><strong>管理员接口</strong>: 提供管理员登录和账户管理功能</li>
+            <li><strong>用户接口</strong>: 提供用户注册、登录和个人信息管理</li>
+            <li><strong>商品接口</strong>: 提供商品信息查询和管理</li>
+            <li><strong>订单接口</strong>: 提供订单创建和管理</li>
+            <li><strong>购物车接口</strong>: 提供购物车管理</li>
+        </ul>
+
+        <div class="note">
+            <p><strong>注意：</strong> API文档中的某些接口可能需要认证才能访问。请先获取有效的访问令牌。</p>
+        </div>
+
+        <h2>健康检查</h2>
+        <p>您可以通过访问 <a href="/api/health">/api/health</a> 来检查API服务的运行状态。</p>
+    </div>
+</body>
+
+</html>

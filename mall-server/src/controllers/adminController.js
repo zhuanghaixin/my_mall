@@ -9,8 +9,136 @@ const { ValidationError, UnauthorizedError, NotFoundError } = require('../utils/
 const logger = require('../utils/logger');
 
 /**
- * 管理员登录
- * @route POST /api/admin/login
+ * @swagger
+ * components:
+ *   schemas:
+ *     Admin:
+ *       type: object
+ *       required:
+ *         - username
+ *         - password
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: 管理员ID
+ *         username:
+ *           type: string
+ *           description: 用户名
+ *         realName:
+ *           type: string
+ *           description: 真实姓名
+ *         email:
+ *           type: string
+ *           description: 电子邮箱
+ *         phone:
+ *           type: string
+ *           description: 手机号码
+ *         avatar:
+ *           type: string
+ *           description: 头像URL
+ *         role:
+ *           type: string
+ *           description: 角色
+ *           enum: [admin, editor, viewer]
+ *         status:
+ *           type: string
+ *           description: 状态
+ *           enum: [active, inactive, locked]
+ *         lastLoginTime:
+ *           type: string
+ *           format: date-time
+ *           description: 最后登录时间
+ *         lastLoginIp:
+ *           type: string
+ *           description: 最后登录IP
+ *       example:
+ *         id: 1
+ *         username: admin
+ *         realName: 系统管理员
+ *         email: admin@example.com
+ *         phone: '13800138000'
+ *         avatar: 'https://example.com/avatar.jpg'
+ *         role: admin
+ *         status: active
+ *         lastLoginTime: '2023-01-01T08:00:00.000Z'
+ *         lastLoginIp: '127.0.0.1'
+ *
+ *     LoginRequest:
+ *       type: object
+ *       required:
+ *         - username
+ *         - password
+ *       properties:
+ *         username:
+ *           type: string
+ *           description: 管理员用户名
+ *         password:
+ *           type: string
+ *           description: 管理员密码
+ *       example:
+ *         username: admin
+ *         password: admin123
+ *
+ *     LoginResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: string
+ *           example: success
+ *         message:
+ *           type: string
+ *           example: 登录成功
+ *         data:
+ *           type: object
+ *           properties:
+ *             admin:
+ *               $ref: '#/components/schemas/Admin'
+ *             token:
+ *               type: string
+ *               description: JWT令牌
+ *
+ *     Error:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: string
+ *           example: fail
+ *         message:
+ *           type: string
+ */
+
+/**
+ * @swagger
+ * /api/admin/login:
+ *   post:
+ *     summary: 管理员登录
+ *     tags: [管理员]
+ *     description: 使用用户名和密码进行管理员登录
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *     responses:
+ *       200:
+ *         description: 登录成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: 请求参数错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: 未授权（用户名或密码错误）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 exports.login = catchAsync(async (req, res, next) => {
     const { username, password } = req.body;
@@ -74,8 +202,42 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 /**
- * 获取当前登录的管理员信息
- * @route GET /api/admin/profile
+ * @swagger
+ * /api/admin/profile:
+ *   get:
+ *     summary: 获取管理员个人资料
+ *     tags: [管理员]
+ *     description: 获取当前已登录管理员的资料信息
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功获取管理员信息
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     admin:
+ *                       $ref: '#/components/schemas/Admin'
+ *       401:
+ *         description: 未授权（无效令牌）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: 管理员不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 exports.getProfile = catchAsync(async (req, res, next) => {
     const admin = await Admin.findByPk(req.user.id, {

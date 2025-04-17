@@ -1,5 +1,10 @@
 /**
  * 管理员相关路由
+ * 
+ * @swagger
+ * tags:
+ *   - name: 管理员
+ *     description: 管理员相关操作
  */
 const express = require('express');
 const adminController = require('../controllers/adminController');

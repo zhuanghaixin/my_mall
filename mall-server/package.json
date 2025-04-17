@@ -19,6 +19,8 @@
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.1.0",
     "sequelize": "^6.28.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.3",
     "winston": "^3.8.2"
   },
   "devDependencies": {
@@ -29,4 +31,4 @@
   "engines": {
     "node": ">=14.0.0"
   }
-} 
+}
