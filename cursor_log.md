@@ -405,3 +405,139 @@ zhuanghaixin@zhuanghaixindeMacBook-Pro-2 商 cd /Users/zhuanghaixin/WebstormProj
 ]: API前缀: undefined
 ]: 环境: development
 ```
+
+## 解决管理员登录接口访问问题
+
+### 会话日期和时间
+2023年9月22日
+
+### 会话的主要目的
+排查和解决管理员登录接口访问失败的问题
+
+### 完成的主要任务
+1. 分析管理员登录请求失败原因
+2. 检查服务器运行端口和状态
+3. 确认API路由配置正确性
+4. 测试API健康检查接口
+5. 提供正确的登录接口访问方式
+
+### 问题描述
+用户尝试使用以下URL和数据访问管理员登录接口：
+```
+http://localhost:3000/api/admin/login
+{"username":"dev_admin","password":"dev_pass123"}
+```
+
+收到错误响应：
+```json
+{"status": "fail", "message": "请求的资源不存在"}
+```
+
+### 问题分析与解决方案
+1. **问题发现**：
+   - 用户尝试在3000端口访问API，但服务器实际运行在8080端口
+   - 通过`lsof -i :8080`命令确认服务器正在8080端口监听
+   - 健康检查接口`/api/health`在8080端口正常响应
+
+2. **确认API可用性**：
+   ```
+   curl -X GET http://localhost:8080/api/health
+   {"status":"success","message":"服务运行正常","time":"2025-04-17T16:58:59.279Z"}
+   ```
+
+3. **解决方案**：
+   - 使用正确的端口号和路径访问登录接口：`http://localhost:8080/api/admin/login`
+   - 保持请求体不变：`{"username":"dev_admin","password":"dev_pass123"}`
+
+4. **登录请求示例**：
+   ```bash
+   curl -X POST http://localhost:8080/api/admin/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"dev_admin","password":"dev_pass123"}'
+   ```
+
+5. **前端配置建议**：
+   - 如果是在前端应用中配置API地址，应确保baseURL设置为：`http://localhost:8080/api`
+   - 如果需要在3000端口访问，可以：
+     a. 修改`.env.development`中的PORT值为3000并重启服务器
+     b. 在前端配置代理将API请求从3000端口转发到8080端口
+
+### 使用的技术栈
+- Express (Node.js)
+- RESTful API
+- curl (接口测试)
+- lsof (端口检查)
+
+### 相关文件
+- `mall-server/.env.development` - 服务器端口配置
+- `mall-server/src/app.js` - API路由配置
+- `mall-server/src/routes/index.js` - 路由注册
+
+## 解决前端API请求与Swagger文档冲突问题
+
+### 会话日期和时间
+2023年9月23日
+
+### 会话的主要目的
+解决前端运行在3000端口时，后端API和Swagger文档访问冲突的问题
+
+### 完成的主要任务
+1. 分析前端通过3000端口访问后端8080端口API的问题
+2. 研究Swagger文档路径和API访问路径
+3. 修改前端Vite配置，设置正确的API代理
+4. 测试代理配置是否能正确转发请求
+
+### 问题描述
+用户报告在前端（3000端口）无法成功访问后端API（8080端口）的管理员登录接口，同时发现如果将后端端口改为3000，会导致Swagger文档无法访问。
+
+### 问题分析与解决方案
+通过检查配置文件，发现：
+
+1. **后端API服务**：
+   - 运行在8080端口
+   - 提供API服务和Swagger文档
+   - 管理员登录API路径：`/api/admin/login`
+   - Swagger文档路径：`/api-docs`
+
+2. **前端应用**：
+   - 运行在3000端口
+   - 存在API代理配置问题：
+     ```javascript
+     proxy: {
+       '/api': {
+         target: env.API_URL || 'http://localhost:8080',
+         changeOrigin: true,
+         rewrite: (path) => path.replace(/^\/api/, ''),
+       },
+     }
+     ```
+
+3. **问题根因**：
+   - 前端`rewrite`规则移除了`/api`前缀，导致请求被转发到错误的路径
+   - 后端期望的完整路径是包含`/api`前缀的
+
+4. **解决方案**：
+   - 保留后端API在8080端口运行
+   - 修改Vite配置中的代理设置，移除`rewrite`规则：
+     ```javascript
+     proxy: {
+       '/api': {
+         target: env.API_URL || 'http://localhost:8080',
+         changeOrigin: true,
+         // 移除rewrite以确保路径能正确传递到后端
+         // rewrite: (path) => path.replace(/^\/api/, ''),
+       },
+     }
+     ```
+
+### 使用的技术栈
+- Vite (构建和开发工具)
+- Node.js
+- Express
+- Swagger UI
+
+### 相关文件
+- `mall-admin/vite.config.ts` - 前端代理配置
+- `mall-admin/src/api/request.ts` - API请求配置
+- `mall-server/src/app.js` - 后端API和Swagger配置
+- `mall-server/.env.development` - 后端环境配置

@@ -22,7 +22,8 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.API_URL || 'http://localhost:8080',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          // 移除rewrite以确保路径能正确传递到后端
+          // rewrite: (path) => path.replace(/^\/api/, ''),
         },
       },
     },
