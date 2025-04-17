@@ -266,13 +266,14 @@ exports.createInitialAdmin = async () => {
         // 只有在没有管理员账号时才创建初始账号
         if (count === 0) {
             await Admin.create({
-                username: 'admin',
-                password: 'admin123',
-                realName: '系统管理员',
+                username: process.env.ADMIN_USERNAME || 'admin',
+                password: process.env.ADMIN_PASSWORD || 'admin123',
+                realName: process.env.ADMIN_REAL_NAME || '超级管理员',
+                email: process.env.ADMIN_EMAIL || 'admin@example.com',
                 role: 'admin',
                 status: 'active'
             });
-            logger.info('已创建初始管理员账号');
+            logger.info(`已创建初始管理员账号: ${process.env.ADMIN_USERNAME || 'superadmin'}`);
         }
     } catch (error) {
         logger.error('创建初始管理员账号失败:', error);

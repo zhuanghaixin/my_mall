@@ -328,3 +328,80 @@ npm run dev
 - API规范JSON：http://localhost:8080/api-docs.json
 - 项目首页：http://localhost:8080/
 - 健康检查接口：http://localhost:8080/api/health
+
+## 配置管理员默认账号
+
+### 会话日期和时间
+2023年9月22日
+
+### 会话的主要目的
+为mall-server项目配置管理员默认账号，提供灵活的管理员账号设置方式
+
+### 完成的主要任务
+1. 分析了当前管理员账号的创建逻辑
+2. 使用环境变量配置默认管理员账号
+3. 修改初始管理员账号创建函数，使用环境变量中的参数
+4. 为开发环境和生产环境设置不同的默认管理员信息
+5. 测试验证管理员账号创建功能
+
+### 关键决策和解决方案
+- 通过环境变量配置管理员账号，而非硬编码在代码中
+- 为不同环境设置不同的默认账号参数
+- 修改`createInitialAdmin`函数，使用环境变量，提高灵活性
+- 解决端口冲突问题，使用备用端口启动服务器
+
+### 使用的技术栈
+- Node.js
+- Express
+- Sequelize
+- MySQL
+- dotenv (环境变量)
+- bcrypt (密码加密)
+
+### 环境变量配置示例
+开发环境配置 (.env.development):
+```
+# 默认管理员配置
+ADMIN_USERNAME=dev_admin
+ADMIN_PASSWORD=dev_pass123
+ADMIN_REAL_NAME=开发环境管理员
+ADMIN_EMAIL=dev@example.com
+```
+
+生产环境配置 (.env.production):
+```
+# 默认管理员配置
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=Secure@Pr0d#Pass!23
+ADMIN_REAL_NAME=系统管理员
+ADMIN_EMAIL=admin@yourcompany.com
+```
+
+### 修改的文件
+- 修改：`mall-server/src/controllers/adminController.js` - 更新管理员创建函数
+- 修改：`mall-server/.env.development` - 添加默认管理员配置
+- 修改：`mall-server/.env.production` - 添加默认管理员配置
+
+### 测试结果
+```
+zhuanghaixin@zhuanghaixindeMacBook-Pro-2 商 cd /Users/zhuanghaixin/WebstormProjects/cursor_code/商or_code/商 城小程序/m城小程序/mall-server && PORT=8081 NODE_ENV=development node src/index.js
+]: 日志系统已初始化，运行在开发模式
+]: 数据库配置:
+]: 尝试连接数据库 (1/3)...
+]: 连接配置: 127.0.0.1:3306, 数据库: shop, 用户: root
+]: Executing (default): SELECT 1+1 AS result
+]: 数据库连接成功
+]: Executing (default): DROP TABLE IF EXISTS `admins`;
+]: Executing (default): SELECT CONSTRAINT_NAME as constraint_name,CONSTRAINT_NAME as constraintName,CONSTRAINT_SCHEMA as constraintSchema,CONSTRAINT_SCHEMA as constraintCatalog,TABLE_NAME as tableName,TABLE_SCHEMA as tableSchema,TABLE_SCHEMA as tableCatalog,COLUMN_NAME as columnName,REFERENCED_TABLE_SCHEMA as referencedTableSchema,REFERENCED_TABLE_SCHEMA as referencedTableCatalog,REFERENCED_TABLE_NAME as referencedTableName,REFERENCED_COLUMN_NAME as referencedColumnName FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE where TABLE_NAME = 'admins' AND CONSTRAINT_NAME!='PRIMARY' AND CONSTRAINT_SCHEMA='shop' AND REFERENCED_TABLE_NAME IS NOT NULL;
+]: Executing (default): DROP TABLE IF EXISTS `admins`;
+]: Executing (default): DROP TABLE IF EXISTS `admins`;
+]: Executing (default): CREATE TABLE IF NOT EXISTS `admins` (`id` INTEGER NOT NULL auto_increment , `username` VARCHAR(50) NOT NULL UNIQUE, `password` VARCHAR(255) NOT NULL, `real_name` VARCHAR(50), `email` VARCHAR(255), `phone` VARCHAR(20), `avatar` VARCHAR(255), `status` ENUM('active', 'inactive', 'locked') DEFAULT 'active', `role` ENUM('admin', 'editor', 'viewer') DEFAULT 'admin', `last_login_ip` VARCHAR(255), `last_login_time` DATETIME, `created_at` DATETIME, `updated_at` DATETIME, PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
+]: Executing (default): SHOW INDEX FROM `admins`
+]: 数据库模型同步完成 (force)
+]: Executing (default): SELECT count(*) AS `count` FROM `admins` AS `Admin`;
+]: Executing (default): INSERT INTO `admins` (`id`,`username`,`password`,`real_name`,`status`,`role`,`created_at`,`updated_at`) VALUES (DEFAULT,?,?,?,?,?,?,?);
+]: 已创建初始管理员账号
+]: 服务器运行在 http://localhost:8081
+]: API前缀: undefined
+]: 环境: development
+```
