@@ -26,11 +26,11 @@ export function setupRouterGuards(router: Router) {
         next({ path: '/' })
       } else {
         // 判断用户信息是否存在
-        if (userStore.hasUserInfo) {
+        if (userStore.userInfo) {
           next()
         } else {
           // 没有用户信息，获取用户信息
-          userStore.getUserInfo().then(() => {
+          userStore.fetchUserInfo().then(() => {
             next({ ...to, replace: true })
           }).catch(() => {
             // 获取用户信息失败，登出并重定向到登录页
