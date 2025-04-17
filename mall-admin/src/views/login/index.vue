@@ -92,7 +92,21 @@ const handleLogin = async () => {
 }
 </script>
 
-<style scoped>
+<style lang="scss">
+@use "@/assets/styles/variables.scss" as *;
+
+.container {
+  color: $primary-color; // 使用全局变量
+
+  .item {
+    background-color: #f5f5f5;
+  }
+}
+</style>
+
+<style scoped lang="scss">
+@use "@/assets/styles/variables.scss" as *;
+
 .login-container {
   width: 100%;
   height: 100vh;
@@ -100,23 +114,25 @@ const handleLogin = async () => {
   justify-content: center;
   align-items: center;
   background-color: #f0f2f5;
-}
 
-.login-card {
-  width: 400px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-}
+  .login-card {
+    width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 
-.title {
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 30px;
-  color: #409EFF;
-}
+    .title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 30px;
+      color: $primary-color;
+    }
 
-.login-button {
-  width: 100%;
+    .login-form {
+      .login-button {
+        width: 100%;
+      }
+    }
+  }
 }
 </style>
