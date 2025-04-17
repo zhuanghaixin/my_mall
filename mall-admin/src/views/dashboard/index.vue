@@ -74,68 +74,70 @@ const Goods = ShoppingBag;
 // 仪表盘逻辑待开发
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use "@/assets/styles/variables.scss" as *;
+
 .dashboard-container {
     padding: 20px;
-}
 
-.dashboard-container h1 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
+    h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
 
-.dashboard-container p {
-    margin-bottom: 30px;
-    color: #606266;
-}
+    p {
+        margin-bottom: 30px;
+        color: $text-color-regular;
+    }
 
-.card-panel-row {
-    margin-bottom: 20px;
-}
+    .card-panel-row {
+        margin-bottom: 20px;
+    }
 
-.card-panel {
-    height: 108px;
-    cursor: pointer;
-    font-size: 12px;
-    position: relative;
-    overflow: hidden;
-    color: #666;
-    background: #fff;
-}
+    .card-panel {
+        height: 108px;
+        cursor: pointer;
+        font-size: 12px;
+        position: relative;
+        overflow: hidden;
+        color: #666;
+        background: #fff;
 
-.card-panel:hover .card-panel-icon-wrapper {
-    color: #fff;
-}
+        &:hover .card-panel-icon-wrapper {
+            color: #fff;
+        }
 
-.card-panel-icon-wrapper {
-    float: left;
-    margin: 14px 0 0 14px;
-    padding: 16px;
-    transition: all 0.38s ease-out;
-    border-radius: 6px;
-    background: #409EFF;
-}
+        .card-panel-icon-wrapper {
+            float: left;
+            margin: 14px 0 0 14px;
+            padding: 16px;
+            transition: all 0.38s ease-out;
+            border-radius: 6px;
+            background: $primary-color;
+        }
 
-.card-panel-icon {
-    float: left;
-    font-size: 48px;
-    color: #fff;
-}
+        .card-panel-icon {
+            float: left;
+            font-size: 48px;
+            color: #fff;
+        }
 
-.card-panel-description {
-    float: right;
-    font-weight: bold;
-    margin: 26px 20px 0 0;
-}
+        .card-panel-description {
+            float: right;
+            font-weight: bold;
+            margin: 26px 20px 0 0;
 
-.card-panel-text {
-    line-height: 18px;
-    color: #606266;
-    font-size: 16px;
-    margin-bottom: 12px;
-}
+            .card-panel-text {
+                line-height: 18px;
+                color: $text-color-regular;
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
 
-.card-panel-num {
-    font-size: 20px;
+            .card-panel-num {
+                font-size: 20px;
+            }
+        }
+    }
 }
 </style>

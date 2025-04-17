@@ -1,25 +1,15 @@
 <template>
   <div class="login-container">
-    <el-card class="login-card">
-      <h2 class="title">商城管理系统</h2>
-      <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-width="0" class="login-form">
+    <div class="login-box">
+      <div class="login-title">
+        <h2>管理系统</h2>
+      </div>
+      <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" @keyup.enter="handleLogin">
         <el-form-item prop="username">
-          <el-input v-model="loginForm.username" placeholder="用户名">
-            <template #prefix>
-              <el-icon>
-                <User />
-              </el-icon>
-            </template>
-          </el-input>
+          <el-input v-model="loginForm.username" placeholder="用户名" :prefix-icon="User" />
         </el-form-item>
         <el-form-item prop="password">
-          <el-input v-model="loginForm.password" placeholder="密码" show-password type="password">
-            <template #prefix>
-              <el-icon>
-                <Lock />
-              </el-icon>
-            </template>
-          </el-input>
+          <el-input v-model="loginForm.password" type="password" placeholder="密码" :prefix-icon="Lock" show-password />
         </el-form-item>
         <el-form-item>
           <el-button :loading="loading" type="primary" class="login-button" @click="handleLogin">
@@ -27,111 +17,96 @@
           </el-button>
         </el-form-item>
       </el-form>
-    </el-card>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { ElMessage, FormInstance, FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
-import { useRouter, useRoute } from 'vue-router'
+import { useUserStore } from '../../stores/user'
 
-// 表单引用
+const router = useRouter()
+const userStore = useUserStore()
+
 const loginFormRef = ref<FormInstance>()
+const loading = ref(false)
 
-// 登录表单数据
+// 登录表单
 const loginForm = reactive({
   username: 'admin',
-  password: '123456'
+  password: 'admin123'
 })
 
 // 表单验证规则
 const loginRules = reactive<FormRules>({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+    { min: 3, max: 20, message: '用户名长度应为3-20个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+    { min: 6, max: 20, message: '密码长度应为6-20个字符', trigger: 'blur' }
   ]
 })
 
-// 加载状态
-const loading = ref(false)
-
-// 用户状态管理
-const userStore = useUserStore()
-const router = useRouter()
-const route = useRoute()
-
-// 处理登录
+// 登录方法
 const handleLogin = async () => {
   if (!loginFormRef.value) return
 
-  await loginFormRef.value.validate(async (valid, fields) => {
+  await loginFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
         loading.value = true
-        // 登录
+
+        // 调用store中的登录方法
         await userStore.login(loginForm.username, loginForm.password)
-        // 登录成功后跳转
-        const redirect = route.query.redirect as string || '/'
-        router.push(redirect)
-      } catch (error) {
+
+        ElMessage.success('登录成功')
+
+        // 根据路由跳转，如果有重定向则跳转到重定向页面
+        const redirect = router.currentRoute.value.query.redirect as string
+        router.push(redirect || '/')
+      } catch (error: any) {
+        // 错误信息已在拦截器中处理
         console.error('登录失败:', error)
       } finally {
         loading.value = false
       }
-    } else {
-      console.error('登录表单验证失败:', fields)
     }
   })
 }
 </script>
 
-<style lang="scss">
-@use "@/assets/styles/variables.scss" as *;
-
-.container {
-  color: $primary-color; // 使用全局变量
-
-  .item {
-    background-color: #f5f5f5;
-  }
-}
-</style>
-
-<style scoped lang="scss">
-@use "@/assets/styles/variables.scss" as *;
-
+<style lang="scss" scoped>
 .login-container {
-  width: 100%;
-  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f0f2f5;
+  height: 100vh;
+  background-color: #f5f7fa;
 
-  .login-card {
+  .login-box {
     width: 400px;
-    border-radius: 8px;
+    padding: 40px;
+    border-radius: 4px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    background-color: #fff;
 
-    .title {
+    .login-title {
       text-align: center;
-      font-size: 24px;
-      font-weight: bold;
       margin-bottom: 30px;
-      color: $primary-color;
+
+      h2 {
+        font-size: 24px;
+        color: #303133;
+      }
     }
 
-    .login-form {
-      .login-button {
-        width: 100%;
-      }
+    .login-button {
+      width: 100%;
     }
   }
 }

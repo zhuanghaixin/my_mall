@@ -1,59 +1,52 @@
-import axios, { AxiosInstance } from 'axios'
+import axios from 'axios'
+import { useUserStore } from '../stores/user'
+import router from '../router'
 import { ElMessage } from 'element-plus'
-import { getToken } from '@/utils/auth'
 
-// 创建 axios 实例
-const request: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 15000,
+// 创建axios实例
+const request = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api', // 从环境变量获取API基础URL
+  timeout: 10000,
   headers: {
-    'Content-Type': 'application/json;charset=utf-8',
-  },
+    'Content-Type': 'application/json'
+  }
 })
 
 // 请求拦截器
 request.interceptors.request.use(
-  (config) => {
-    // 添加token
-    const token = getToken()
-    if (token && config.headers) {
-      config.headers['Authorization'] = `Bearer ${token}`
+  config => {
+    const userStore = useUserStore()
+    // 如果有token，添加到请求头
+    if (userStore.token) {
+      config.headers.Authorization = `Bearer ${userStore.token}`
     }
     return config
   },
-  (error) => {
-    console.log(error)
+  error => {
     return Promise.reject(error)
   }
 )
 
 // 响应拦截器
 request.interceptors.response.use(
-  (response) => {
-    // 开发阶段，直接返回响应数据，不做校验
-    // 模拟API返回数据格式
-    return {
-      code: 200,
-      data: response.data || {
-        token: 'dev-token-123456',
-        user: {
-          id: 1,
-          username: 'admin',
-          avatar: '',
-          roles: ['admin']
-        }
-      },
-      message: 'success'
-    }
+  response => {
+    // 只返回响应的数据部分
+    return response.data
   },
-  (error) => {
-    console.log('请求错误', error)
+  error => {
+    const userStore = useUserStore()
     
-    ElMessage({
-      message: '网络请求失败，请稍后重试',
-      type: 'error',
-      duration: 5 * 1000,
-    })
+    // 处理401错误（未授权）
+    if (error.response && error.response.status === 401) {
+      userStore.logout()
+      router.push('/login')
+      ElMessage.error('登录已过期，请重新登录')
+    } else {
+      // 显示错误消息
+      const errorMessage = error.response?.data?.message || '请求失败'
+      ElMessage.error(errorMessage)
+    }
+    
     return Promise.reject(error)
   }
 )

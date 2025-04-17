@@ -8,7 +8,9 @@
 // 登录布局组件逻辑
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use "@/assets/styles/variables.scss" as *;
+
 .login-layout {
   height: 100vh;
   display: flex;
