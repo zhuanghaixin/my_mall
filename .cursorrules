@@ -1,0 +1,141 @@
+# Cursor 编辑器配置规则
+每一次会话请求结束后进行会话总结，无论生成新文件还是修改已有文件都需要做总结，
+cursor_log.md(说明文件中的内容是累积增加的)。
+总结内容应包括：
+   - 会话日期和时间
+   - 会话的主要目的
+   - 完成的主要任务
+   - 关键决策和解决方案
+   - 使用的技术栈
+   - 修改了哪些文件
+
+# 编辑器基本设置
+editor:
+  tabSize: 2                    # 缩进空格数
+  insertSpaces: true            # 使用空格而不是制表符
+  formatOnSave: true           # 保存时自动格式化
+  defaultFormatter: "prettier"  # 默认格式化工具
+  rulers: [80]                 # 行宽标尺
+  wordWrap: "on"              # 自动换行
+  trimTrailingWhitespace: true # 删除行尾空格
+
+# 文件类型关联
+files:
+  associations:
+    "*.vue": "vue"
+    "*.ts": "typescript"
+    "*.tsx": "typescriptreact"
+    "*.scss": "scss"
+    "*.module.css": "css"
+
+# 语言特定设置
+languageSpecific:
+  typescript:
+    semi: true                 # 分号
+    singleQuote: true         # 单引号
+    trailingComma: "es5"      # 尾随逗号
+    bracketSpacing: true      # 对象字面量空格
+    arrowParens: "always"     # 箭头函数参数括号
+
+  vue:
+    vueIndentScriptAndStyle: true  # Vue文件中的script和style标签缩进
+    htmlWhitespaceSensitivity: "css" # HTML空白符敏感度
+
+  scss:
+    singleQuote: true         # 使用单引号
+    tabWidth: 2               # SCSS缩进
+
+# 代码片段设置
+snippets:
+  vue:
+    "vue-component": 
+      prefix: "vbase"
+      body: [
+        "<template>",
+        "  <div>",
+        "    $1",
+        "  </div>",
+        "</template>",
+        "",
+        "<script setup lang=\"ts\">",
+        "$2",
+        "</script>",
+        "",
+        "<style scoped lang=\"scss\">",
+        "$3",
+        "</style>"
+      ]
+
+# 路径别名配置
+pathAliases:
+  "@": "src"
+  "@components": "src/components"
+  "@views": "src/views"
+  "@assets": "src/assets"
+  "@utils": "src/utils"
+
+# 代码检查配置
+linting:
+  eslint:
+    enable: true
+    autofix: true
+  stylelint:
+    enable: true
+    autofix: true
+
+# 自动导入配置
+autoImport:
+  enable: true
+  include:
+    - "vue"
+    - "@vueuse/core"
+    - "vue-router"
+    - "pinia"
+
+# 代码补全配置
+completion:
+  enable: true
+  snippetsSupport: true
+  autoImport: true
+  path: true
+
+# Git集成配置
+git:
+  enabled: true
+  autofetch: true
+  confirmSync: true
+  enableSmartCommit: true
+
+# 终端配置
+terminal:
+  integrated:
+    shell:
+      osx: "/bin/zsh"
+      linux: "/bin/bash"
+    fontSize: 12
+    lineHeight: 1.2
+
+# 调试配置
+debug:
+  javascript:
+    enable: true
+    sourceMaps: true
+    autoAttach: true
+
+# 项目特定设置
+project:
+  exclude:
+    - "node_modules"
+    - "dist"
+    - ".git"
+    - "*.log"
+  include:
+    - "src/**/*"
+    - "server/**/*"
+    - "public/**/*"
+
+# 性能优化设置
+performance:
+  maxFileSize: 5242880        # 最大文件大小限制(5MB)
+  largeFileOptimization: true # 大文件优化
+  codeNavigation: true       # 代码导航优化 
