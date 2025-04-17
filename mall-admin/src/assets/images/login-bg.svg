@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1440px" height="900px" viewBox="0 0 1440 900" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>登录背景</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#f0f2f5" offset="0%"></stop>
+            <stop stop-color="#e6f7ff" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="背景" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="矩形" fill="url(#linearGradient-1)" x="0" y="0" width="1440" height="900"></rect>
+        <circle id="圆形" fill="#1890ff" opacity="0.1" cx="200" cy="200" r="80"></circle>
+        <circle id="圆形" fill="#1890ff" opacity="0.15" cx="1200" cy="400" r="120"></circle>
+        <circle id="圆形" fill="#1890ff" opacity="0.05" cx="600" cy="700" r="200"></circle>
+    </g>
+</svg> 

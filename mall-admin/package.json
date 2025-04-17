@@ -1,0 +1,31 @@
+{
+  "name": "mall-admin",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --mode development",
+    "build": "vue-tsc && vite build --mode production",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .ts,.vue"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "element-plus": "^2.4.3",
+    "pinia": "^2.1.7",
+    "vue": "^3.3.8",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "@vitejs/plugin-vue": "^4.5.0",
+    "eslint": "^8.54.0",
+    "eslint-plugin-vue": "^9.18.1",
+    "sass": "^1.69.5",
+    "typescript": "^5.3.2",
+    "vite": "^5.0.2",
+    "vue-tsc": "^1.8.22"
+  }
+} 

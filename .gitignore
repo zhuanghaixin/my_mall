@@ -1,0 +1,138 @@
+# 依赖目录
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+.pnpm-lock.yaml
+
+# 编译输出
+/dist
+/build
+/out
+/.next
+/.nuxt
+/.output
+
+# 测试覆盖率
+/coverage
+
+# 环境变量文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 编辑器目录和文件
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 前端框架特定
+# Vue
+.vue-sfc-cache/
+
+# React / Create React App
+/.pnp
+.pnp.js
+
+# Angular
+/.angular/cache
+.sass-cache/
+
+# 后端特定
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Java / Spring Boot
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# Node.js 后端
+/dist
+/tmp
+/temp
+
+# 数据库文件
+*.sqlite
+*.sqlite3
+*.db
+
+# 临时文件
+tmp/
+temp/
+
+# 本地缓存
+.cache/
+.temp/
+.cache-loader/
+.parcel-cache/
+
+# 构建缓存
+.webpack/
+.babel-cache/
+
+# 生成的静态文件
+/public/uploads
+/public/static
+
+# 依赖管理工具缓存
+.npm
+.eslintcache
+.stylelintcache
+
+# Storybook
+/storybook-static
+
+# Docker
+docker-compose.override.yml
+
+# Serverless
+.serverless/
+
+# 单元测试报告
+/report.*.json
+/junit.xml
+
+# SSR 临时文件
+/ssr-dist 
