@@ -66,7 +66,10 @@
 </template>
 
 <script setup lang="ts">
-import { User, Goods, ShoppingCart, Money } from '@element-plus/icons-vue'
+import { User, ShoppingBag, ShoppingCart, Money } from '@element-plus/icons-vue'
+
+// 使用ShoppingBag代替不存在的Goods图标
+const Goods = ShoppingBag;
 
 // 仪表盘逻辑待开发
 </script>

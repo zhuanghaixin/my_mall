@@ -2,36 +2,27 @@
   <div class="login-container">
     <el-card class="login-card">
       <h2 class="title">商城管理系统</h2>
-      <el-form
-        ref="loginFormRef"
-        :model="loginForm"
-        :rules="loginRules"
-        label-width="0"
-        class="login-form"
-      >
+      <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-width="0" class="login-form">
         <el-form-item prop="username">
-          <el-input
-            v-model="loginForm.username"
-            placeholder="用户名"
-            prefix-icon="User"
-          />
+          <el-input v-model="loginForm.username" placeholder="用户名">
+            <template #prefix>
+              <el-icon>
+                <User />
+              </el-icon>
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item prop="password">
-          <el-input
-            v-model="loginForm.password"
-            placeholder="密码"
-            prefix-icon="Lock"
-            show-password
-            type="password"
-          />
+          <el-input v-model="loginForm.password" placeholder="密码" show-password type="password">
+            <template #prefix>
+              <el-icon>
+                <Lock />
+              </el-icon>
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item>
-          <el-button
-            :loading="loading"
-            type="primary"
-            class="login-button"
-            @click="handleLogin"
-          >
+          <el-button :loading="loading" type="primary" class="login-button" @click="handleLogin">
             登录
           </el-button>
         </el-form-item>
@@ -52,8 +43,8 @@ const loginFormRef = ref<FormInstance>()
 
 // 登录表单数据
 const loginForm = reactive({
-  username: '',
-  password: ''
+  username: 'admin',
+  password: '123456'
 })
 
 // 表单验证规则
@@ -79,7 +70,7 @@ const route = useRoute()
 // 处理登录
 const handleLogin = async () => {
   if (!loginFormRef.value) return
-  
+
   await loginFormRef.value.validate(async (valid, fields) => {
     if (valid) {
       try {
@@ -104,11 +95,11 @@ const handleLogin = async () => {
 <style scoped lang="scss">
 .login-container {
   width: 100%;
-  
+
   .login-card {
     width: 400px;
     border-radius: 8px;
-    
+
     .title {
       text-align: center;
       font-size: 24px;
@@ -116,7 +107,7 @@ const handleLogin = async () => {
       margin-bottom: 30px;
       color: $primary-color;
     }
-    
+
     .login-form {
       .login-button {
         width: 100%;
@@ -124,4 +115,4 @@ const handleLogin = async () => {
     }
   }
 }
-</style> 
+</style>

@@ -17,6 +17,10 @@ export const useUserStore = defineStore('user', () => {
       const { data } = await login({ username, password })
       setToken(data.token)
       token.value = data.token
+      
+      // 登录成功后立即获取用户信息
+      await getUserInfoAction()
+      
       return Promise.resolve()
     } catch (error) {
       return Promise.reject(error)
@@ -26,10 +30,17 @@ export const useUserStore = defineStore('user', () => {
   // 获取用户信息
   async function getUserInfoAction() {
     try {
-      const { data } = await getUserInfo()
-      userInfo.value = data
+      // 开发环境模拟用户数据
+      userInfo.value = {
+        id: 1,
+        username: 'admin',
+        nickname: '管理员',
+        avatar: '',
+        role: 'admin',
+        permissions: ['dashboard', 'users', 'products', 'orders']
+      }
       hasUserInfo.value = true
-      return Promise.resolve(data)
+      return Promise.resolve(userInfo.value)
     } catch (error) {
       return Promise.reject(error)
     }
