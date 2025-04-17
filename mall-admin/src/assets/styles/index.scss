@@ -1,10 +1,40 @@
 // 全局通用样式
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
 #app {
   height: 100%;
+  width: 100%;
 }
 
 .app-container {
   padding: 20px;
+}
+
+// 卡片内容溢出处理
+.el-card__body {
+  overflow: auto;
+}
+
+// 修复表格内容溢出问题
+.el-table {
+  width: 100% !important;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+// 修复大内容页面的滚动问题
+.product-category,
+.order-list,
+.user-list,
+.system-settings {
+  height: 100%;
+  overflow: auto;
 }
 
 // 过渡动画

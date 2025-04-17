@@ -1,0 +1,355 @@
+<template>
+  <div class="product-list-container">
+    <el-card class="filter-container">
+      <el-form :inline="true" :model="queryParams" class="demo-form-inline">
+        <el-form-item label="商品名称">
+          <el-input v-model="queryParams.keyword" placeholder="请输入商品名称" clearable />
+        </el-form-item>
+        <el-form-item label="商品分类">
+          <el-select v-model="queryParams.category_id" placeholder="请选择" clearable>
+            <el-option v-for="item in categoryOptions" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="商品状态">
+          <el-select v-model="queryParams.status" placeholder="请选择" clearable>
+            <el-option :value="1" label="上架" />
+            <el-option :value="0" label="下架" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <el-card class="table-container">
+      <div class="operation-container">
+        <el-button type="primary" @click="handleAdd">
+          <el-icon>
+            <Plus />
+          </el-icon>新增商品
+        </el-button>
+        <el-button v-if="selectedIds.length > 0" type="success" @click="handleBatchOperation('online')">
+          <el-icon>
+            <TopRight />
+          </el-icon>批量上架
+        </el-button>
+        <el-button v-if="selectedIds.length > 0" type="warning" @click="handleBatchOperation('offline')">
+          <el-icon>
+            <BottomRight />
+          </el-icon>批量下架
+        </el-button>
+        <el-button v-if="selectedIds.length > 0" type="danger" @click="handleBatchOperation('delete')">
+          <el-icon>
+            <Delete />
+          </el-icon>批量删除
+        </el-button>
+      </div>
+
+      <el-table v-loading="loading" :data="productList" border style="width: 100%"
+        @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" />
+        <el-table-column label="ID" prop="id" width="80" />
+        <el-table-column label="商品图片" width="100">
+          <template #default="scope">
+            <el-image :src="scope.row.main_image" :preview-src-list="[scope.row.main_image]"
+              style="width: 60px; height: 60px" fit="cover" />
+          </template>
+        </el-table-column>
+        <el-table-column label="商品名称" prop="name" show-overflow-tooltip />
+        <el-table-column label="分类" prop="category_name" width="120" />
+        <el-table-column label="价格" prop="price" width="100">
+          <template #default="scope">
+            <span class="price">¥{{ scope.row.price }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="库存" prop="stock" width="100" />
+        <el-table-column label="状态" prop="status" width="100">
+          <template #default="scope">
+            <el-tag :type="scope.row.status === 1 ? 'success' : 'info'">
+              {{ scope.row.status === 1 ? '已上架' : '已下架' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" prop="create_time" width="180" />
+        <el-table-column label="操作" width="200" fixed="right">
+          <template #default="scope">
+            <el-button type="primary" link @click="handleEdit(scope.row)">
+              <el-icon>
+                <Edit />
+              </el-icon>编辑
+            </el-button>
+            <el-button type="primary" link :type="scope.row.status === 1 ? 'warning' : 'success'"
+              @click="handleStatusChange(scope.row)">
+              {{ scope.row.status === 1 ? '下架' : '上架' }}
+            </el-button>
+            <el-button type="danger" link @click="handleDelete(scope.row)">
+              <el-icon>
+                <Delete />
+              </el-icon>删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination-container">
+        <el-pagination v-model:current-page="queryParams.page" v-model:page-size="queryParams.pageSize"
+          :page-sizes="[10, 20, 50, 100]" :total="total" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+      </div>
+    </el-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Edit, Delete, TopRight, BottomRight } from '@element-plus/icons-vue'
+import {
+  getProductList,
+  updateProductStatus,
+  deleteProduct,
+  batchOperateProducts,
+  getCategoryList
+} from '@/api/product'
+import type { Product, Category, PaginationData, ProductQueryParams } from '@/types/product'
+
+const router = useRouter()
+const loading = ref(false)
+const productList = ref<Product[]>([])
+const total = ref(0)
+const selectedIds = ref<number[]>([])
+const categoryOptions = ref<Category[]>([])
+
+// 查询参数
+const queryParams = reactive<ProductQueryParams>({
+  keyword: '',
+  category_id: undefined,
+  status: undefined,
+  page: 1,
+  pageSize: 10
+})
+
+// 初始化
+onMounted(() => {
+  console.log('商品列表组件已加载')
+  fetchProductList()
+  fetchCategoryList()
+})
+
+// 获取商品列表
+const fetchProductList = async () => {
+  loading.value = true
+  try {
+    console.log('获取商品列表...')
+    const res = await getProductList(queryParams) as {
+      code: number
+      message: string
+      data: PaginationData<Product>
+    }
+
+    if (res.code === 200) {
+      productList.value = res.data.list
+      total.value = res.data.total
+      console.log('获取商品列表成功', res.data)
+    } else {
+      ElMessage.error(res.message || '获取商品列表失败')
+    }
+  } catch (error) {
+    console.error('获取商品列表失败', error)
+    ElMessage.error('获取商品列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 获取分类列表
+const fetchCategoryList = async () => {
+  try {
+    const res = await getCategoryList() as {
+      code: number
+      message: string
+      data: Category[]
+    }
+
+    if (res.code === 200) {
+      categoryOptions.value = res.data
+    }
+  } catch (error) {
+    console.error('获取分类列表失败', error)
+  }
+}
+
+// 搜索
+const handleSearch = () => {
+  queryParams.page = 1
+  fetchProductList()
+}
+
+// 重置搜索条件
+const resetQuery = () => {
+  queryParams.keyword = ''
+  queryParams.category_id = undefined
+  queryParams.status = undefined
+  queryParams.page = 1
+  fetchProductList()
+}
+
+// 处理多选变化
+const handleSelectionChange = (selection: Product[]) => {
+  selectedIds.value = selection.map(item => item.id)
+}
+
+// 处理批量操作
+const handleBatchOperation = (action: string) => {
+  if (selectedIds.value.length === 0) {
+    ElMessage.warning('请至少选择一条记录')
+    return
+  }
+
+  let confirmMsg = ''
+  let actionValue: number | undefined
+
+  if (action === 'online') {
+    confirmMsg = '确定要将选中的商品批量上架吗？'
+    actionValue = 1
+  } else if (action === 'offline') {
+    confirmMsg = '确定要将选中的商品批量下架吗？'
+    actionValue = 0
+  } else if (action === 'delete') {
+    confirmMsg = '确定要批量删除选中的商品吗？这个操作不可恢复！'
+  }
+
+  ElMessageBox.confirm(confirmMsg, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      const actionType = action === 'delete' ? 'delete' : 'status'
+      const res = await batchOperateProducts({
+        ids: selectedIds.value,
+        action: actionType,
+        value: actionValue
+      }) as { code: number, message: string }
+
+      if (res.code === 200) {
+        ElMessage.success('操作成功')
+        fetchProductList()
+      } else {
+        ElMessage.error(res.message || '操作失败')
+      }
+    } catch (error) {
+      console.error('批量操作失败', error)
+      ElMessage.error('操作失败')
+    }
+  }).catch(() => {
+    // 用户取消操作
+  })
+}
+
+// 更改商品状态
+const handleStatusChange = (row: Product) => {
+  const status = row.status === 1 ? 0 : 1
+  const statusText = status === 1 ? '上架' : '下架'
+
+  ElMessageBox.confirm(`确认要${statusText}该商品吗？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      const res = await updateProductStatus(row.id, status) as { code: number, message: string }
+
+      if (res.code === 200) {
+        ElMessage.success(`${statusText}成功`)
+        fetchProductList()
+      } else {
+        ElMessage.error(res.message || `${statusText}失败`)
+      }
+    } catch (error) {
+      console.error(`${statusText}失败`, error)
+      ElMessage.error(`${statusText}失败`)
+    }
+  }).catch(() => {
+    // 用户取消操作
+  })
+}
+
+// 删除商品
+const handleDelete = (row: Product) => {
+  ElMessageBox.confirm('确认删除该商品吗？此操作不可恢复！', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      const res = await deleteProduct(row.id) as { code: number, message: string }
+
+      if (res.code === 200) {
+        ElMessage.success('删除成功')
+        fetchProductList()
+      } else {
+        ElMessage.error(res.message || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除失败', error)
+      ElMessage.error('删除失败')
+    }
+  }).catch(() => {
+    // 用户取消操作
+  })
+}
+
+// 新增商品
+const handleAdd = () => {
+  router.push('/products/add')
+}
+
+// 编辑商品
+const handleEdit = (row: Product) => {
+  router.push(`/products/edit/${row.id}`)
+}
+
+// 处理分页大小变化
+const handleSizeChange = (size: number) => {
+  queryParams.pageSize = size
+  fetchProductList()
+}
+
+// 处理页码变化
+const handleCurrentChange = (page: number) => {
+  queryParams.page = page
+  fetchProductList()
+}
+</script>
+
+<style scoped>
+.product-list-container {
+  padding: 20px;
+}
+
+.filter-container,
+.table-container {
+  margin-bottom: 20px;
+}
+
+.operation-container {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.price {
+  color: #f56c6c;
+  font-weight: bold;
+}
+</style>
