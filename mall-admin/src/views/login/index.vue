@@ -92,27 +92,31 @@ const handleLogin = async () => {
 }
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .login-container {
   width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f2f5;
+}
 
-  .login-card {
-    width: 400px;
-    border-radius: 8px;
+.login-card {
+  width: 400px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
 
-    .title {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 30px;
-      color: $primary-color;
-    }
+.title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: #409EFF;
+}
 
-    .login-form {
-      .login-button {
-        width: 100%;
-      }
-    }
-  }
+.login-button {
+  width: 100%;
 }
 </style>

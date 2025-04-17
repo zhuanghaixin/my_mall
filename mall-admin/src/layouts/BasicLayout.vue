@@ -39,60 +39,60 @@ import { ArrowDown } from '@element-plus/icons-vue'
 // BasicLayout组件逻辑待开发
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .basic-layout {
   display: flex;
   height: 100vh;
   overflow: hidden;
-
-  .sidebar {
-    width: v-bind('$sidebar-width');
-    height: 100%;
-    background-color: #304156;
-    transition: width 0.3s;
-
-    .logo {
-      height: 60px;
-      line-height: 60px;
-      text-align: center;
-      color: #fff;
-      font-size: 16px;
-      overflow: hidden;
-    }
-  }
-
-  .main-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-
-    .header {
-      height: v-bind('$header-height');
-      padding: 0 20px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      border-bottom: 1px solid #eee;
-
-      .right-menu {
-        display: flex;
-        align-items: center;
-
-        .user-dropdown {
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-        }
-      }
-    }
-
-    .app-main {
-      flex: 1;
-      padding: 20px;
-      overflow: auto;
-      background-color: #f0f2f5;
-    }
-  }
 }
-</style> 
+
+.sidebar {
+  width: 210px;
+  height: 100%;
+  background-color: #304156;
+  transition: width 0.3s;
+}
+
+.logo {
+  height: 60px;
+  line-height: 60px;
+  text-align: center;
+  color: #fff;
+  font-size: 16px;
+  overflow: hidden;
+}
+
+.main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  height: 60px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  border-bottom: 1px solid #eee;
+}
+
+.right-menu {
+  display: flex;
+  align-items: center;
+}
+
+.user-dropdown {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.app-main {
+  flex: 1;
+  padding: 20px;
+  overflow: auto;
+  background-color: #f0f2f5;
+}
+</style>

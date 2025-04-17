@@ -14,27 +14,25 @@
 // 404组件逻辑
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .not-found {
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   text-align: center;
-  
-  .not-found-content {
-    h1 {
-      font-size: 100px;
-      font-weight: bold;
-      color: $primary-color;
-      margin-bottom: 20px;
-    }
-    
-    .info {
-      font-size: 18px;
-      color: $text-color-regular;
-      margin-bottom: 20px;
-    }
-  }
 }
-</style> 
+
+.not-found-content h1 {
+  font-size: 100px;
+  font-weight: bold;
+  color: #409EFF;
+  margin-bottom: 20px;
+}
+
+.not-found-content .info {
+  font-size: 18px;
+  color: #606266;
+  margin-bottom: 20px;
+}
+</style>
