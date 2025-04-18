@@ -5,6 +5,7 @@ const app = require('./app');
 const logger = require('./utils/logger');
 const { connectToDatabase } = require('./db');
 const { createInitialAdmin } = require('./controllers/adminController');
+const { initAllSeedData } = require('./utils/seedData');
 
 // 打印环境变量以进行调试
 logger.debug('数据库配置:', {
@@ -22,6 +23,9 @@ connectToDatabase()
     .then(async () => {
         // 创建初始管理员账号
         await createInitialAdmin();
+
+        // 初始化种子数据
+        await initAllSeedData();
 
         // 启动服务器
         app.listen(PORT, () => {

@@ -150,11 +150,16 @@ exports.getCategoryList = catchAsync(async (req, res) => {
     }
 
     // 获取所有分类
+    // 使用 Sequelize 的 findAll 方法查询分类数据
+    // where: 包含查询条件(关键词搜索和状态筛选)
+    // order: 指定排序规则
+    //   - 首先按 sort 字段升序排序(ASC)
+    //   - 当 sort 相同时按 id 升序排序(ASC)
     const categories = await Category.findAll({
         where,
         order: [
-            ['sort', 'ASC'],
-            ['id', 'ASC']
+            ['sort', 'ASC'],  // 优先按排序字段升序
+            ['id', 'ASC']     // 其次按ID升序  
         ]
     });
 

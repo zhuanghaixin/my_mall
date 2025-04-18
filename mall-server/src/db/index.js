@@ -64,16 +64,9 @@ const connectToDatabase = async () => {
 
             // 开发环境下同步模型 - 采用更安全的方式
             if (process.env.NODE_ENV === 'development') {
-                try {
-                    // 尝试用force模式重建表结构
-                    await sequelize.sync({ force: true });
-                    logger.info('数据库模型同步完成 (force)');
-                } catch (syncError) {
-                    logger.warn('强制同步失败，尝试使用alter模式:', syncError.message);
-                    // 如果force失败，尝试alter模式
-                    await sequelize.sync({ alter: true });
-                    logger.info('数据库模型同步完成 (alter)');
-                }
+                // 使用alter模式更新表结构，但保留数据
+                await sequelize.sync({ alter: true });
+                logger.info('数据库模型同步完成 (alter)');
             }
 
             return sequelize;
