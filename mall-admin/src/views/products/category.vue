@@ -1,5 +1,24 @@
 <template>
     <div class="product-category">
+        <!-- 搜索区域 -->
+        <el-card class="filter-container" style="margin-bottom: 20px">
+            <el-form :inline="true" :model="queryParams">
+                <el-form-item label="分类名称">
+                    <el-input v-model="queryParams.keyword" placeholder="请输入分类名称" clearable></el-input>
+                </el-form-item>
+                <el-form-item label="状态">
+                    <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
+                        <el-option :value="1" label="启用"></el-option>
+                        <el-option :value="0" label="禁用"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="handleSearch">搜索</el-button>
+                    <el-button @click="resetQuery">重置</el-button>
+                </el-form-item>
+            </el-form>
+        </el-card>
+
         <el-card class="box-card">
             <template #header>
                 <div class="card-header">
@@ -8,7 +27,7 @@
                 </div>
             </template>
 
-            <el-table :data="categoryList" row-key="id" border default-expand-all
+            <el-table v-loading="loading" :data="categoryList" row-key="id" border default-expand-all
                 :tree-props="{ children: 'children' }">
                 <el-table-column prop="name" label="分类名称" width="250"></el-table-column>
                 <el-table-column prop="level" label="层级" width="100">
@@ -40,7 +59,7 @@
                 <el-form-item label="分类名称" prop="name">
                     <el-input v-model="categoryForm.name" placeholder="请输入分类名称"></el-input>
                 </el-form-item>
-                <el-form-item label="父级分类" v-if="dialogType === 'add' && !categoryForm.parent_id">
+                <el-form-item label="父级分类" v-if="dialogType === 'add'">
                     <el-cascader v-model="selectedParent" :options="parentOptions"
                         :props="{ checkStrictly: true, value: 'id', label: 'name' }" clearable placeholder="请选择父级分类"
                         @change="handleParentChange"></el-cascader>
@@ -57,14 +76,14 @@
             </el-form>
             <template #footer>
                 <el-button @click="dialogVisible = false">取 消</el-button>
-                <el-button type="primary" @click="submitCategory">确 定</el-button>
+                <el-button type="primary" @click="submitCategory" :loading="submitLoading">确 定</el-button>
             </template>
         </el-dialog>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { getCategoryList, getCategoryDetail, createCategory, updateCategory as updateCategoryApi, deleteCategory as deleteCategoryApi, updateCategoryStatus } from '@/api/category'
@@ -80,9 +99,17 @@ interface Category {
     children?: Category[];
 }
 
+// 查询参数
+const queryParams = reactive({
+    keyword: '',
+    status: undefined as undefined | number
+});
+
 // 分类列表数据
 const categoryList = ref<Category[]>([]);
+const allCategories = ref<Category[]>([]); // 存储所有分类，用于搜索筛选
 const loading = ref(false);
+const submitLoading = ref(false);
 
 // 对话框相关
 const dialogVisible = ref(false);
@@ -127,7 +154,7 @@ const parentOptions = computed(() => {
         });
     }
 
-    return filterOptions(categoryList.value);
+    return filterOptions(allCategories.value);
 });
 
 // 获取层级文本
@@ -167,7 +194,7 @@ const handleParentChange = (value: any) => {
             return null;
         };
 
-        const parentCategory = findParent(value[value.length - 1], categoryList.value);
+        const parentCategory = findParent(value[value.length - 1], allCategories.value);
         if (parentCategory) {
             categoryForm.parent_id = parentCategory.id;
             categoryForm.level = parentCategory.level ? parentCategory.level + 1 : 1;
@@ -175,6 +202,71 @@ const handleParentChange = (value: any) => {
     } else {
         categoryForm.parent_id = 0;
         categoryForm.level = 0;
+    }
+};
+
+// 搜索
+const handleSearch = () => {
+    applyFilters();
+};
+
+// 重置搜索条件
+const resetQuery = () => {
+    queryParams.keyword = '';
+    queryParams.status = undefined;
+    applyFilters();
+};
+
+// 应用筛选条件
+const applyFilters = () => {
+    // 深拷贝所有分类，保持原始数据不变
+    const filterCategories = (categories: Category[]): Category[] => {
+        const result: Category[] = [];
+
+        for (const category of categories) {
+            // 检查当前分类是否满足筛选条件
+            const matchesKeyword = !queryParams.keyword ||
+                category.name.toLowerCase().includes(queryParams.keyword.toLowerCase());
+            const matchesStatus = queryParams.status === undefined ||
+                category.status === queryParams.status;
+
+            if (matchesKeyword && matchesStatus) {
+                // 当前分类满足条件，复制一份添加到结果中
+                const newCategory = { ...category };
+
+                // 如果有子分类，递归过滤
+                if (category.children && category.children.length > 0) {
+                    const filteredChildren = filterCategories(category.children);
+                    if (filteredChildren.length > 0) {
+                        newCategory.children = filteredChildren;
+                    } else {
+                        newCategory.children = [];
+                    }
+                }
+
+                result.push(newCategory);
+            } else if (category.children && category.children.length > 0) {
+                // 当前分类不满足条件，但其子分类可能满足
+                const filteredChildren = filterCategories(category.children);
+                if (filteredChildren.length > 0) {
+                    // 如果子分类中有满足条件的，也将当前分类加入结果
+                    result.push({
+                        ...category,
+                        children: filteredChildren
+                    });
+                }
+            }
+        }
+
+        return result;
+    };
+
+    if (!queryParams.keyword && queryParams.status === undefined) {
+        // 如果没有筛选条件，直接显示所有分类
+        categoryList.value = JSON.parse(JSON.stringify(allCategories.value));
+    } else {
+        // 应用筛选
+        categoryList.value = filterCategories(JSON.parse(JSON.stringify(allCategories.value)));
     }
 };
 
@@ -202,15 +294,18 @@ const addSubCategory = (row: Category) => {
 const editCategory = async (row: Category) => {
     resetForm();
     dialogType.value = 'edit';
+    loading.value = true;
     try {
         const res = await getCategoryDetail(row.id);
-        if (res.data && res.data.data) {
-            Object.assign(categoryForm, res.data.data);
+        if (res && res.data) {
+            Object.assign(categoryForm, res.data);
+            dialogVisible.value = true;
         }
-        dialogVisible.value = true;
     } catch (error) {
         ElMessage.error('获取分类详情失败');
         console.error('获取分类详情失败:', error);
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -225,6 +320,7 @@ const deleteCategory = (row: Category) => {
             type: 'warning'
         }
     ).then(async () => {
+        loading.value = true;
         try {
             await deleteCategoryApi(row.id);
             ElMessage({
@@ -236,6 +332,8 @@ const deleteCategory = (row: Category) => {
         } catch (error) {
             ElMessage.error('删除失败');
             console.error('删除失败:', error);
+        } finally {
+            loading.value = false;
         }
     }).catch(() => {
         // 取消删除
@@ -244,17 +342,22 @@ const deleteCategory = (row: Category) => {
 
 // 更新分类状态
 const handleStatusChange = async (row: Category) => {
+    loading.value = true;
     try {
         await updateCategoryStatus(row.id, row.status);
         ElMessage({
             type: 'success',
             message: `${row.name} 状态已${row.status === 1 ? '启用' : '禁用'}`
         });
+        // 状态更新成功后重新获取列表，确保数据一致性
+        await fetchCategoryList();
     } catch (error) {
         // 恢复之前的状态
         row.status = row.status === 1 ? 0 : 1;
         ElMessage.error('状态更新失败');
         console.error('状态更新失败:', error);
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -262,6 +365,7 @@ const handleStatusChange = async (row: Category) => {
 const submitCategory = () => {
     categoryFormRef.value?.validate(async (valid) => {
         if (valid) {
+            submitLoading.value = true;
             try {
                 if (dialogType.value === 'add') {
                     // 调用添加API
@@ -298,10 +402,12 @@ const submitCategory = () => {
 
                 // 关闭对话框并刷新列表
                 dialogVisible.value = false;
-                fetchCategoryList();
+                await fetchCategoryList(); // 等待获取最新数据
             } catch (error) {
                 ElMessage.error(dialogType.value === 'add' ? '添加失败' : '更新失败');
                 console.error(`${dialogType.value === 'add' ? '添加' : '更新'}失败:`, error);
+            } finally {
+                submitLoading.value = false;
             }
         }
     });
@@ -328,8 +434,11 @@ const fetchCategoryList = async () => {
     loading.value = true;
     try {
         const res = await getCategoryList();
-        if (res.data && res.data.data) {
-            categoryList.value = res.data.data;
+        if (res && res.data) {
+            // 存储所有分类用于筛选和父级分类选择
+            allCategories.value = res.data;
+            // 应用当前的筛选条件
+            applyFilters();
         }
     } catch (error) {
         ElMessage.error('获取分类列表失败');
@@ -354,6 +463,10 @@ onMounted(() => {
         display: flex;
         justify-content: space-between;
         align-items: center;
+    }
+
+    .filter-container {
+        margin-bottom: 20px;
     }
 
     .el-tag {
