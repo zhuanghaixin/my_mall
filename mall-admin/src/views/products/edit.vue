@@ -1,14 +1,8 @@
 <template>
   <div class="product-edit-container">
     <el-page-header :icon="null" :title="isEdit ? '编辑商品' : '新增商品'" @back="goBack" />
-    
-    <el-form
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      label-width="120px"
-      class="product-form"
-    >
+
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" class="product-form">
       <!-- 基本信息 -->
       <el-card class="form-card">
         <template #header>
@@ -16,82 +10,55 @@
             <h3>基本信息</h3>
           </div>
         </template>
-        
+
         <el-form-item label="商品名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入商品名称" />
         </el-form-item>
-        
+
         <el-form-item label="商品分类" prop="category_id">
           <el-select v-model="form.category_id" placeholder="请选择商品分类">
-            <el-option
-              v-for="item in categoryOptions"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
-            />
+            <el-option v-for="item in categoryOptions" :key="item.id" :label="item.fullPath || item.name"
+              :value="item.id" />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="商品价格" prop="price">
-          <el-input-number
-            v-model="form.price"
-            :min="0"
-            :precision="2"
-            :step="0.1"
-            controls-position="right"
-          />
+          <el-input-number v-model="form.price" :min="0" :precision="2" :step="0.1" controls-position="right" />
           <span class="form-item-unit">元</span>
         </el-form-item>
-        
+
         <el-form-item label="原价" prop="original_price">
-          <el-input-number
-            v-model="form.original_price"
-            :min="0"
-            :precision="2"
-            :step="0.1"
-            controls-position="right"
-          />
+          <el-input-number v-model="form.original_price" :min="0" :precision="2" :step="0.1"
+            controls-position="right" />
           <span class="form-item-unit">元</span>
         </el-form-item>
-        
+
         <el-form-item label="商品库存" prop="stock">
-          <el-input-number
-            v-model="form.stock"
-            :min="0"
-            :precision="0"
-            :step="1"
-            controls-position="right"
-          />
+          <el-input-number v-model="form.stock" :min="0" :precision="0" :step="1" controls-position="right" />
           <span class="form-item-unit">件</span>
         </el-form-item>
-        
+
         <el-form-item label="商品状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio :label="1">上架</el-radio>
             <el-radio :label="0">下架</el-radio>
           </el-radio-group>
         </el-form-item>
-        
+
         <el-form-item label="商品图片" prop="images">
-          <el-upload
-            v-model:file-list="fileList"
-            action="#"
-            list-type="picture-card"
-            :http-request="uploadImage"
-            :limit="5"
-            :on-preview="handlePicturePreview"
-            :on-remove="handleRemove"
-            :before-upload="beforeUpload"
-          >
-            <el-icon><Plus /></el-icon>
+          <el-upload v-model:file-list="fileList" action="#" list-type="picture-card" :http-request="uploadImage"
+            :limit="5" :on-preview="handlePicturePreview" :on-remove="handleRemove" :before-upload="beforeUpload">
+            <el-icon>
+              <Plus />
+            </el-icon>
           </el-upload>
-          
+
           <el-dialog v-model="dialogVisible">
             <img w-full :src="dialogImageUrl" alt="Preview Image" />
           </el-dialog>
         </el-form-item>
       </el-card>
-      
+
       <!-- 商品详情 -->
       <el-card class="form-card">
         <template #header>
@@ -99,82 +66,64 @@
             <h3>商品详情</h3>
           </div>
         </template>
-        
+
         <el-form-item label="商品描述" prop="description">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入商品简短描述"
-          />
+          <el-input v-model="form.description" type="textarea" :rows="4" placeholder="请输入商品简短描述" />
         </el-form-item>
-        
+
         <el-form-item label="商品详情" prop="detail">
-          <el-input
-            v-model="form.detail"
-            type="textarea"
-            :rows="8"
-            placeholder="请输入商品详细介绍"
-          />
+          <el-input v-model="form.detail" type="textarea" :rows="8" placeholder="请输入商品详细介绍" />
         </el-form-item>
-        
+
         <!-- 商品规格 -->
         <div class="spec-section">
           <div class="spec-header">
             <h4>商品规格</h4>
             <el-button type="primary" size="small" @click="addSpec">
-              <el-icon><Plus /></el-icon>添加规格
+              <el-icon>
+                <Plus />
+              </el-icon>添加规格
             </el-button>
           </div>
-          
+
           <el-table :data="specs" border>
             <el-table-column label="规格名称" min-width="150">
               <template #default="{ row }">
                 <el-input v-model="row.name" placeholder="如: 颜色" />
               </template>
             </el-table-column>
-            
+
             <el-table-column label="规格值" min-width="150">
               <template #default="{ row }">
                 <el-input v-model="row.value" placeholder="如: 红色" />
               </template>
             </el-table-column>
-            
+
             <el-table-column label="价格" min-width="150">
               <template #default="{ row }">
-                <el-input-number
-                  v-model="row.price"
-                  :min="0"
-                  :precision="2"
-                  :step="0.1"
-                  controls-position="right"
-                />
+                <el-input-number v-model="row.price" :min="0" :precision="2" :step="0.1" controls-position="right" />
               </template>
             </el-table-column>
-            
+
             <el-table-column label="库存" min-width="150">
               <template #default="{ row }">
-                <el-input-number
-                  v-model="row.stock"
-                  :min="0"
-                  :precision="0"
-                  :step="1"
-                  controls-position="right"
-                />
+                <el-input-number v-model="row.stock" :min="0" :precision="0" :step="1" controls-position="right" />
               </template>
             </el-table-column>
-            
+
             <el-table-column label="操作" width="120">
               <template #default="{ $index }">
                 <el-button type="danger" link @click="removeSpec($index)">
-                  <el-icon><Delete /></el-icon>删除
+                  <el-icon>
+                    <Delete />
+                  </el-icon>删除
                 </el-button>
               </template>
             </el-table-column>
           </el-table>
         </div>
       </el-card>
-      
+
       <!-- 表单按钮 -->
       <div class="form-actions">
         <el-button @click="goBack">取消</el-button>
@@ -197,6 +146,7 @@ import {
   getCategoryList
 } from '@/api/product'
 import type { Product, Category, ProductSpec } from '@/types/product'
+import type { ApiResponse } from '@/api/request'
 
 const route = useRoute()
 const router = useRouter()
@@ -244,7 +194,7 @@ const dialogVisible = ref(false)
 // 初始化数据
 onMounted(async () => {
   await fetchCategoryList()
-  
+
   if (isEdit.value) {
     await fetchProductDetail()
   }
@@ -253,14 +203,11 @@ onMounted(async () => {
 // 获取分类列表
 const fetchCategoryList = async () => {
   try {
-    const res = await getCategoryList() as {
-      code: number
-      message: string
-      data: Category[]
-    }
-    
+    const res = await getCategoryList() as ApiResponse<Category[]>
+
     if (res.code === 200) {
-      categoryOptions.value = res.data
+      // 将树形分类列表扁平化
+      categoryOptions.value = flattenCategoryTree(res.data)
     }
   } catch (error) {
     console.error('获取分类列表失败', error)
@@ -268,30 +215,57 @@ const fetchCategoryList = async () => {
   }
 }
 
+// 将树形分类数据扁平化
+const flattenCategoryTree = (tree: Category[], result: Category[] = [], parentPath: string[] = []) => {
+  tree.forEach(node => {
+    // 创建新的分类对象，避免修改原始对象
+    const category = { ...node }
+
+    // 构建当前分类的路径
+    const currentPath = [...parentPath, category.name]
+
+    // 添加完整路径属性，用于在选择器中显示
+    category.fullPath = currentPath.join(' / ')
+
+    // 根据层级添加缩进，使分类名称在下拉列表中能够直观地表示层级关系
+    if (category.level && category.level > 0) {
+      category.name = `${'　'.repeat(category.level)} ${category.name}`
+    }
+
+    // 添加到结果数组
+    result.push(category)
+
+    // 递归处理子分类，传递当前路径
+    if (category.children && category.children.length > 0) {
+      flattenCategoryTree(category.children, result, currentPath)
+      // 删除children属性，避免在下拉列表中显示为对象
+      delete category.children
+    }
+  })
+
+  return result
+}
+
 // 获取商品详情
 const fetchProductDetail = async () => {
   try {
-    const res = await getProductDetail(productId.value) as {
-      code: number
-      message: string
-      data: Product
-    }
-    
+    const res = await getProductDetail(productId.value) as ApiResponse<Product>
+
     if (res.code === 200) {
       const productData = res.data
-      
+
       // 填充表单数据
       Object.keys(form).forEach(key => {
         if (key !== 'images_list' && key in productData) {
           form[key as keyof Product] = productData[key as keyof Product]
         }
       })
-      
+
       // 处理图片列表
       if (productData.images) {
         const imagesList = productData.images.split(',')
         form.images_list = imagesList
-        
+
         // 设置上传文件列表
         fileList.value = imagesList.map((url, index) => {
           return {
@@ -299,13 +273,13 @@ const fetchProductDetail = async () => {
             url
           }
         })
-        
+
         // 设置主图
         if (!form.main_image && imagesList.length > 0) {
           form.main_image = imagesList[0]
         }
       }
-      
+
       // TODO: 获取商品规格信息（需要后端接口支持）
     } else {
       ElMessage.error(res.message || '获取商品详情失败')
@@ -320,46 +294,42 @@ const fetchProductDetail = async () => {
 const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   const isImage = file.type.startsWith('image/')
   const isLt2M = file.size / 1024 / 1024 < 2
-  
+
   if (!isImage) {
     ElMessage.error('只能上传图片文件!')
     return false
   }
-  
+
   if (!isLt2M) {
     ElMessage.error('图片大小不能超过 2MB!')
     return false
   }
-  
+
   return true
 }
 
 // 自定义上传图片
 const uploadImage = async (options: any) => {
   try {
-    const res = await uploadImageApi(options.file) as {
-      code: number
-      message: string
-      data: { url: string }
-    }
-    
+    const res = await uploadImageApi(options.file) as ApiResponse<{ url: string }>
+
     if (res.code === 200) {
       const url = res.data.url
-      
+
       // 如果没有主图，将第一张图设为主图
       if (!form.main_image) {
         form.main_image = url
       }
-      
+
       // 添加到图片列表
       if (!form.images_list) {
         form.images_list = []
       }
       form.images_list.push(url)
-      
+
       // 更新images字段（逗号分隔的字符串）
       form.images = form.images_list.join(',')
-      
+
       // 上传成功回调
       options.onSuccess(url)
     } else {
@@ -384,7 +354,7 @@ const handleRemove = (file: UploadUserFile, fileList: UploadUserFile[]) => {
   // 更新图片列表
   form.images_list = fileList.map(file => file.url || '')
   form.images = form.images_list.join(',')
-  
+
   // 如果移除的是主图，则重新设置主图
   if (file.url === form.main_image) {
     form.main_image = form.images_list.length > 0 ? form.images_list[0] : ''
@@ -409,23 +379,23 @@ const removeSpec = (index: number) => {
 // 提交表单
 const submitForm = async () => {
   if (!formRef.value) return
-  
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
         // 准备提交的数据
         const submitData = { ...form }
         delete submitData.images_list // 移除辅助字段
-        
+
         // TODO: 处理规格数据（需要后端接口支持）
-        
+
         let res
         if (isEdit.value) {
           res = await updateProduct(productId.value, submitData) as { code: number, message: string }
         } else {
           res = await addProduct(submitData) as { code: number, message: string }
         }
-        
+
         if (res.code === 200) {
           ElMessage.success(isEdit.value ? '商品更新成功' : '商品添加成功')
           goBack()
@@ -502,4 +472,4 @@ const goBack = () => {
   justify-content: center;
   gap: 20px;
 }
-</style> 
+</style>
