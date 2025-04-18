@@ -6,6 +6,7 @@ const express = require('express');
 const adminRoutes = require('./adminRoutes');
 const goodsRoutes = require('./goodsRoutes');
 const categoryRoutes = require('./categoryRoutes');
+const uploadRoutes = require('./uploadRoutes');
 
 const router = express.Router();
 
@@ -48,5 +49,6 @@ router.get('/health', (req, res) => {
 router.use('/admin', adminRoutes);
 router.use('/admin/goods', goodsRoutes);
 router.use('/admin/category', categoryRoutes);
+router.use('/upload', uploadRoutes);
 
 module.exports = router; 
