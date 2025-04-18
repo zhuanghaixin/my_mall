@@ -111,9 +111,9 @@ import {
   getProductList,
   updateProductStatus,
   deleteProduct,
-  batchOperateProducts,
-  getCategoryList
+  batchOperateProducts
 } from '@/api/product'
+import { getCategoryList } from '@/api/category'
 import type { Product, Category, PaginationData, ProductQueryParams } from '@/types/product'
 
 const router = useRouter()
@@ -202,52 +202,53 @@ const handleSelectionChange = (selection: Product[]) => {
   selectedIds.value = selection.map(item => item.id)
 }
 
+// API响应类型
+interface ApiResponse<T = any> {
+  code: number
+  message: string
+  data: T
+}
+
 // 处理批量操作
-const handleBatchOperation = (action: string) => {
+const handleBatchOperation = async (operation: string) => {
   if (selectedIds.value.length === 0) {
-    ElMessage.warning('请至少选择一条记录')
+    ElMessage.warning('请至少选择一项')
     return
   }
 
-  let confirmMsg = ''
-  let actionValue: number | undefined
-
-  if (action === 'online') {
-    confirmMsg = '确定要将选中的商品批量上架吗？'
-    actionValue = 1
-  } else if (action === 'offline') {
-    confirmMsg = '确定要将选中的商品批量下架吗？'
-    actionValue = 0
-  } else if (action === 'delete') {
-    confirmMsg = '确定要批量删除选中的商品吗？这个操作不可恢复！'
+  let confirmMessage = '确定要批量操作所选商品吗？'
+  if (operation === 'delete') {
+    confirmMessage = '确定要删除所选商品吗？此操作不可逆！'
+  } else if (operation === 'online') {
+    confirmMessage = '确定要上架所选商品吗？'
+  } else if (operation === 'offline') {
+    confirmMessage = '确定要下架所选商品吗？'
   }
 
-  ElMessageBox.confirm(confirmMsg, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    try {
-      const actionType = action === 'delete' ? 'delete' : 'status'
-      const res = await batchOperateProducts({
-        ids: selectedIds.value,
-        action: actionType,
-        value: actionValue
-      }) as { code: number, message: string }
+  try {
+    await ElMessageBox.confirm(confirmMessage, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
 
-      if (res.code === 200) {
-        ElMessage.success('操作成功')
-        fetchProductList()
-      } else {
-        ElMessage.error(res.message || '操作失败')
-      }
-    } catch (error) {
-      console.error('批量操作失败', error)
-      ElMessage.error('操作失败')
+    loading.value = true
+    const res = await batchOperateProducts({
+      ids: selectedIds.value,
+      operation: operation
+    }) as ApiResponse
+
+    if (res.code === 200) {
+      ElMessage.success(res.message || '批量操作成功')
+      fetchProductList()
+    } else {
+      ElMessage.error(res.message || '批量操作失败')
     }
-  }).catch(() => {
-    // 用户取消操作
-  })
+  } catch (error) {
+    console.error('批量操作失败', error)
+  } finally {
+    loading.value = false
+  }
 }
 
 // 更改商品状态

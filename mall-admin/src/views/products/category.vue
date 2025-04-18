@@ -40,7 +40,7 @@
                 <el-form-item label="分类名称" prop="name">
                     <el-input v-model="categoryForm.name" placeholder="请输入分类名称"></el-input>
                 </el-form-item>
-                <el-form-item label="父级分类" v-if="dialogType === 'add' && !categoryForm.parentId">
+                <el-form-item label="父级分类" v-if="dialogType === 'add' && !categoryForm.parent_id">
                     <el-cascader v-model="selectedParent" :options="parentOptions"
                         :props="{ checkStrictly: true, value: 'id', label: 'name' }" clearable placeholder="请选择父级分类"
                         @change="handleParentChange"></el-cascader>
@@ -67,91 +67,22 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
+import { getCategoryList, getCategoryDetail, createCategory, updateCategory as updateCategoryApi, deleteCategory as deleteCategoryApi, updateCategoryStatus } from '@/api/category'
 
 // 分类数据接口
 interface Category {
     id: number;
     name: string;
-    parentId: number | null;
-    level: number;
+    parent_id: number;
+    level?: number;
     sort: number;
     status: number;
     children?: Category[];
 }
 
 // 分类列表数据
-const categoryList = ref<Category[]>([
-    {
-        id: 1,
-        name: '服装',
-        parentId: null,
-        level: 0,
-        sort: 1,
-        status: 1,
-        children: [
-            {
-                id: 3,
-                name: '男装',
-                parentId: 1,
-                level: 1,
-                sort: 1,
-                status: 1,
-                children: [
-                    {
-                        id: 7,
-                        name: 'T恤',
-                        parentId: 3,
-                        level: 2,
-                        sort: 1,
-                        status: 1
-                    },
-                    {
-                        id: 8,
-                        name: '衬衫',
-                        parentId: 3,
-                        level: 2,
-                        sort: 2,
-                        status: 1
-                    }
-                ]
-            },
-            {
-                id: 4,
-                name: '女装',
-                parentId: 1,
-                level: 1,
-                sort: 2,
-                status: 1
-            }
-        ]
-    },
-    {
-        id: 2,
-        name: '电子产品',
-        parentId: null,
-        level: 0,
-        sort: 2,
-        status: 1,
-        children: [
-            {
-                id: 5,
-                name: '手机',
-                parentId: 2,
-                level: 1,
-                sort: 1,
-                status: 1
-            },
-            {
-                id: 6,
-                name: '电脑',
-                parentId: 2,
-                level: 1,
-                sort: 2,
-                status: 1
-            }
-        ]
-    }
-]);
+const categoryList = ref<Category[]>([]);
+const loading = ref(false);
 
 // 对话框相关
 const dialogVisible = ref(false);
@@ -159,7 +90,7 @@ const dialogType = ref<'add' | 'edit'>('add');
 const categoryFormRef = ref<FormInstance>();
 const categoryForm = reactive<Partial<Category>>({
     name: '',
-    parentId: null,
+    parent_id: 0,
     level: 0,
     sort: 0,
     status: 1
@@ -185,10 +116,10 @@ const parentOptions = computed(() => {
             const newItem: any = {
                 id: item.id,
                 name: item.name,
-                level: item.level
+                level: item.level || 0
             };
 
-            if (item.children && item.level < 1) {
+            if (item.children && item.level !== undefined && item.level < 1) {
                 newItem.children = filterOptions(item.children);
             }
 
@@ -238,11 +169,11 @@ const handleParentChange = (value: any) => {
 
         const parentCategory = findParent(value[value.length - 1], categoryList.value);
         if (parentCategory) {
-            categoryForm.parentId = parentCategory.id;
-            categoryForm.level = parentCategory.level + 1;
+            categoryForm.parent_id = parentCategory.id;
+            categoryForm.level = parentCategory.level ? parentCategory.level + 1 : 1;
         }
     } else {
-        categoryForm.parentId = null;
+        categoryForm.parent_id = 0;
         categoryForm.level = 0;
     }
 };
@@ -251,7 +182,7 @@ const handleParentChange = (value: any) => {
 const addCategory = () => {
     resetForm();
     dialogType.value = 'add';
-    categoryForm.parentId = null;
+    categoryForm.parent_id = 0;
     categoryForm.level = 0;
     selectedParent.value = [];
     dialogVisible.value = true;
@@ -261,18 +192,26 @@ const addCategory = () => {
 const addSubCategory = (row: Category) => {
     resetForm();
     dialogType.value = 'add';
-    categoryForm.parentId = row.id;
-    categoryForm.level = row.level + 1;
+    categoryForm.parent_id = row.id;
+    categoryForm.level = row.level ? row.level + 1 : 1;
     selectedParent.value = [row.id];
     dialogVisible.value = true;
 };
 
 // 编辑分类
-const editCategory = (row: Category) => {
+const editCategory = async (row: Category) => {
     resetForm();
     dialogType.value = 'edit';
-    Object.assign(categoryForm, row);
-    dialogVisible.value = true;
+    try {
+        const res = await getCategoryDetail(row.id);
+        if (res.data && res.data.data) {
+            Object.assign(categoryForm, res.data.data);
+        }
+        dialogVisible.value = true;
+    } catch (error) {
+        ElMessage.error('获取分类详情失败');
+        console.error('获取分类详情失败:', error);
+    }
 };
 
 // 删除分类
@@ -285,161 +224,96 @@ const deleteCategory = (row: Category) => {
             cancelButtonText: '取消',
             type: 'warning'
         }
-    ).then(() => {
-        // 模拟删除操作
-        // 实际项目中应调用API删除
-        removeCategory(row.id);
-        ElMessage({
-            type: 'success',
-            message: '删除成功'
-        });
+    ).then(async () => {
+        try {
+            await deleteCategoryApi(row.id);
+            ElMessage({
+                type: 'success',
+                message: '删除成功'
+            });
+            // 重新加载分类列表
+            fetchCategoryList();
+        } catch (error) {
+            ElMessage.error('删除失败');
+            console.error('删除失败:', error);
+        }
     }).catch(() => {
         // 取消删除
     });
 };
 
-// 递归删除分类
-const removeCategory = (id: number) => {
-    const removeFromList = (list: Category[]) => {
-        const index = list.findIndex(item => item.id === id);
-        if (index !== -1) {
-            list.splice(index, 1);
-            return true;
-        }
-
-        for (let i = 0; i < list.length; i++) {
-            if (list[i].children && list[i].children!.length > 0) {
-                if (removeFromList(list[i].children!)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    };
-
-    removeFromList(categoryList.value);
-};
-
 // 更新分类状态
-const handleStatusChange = (row: Category) => {
-    // 实际项目中应调用API更新状态
-    ElMessage({
-        type: 'success',
-        message: `${row.name} 状态已${row.status === 1 ? '启用' : '禁用'}`
-    });
+const handleStatusChange = async (row: Category) => {
+    try {
+        await updateCategoryStatus(row.id, row.status);
+        ElMessage({
+            type: 'success',
+            message: `${row.name} 状态已${row.status === 1 ? '启用' : '禁用'}`
+        });
+    } catch (error) {
+        // 恢复之前的状态
+        row.status = row.status === 1 ? 0 : 1;
+        ElMessage.error('状态更新失败');
+        console.error('状态更新失败:', error);
+    }
 };
 
 // 提交分类表单
 const submitCategory = () => {
-    categoryFormRef.value?.validate((valid) => {
+    categoryFormRef.value?.validate(async (valid) => {
         if (valid) {
-            if (dialogType.value === 'add') {
-                // 模拟添加操作，生成新ID
-                const newId = Math.max(...getAllIds(categoryList.value)) + 1;
-                const newCategory: Category = {
-                    id: newId,
-                    name: categoryForm.name || '',
-                    parentId: categoryForm.parentId || null,
-                    level: categoryForm.level || 0,
-                    sort: categoryForm.sort || 0,
-                    status: categoryForm.status || 1
-                };
+            try {
+                if (dialogType.value === 'add') {
+                    // 调用添加API
+                    await createCategory({
+                        name: categoryForm.name || '',
+                        parent_id: categoryForm.parent_id || 0,
+                        sort: categoryForm.sort || 0,
+                        status: categoryForm.status || 1
+                    });
 
-                if (categoryForm.parentId === null) {
-                    // 添加一级分类
-                    categoryList.value.push(newCategory);
+                    ElMessage({
+                        type: 'success',
+                        message: '添加成功'
+                    });
                 } else {
-                    // 添加子分类
-                    addChildCategory(categoryList.value, categoryForm.parentId as number, newCategory);
+                    // 调用更新API
+                    if (!categoryForm.id) {
+                        ElMessage.error('缺少分类ID');
+                        return;
+                    }
+
+                    await updateCategoryApi(categoryForm.id, {
+                        name: categoryForm.name,
+                        parent_id: categoryForm.parent_id || 0,
+                        sort: categoryForm.sort,
+                        status: categoryForm.status
+                    });
+
+                    ElMessage({
+                        type: 'success',
+                        message: '更新成功'
+                    });
                 }
 
-                ElMessage({
-                    type: 'success',
-                    message: '添加成功'
-                });
-            } else {
-                // 模拟编辑操作
-                updateCategory(categoryList.value, {
-                    id: categoryForm.id as number,
-                    name: categoryForm.name || '',
-                    parentId: categoryForm.parentId || null,
-                    level: categoryForm.level || 0,
-                    sort: categoryForm.sort || 0,
-                    status: categoryForm.status || 1
-                });
-                ElMessage({
-                    type: 'success',
-                    message: '更新成功'
-                });
+                // 关闭对话框并刷新列表
+                dialogVisible.value = false;
+                fetchCategoryList();
+            } catch (error) {
+                ElMessage.error(dialogType.value === 'add' ? '添加失败' : '更新失败');
+                console.error(`${dialogType.value === 'add' ? '添加' : '更新'}失败:`, error);
             }
-
-            dialogVisible.value = false;
         }
     });
-};
-
-// 获取所有分类ID
-const getAllIds = (categories: Category[]): number[] => {
-    let ids: number[] = [];
-
-    categories.forEach(category => {
-        ids.push(category.id);
-        if (category.children && category.children.length > 0) {
-            ids = ids.concat(getAllIds(category.children));
-        }
-    });
-
-    return ids;
-};
-
-// 添加子分类
-const addChildCategory = (categories: Category[], parentId: number, newCategory: Category) => {
-    for (const category of categories) {
-        if (category.id === parentId) {
-            if (!category.children) {
-                category.children = [];
-            }
-            category.children.push(newCategory);
-            return true;
-        }
-
-        if (category.children && category.children.length > 0) {
-            if (addChildCategory(category.children, parentId, newCategory)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-};
-
-// 更新分类
-const updateCategory = (categories: Category[], updatedCategory: Category) => {
-    for (let i = 0; i < categories.length; i++) {
-        if (categories[i].id === updatedCategory.id) {
-            categories[i].name = updatedCategory.name;
-            categories[i].sort = updatedCategory.sort;
-            categories[i].status = updatedCategory.status;
-            return true;
-        }
-
-        if (categories[i].children && categories[i].children!.length > 0) {
-            if (updateCategory(categories[i].children!, updatedCategory)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
 };
 
 // 重置表单
 const resetForm = () => {
     // 重置表单数据
     Object.assign(categoryForm, {
+        id: undefined,
         name: '',
-        parentId: null,
+        parent_id: 0,
         level: 0,
         sort: 0,
         status: 1
@@ -449,10 +323,25 @@ const resetForm = () => {
     categoryFormRef.value?.resetFields();
 };
 
+// 获取分类列表
+const fetchCategoryList = async () => {
+    loading.value = true;
+    try {
+        const res = await getCategoryList();
+        if (res.data && res.data.data) {
+            categoryList.value = res.data.data;
+        }
+    } catch (error) {
+        ElMessage.error('获取分类列表失败');
+        console.error('获取分类列表失败:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
 // 页面加载时获取分类列表
 onMounted(() => {
-    // 实际项目中应调用API获取分类列表
-    // 这里使用模拟数据
+    fetchCategoryList();
 });
 </script>
 

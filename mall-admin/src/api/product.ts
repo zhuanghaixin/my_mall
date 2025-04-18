@@ -75,8 +75,7 @@ export function updateProductStatus(id: number, status: number) {
  */
 export function batchOperateProducts(data: {
   ids: number[]
-  action: string // 'status' 或 'delete'
-  value?: number // 当action为'status'时传入状态值
+  operation: string // 'delete', 'online', 'offline'
 }) {
   return request({
     url: '/admin/goods/batch',
@@ -103,11 +102,11 @@ export function uploadImage(file: File) {
 }
 
 /**
- * 获取商品分类
+ * 获取商品分类 (改为使用category API)
  */
 export function getCategoryList() {
   return request({
-    url: '/admin/categories',
+    url: '/admin/category/list',
     method: 'get'
   })
 } 

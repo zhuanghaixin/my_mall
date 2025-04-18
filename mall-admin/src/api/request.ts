@@ -3,6 +3,13 @@ import { useUserStore } from '../stores/user'
 import router from '../router'
 import { ElMessage } from 'element-plus'
 
+// API响应类型
+export interface ApiResponse<T = any> {
+  code: number
+  message: string
+  data: T
+}
+
 // 创建axios实例
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api', // 从环境变量获取API基础URL
