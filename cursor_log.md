@@ -253,496 +253,80 @@ npm run dev
 - 旧版Node.js不支持某些现代JavaScript语法，需要进行兼容性调整
 - 在生产环境中，建议为应用程序创建专用的数据库用户而非使用root账号
 
-## 分析商城小程序项目架构
+## 修复商品分类管理功能
 
-### 会话日期和时间
-2023年9月20日
-
-### 会话的主要目的
-审查商城小程序项目的错误处理机制和后端架构
+### 主要目的
+优化商城管理后台的商品分类管理模块，解决多个UI和功能问题。
 
 ### 完成的主要任务
-- 分析了AppError类的实现
-- 检查了errorHandler中间件的工作流程
-- 探索了项目的总体架构设计
-- 研究了API接口文档和数据库设计
-- 审查了后端控制器和路由结构
+1. 修复状态选择器无法获取值的问题
+2. 解决层级显示错误问题
+3. 优化分类删除功能，增加父类删除确认提示
+4. 调整表格布局，确保表格占满容器
+5. 添加"新增子分类"功能按钮
+6. 优化后端API，支持级联删除分类
 
 ### 关键决策和解决方案
-- 项目采用统一的错误处理机制和响应格式
-- 使用Sequelize ORM管理数据库交互
-- 采用JWT进行用户认证
-
-### 使用的技术栈
-- 后端：Node.js, Express, Sequelize, MySQL
-- 前端：微信小程序原生框架, Vue 3, TypeScript, Element Plus
-- 其他：JWT认证, RESTful API设计
-
-### 修改的文件
-未进行文件修改，仅进行了代码审查和分析
-
-## 集成Swagger API文档功能
-
-### 会话日期和时间
-2023年9月21日
-
-### 会话的主要目的
-为mall-server项目集成Swagger文档功能，提供API在线文档和测试能力
-
-### 完成的主要任务
-1. 安装了Swagger相关依赖包
-2. 创建了Swagger配置文件
-3. 在Express应用中集成Swagger UI
-4. 为现有API添加了Swagger文档注释
-5. 创建了项目首页引导用户访问文档
-6. 配置了静态文件服务
-
-### 关键决策和解决方案
-- 使用swagger-jsdoc从代码注释自动生成API规范
-- 使用swagger-ui-express提供文档UI界面
-- 采用JSDoc风格注释为API添加文档
-- 创建了完整的API模型和示例数据
-- 配置了Bearer Token认证方式
-- 为每个接口提供了详细的请求和响应说明
-
-### 使用的技术栈
-- Node.js
-- Express
-- Swagger (OpenAPI 3.0)
-- JSDoc
-- HTML/CSS
-
-### 修改的文件
-- 新建：`mall-server/src/utils/swagger.js` - Swagger配置文件
-- 修改：`mall-server/src/app.js` - 集成Swagger UI
-- 修改：`mall-server/src/controllers/adminController.js` - 添加API文档注释
-- 修改：`mall-server/src/routes/adminRoutes.js` - 添加路由文档注释
-- 修改：`mall-server/src/routes/index.js` - 添加健康检查接口文档
-- 新建：`mall-server/public/index.html` - 创建项目首页
-- 创建：`mall-server/public/uploads/` - 上传文件目录
-- 修改：`mall-server/package.json` - 添加Swagger依赖
-
-### 访问方式
-在服务器启动后，可通过以下URL访问文档：
-- API文档界面：http://localhost:8080/api-docs
-- API规范JSON：http://localhost:8080/api-docs.json
-- 项目首页：http://localhost:8080/
-- 健康检查接口：http://localhost:8080/api/health
-
-## 配置管理员默认账号
-
-### 会话日期和时间
-2023年9月22日
-
-### 会话的主要目的
-为mall-server项目配置管理员默认账号，提供灵活的管理员账号设置方式
-
-### 完成的主要任务
-1. 分析了当前管理员账号的创建逻辑
-2. 使用环境变量配置默认管理员账号
-3. 修改初始管理员账号创建函数，使用环境变量中的参数
-4. 为开发环境和生产环境设置不同的默认管理员信息
-5. 测试验证管理员账号创建功能
-
-### 关键决策和解决方案
-- 通过环境变量配置管理员账号，而非硬编码在代码中
-- 为不同环境设置不同的默认账号参数
-- 修改`createInitialAdmin`函数，使用环境变量，提高灵活性
-- 解决端口冲突问题，使用备用端口启动服务器
-
-### 使用的技术栈
-- Node.js
-- Express
-- Sequelize
-- MySQL
-- dotenv (环境变量)
-- bcrypt (密码加密)
-
-### 环境变量配置示例
-开发环境配置 (.env.development):
-```
-# 默认管理员配置
-ADMIN_USERNAME=dev_admin
-ADMIN_PASSWORD=dev_pass123
-ADMIN_REAL_NAME=开发环境管理员
-ADMIN_EMAIL=dev@example.com
-```
-
-生产环境配置 (.env.production):
-```
-# 默认管理员配置
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=Secure@Pr0d#Pass!23
-ADMIN_REAL_NAME=系统管理员
-ADMIN_EMAIL=admin@yourcompany.com
-```
-
-### 修改的文件
-- 修改：`mall-server/src/controllers/adminController.js` - 更新管理员创建函数
-- 修改：`mall-server/.env.development` - 添加默认管理员配置
-- 修改：`mall-server/.env.production` - 添加默认管理员配置
-
-### 测试结果
-```
-zhuanghaixin@zhuanghaixindeMacBook-Pro-2 商 cd /Users/zhuanghaixin/WebstormProjects/cursor_code/商or_code/商 城小程序/m城小程序/mall-server && PORT=8081 NODE_ENV=development node src/index.js
-]: 日志系统已初始化，运行在开发模式
-]: 数据库配置:
-]: 尝试连接数据库 (1/3)...
-]: 连接配置: 127.0.0.1:3306, 数据库: shop, 用户: root
-]: Executing (default): SELECT 1+1 AS result
-]: 数据库连接成功
-]: Executing (default): DROP TABLE IF EXISTS `admins`;
-]: Executing (default): SELECT CONSTRAINT_NAME as constraint_name,CONSTRAINT_NAME as constraintName,CONSTRAINT_SCHEMA as constraintSchema,CONSTRAINT_SCHEMA as constraintCatalog,TABLE_NAME as tableName,TABLE_SCHEMA as tableSchema,TABLE_SCHEMA as tableCatalog,COLUMN_NAME as columnName,REFERENCED_TABLE_SCHEMA as referencedTableSchema,REFERENCED_TABLE_SCHEMA as referencedTableCatalog,REFERENCED_TABLE_NAME as referencedTableName,REFERENCED_COLUMN_NAME as referencedColumnName FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE where TABLE_NAME = 'admins' AND CONSTRAINT_NAME!='PRIMARY' AND CONSTRAINT_SCHEMA='shop' AND REFERENCED_TABLE_NAME IS NOT NULL;
-]: Executing (default): DROP TABLE IF EXISTS `admins`;
-]: Executing (default): DROP TABLE IF EXISTS `admins`;
-]: Executing (default): CREATE TABLE IF NOT EXISTS `admins` (`id` INTEGER NOT NULL auto_increment , `username` VARCHAR(50) NOT NULL UNIQUE, `password` VARCHAR(255) NOT NULL, `real_name` VARCHAR(50), `email` VARCHAR(255), `phone` VARCHAR(20), `avatar` VARCHAR(255), `status` ENUM('active', 'inactive', 'locked') DEFAULT 'active', `role` ENUM('admin', 'editor', 'viewer') DEFAULT 'admin', `last_login_ip` VARCHAR(255), `last_login_time` DATETIME, `created_at` DATETIME, `updated_at` DATETIME, PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
-]: Executing (default): SHOW INDEX FROM `admins`
-]: 数据库模型同步完成 (force)
-]: Executing (default): SELECT count(*) AS `count` FROM `admins` AS `Admin`;
-]: Executing (default): INSERT INTO `admins` (`id`,`username`,`password`,`real_name`,`status`,`role`,`created_at`,`updated_at`) VALUES (DEFAULT,?,?,?,?,?,?,?);
-]: 已创建初始管理员账号
-]: 服务器运行在 http://localhost:8081
-]: API前缀: undefined
-]: 环境: development
-```
-
-## 解决管理员登录接口访问问题
-
-### 会话日期和时间
-2023年9月22日
-
-### 会话的主要目的
-排查和解决管理员登录接口访问失败的问题
-
-### 完成的主要任务
-1. 分析管理员登录请求失败原因
-2. 检查服务器运行端口和状态
-3. 确认API路由配置正确性
-4. 测试API健康检查接口
-5. 提供正确的登录接口访问方式
-
-### 问题描述
-用户尝试使用以下URL和数据访问管理员登录接口：
-```
-http://localhost:3000/api/admin/login
-{"username":"dev_admin","password":"dev_pass123"}
-```
-
-收到错误响应：
-```json
-{"status": "fail", "message": "请求的资源不存在"}
-```
-
-### 问题分析与解决方案
-1. **问题发现**：
-   - 用户尝试在3000端口访问API，但服务器实际运行在8080端口
-   - 通过`lsof -i :8080`命令确认服务器正在8080端口监听
-   - 健康检查接口`/api/health`在8080端口正常响应
-
-2. **确认API可用性**：
-   ```
-   curl -X GET http://localhost:8080/api/health
-   {"status":"success","message":"服务运行正常","time":"2025-04-17T16:58:59.279Z"}
-   ```
-
-3. **解决方案**：
-   - 使用正确的端口号和路径访问登录接口：`http://localhost:8080/api/admin/login`
-   - 保持请求体不变：`{"username":"dev_admin","password":"dev_pass123"}`
-
-4. **登录请求示例**：
-   ```bash
-   curl -X POST http://localhost:8080/api/admin/login \
-     -H "Content-Type: application/json" \
-     -d '{"username":"dev_admin","password":"dev_pass123"}'
-   ```
-
-5. **前端配置建议**：
-   - 如果是在前端应用中配置API地址，应确保baseURL设置为：`http://localhost:8080/api`
-   - 如果需要在3000端口访问，可以：
-     a. 修改`.env.development`中的PORT值为3000并重启服务器
-     b. 在前端配置代理将API请求从3000端口转发到8080端口
-
-### 使用的技术栈
-- Express (Node.js)
-- RESTful API
-- curl (接口测试)
-- lsof (端口检查)
-
-### 相关文件
-- `mall-server/.env.development` - 服务器端口配置
-- `mall-server/src/app.js` - API路由配置
-- `mall-server/src/routes/index.js` - 路由注册
-
-## 解决前端API请求与Swagger文档冲突问题
-
-### 会话日期和时间
-2023年9月23日
-
-### 会话的主要目的
-解决前端运行在3000端口时，后端API和Swagger文档访问冲突的问题
-
-### 完成的主要任务
-1. 分析前端通过3000端口访问后端8080端口API的问题
-2. 研究Swagger文档路径和API访问路径
-3. 修改前端Vite配置，设置正确的API代理
-4. 测试代理配置是否能正确转发请求
-
-### 问题描述
-用户报告在前端（3000端口）无法成功访问后端API（8080端口）的管理员登录接口，同时发现如果将后端端口改为3000，会导致Swagger文档无法访问。
-
-### 问题分析与解决方案
-通过检查配置文件，发现：
-
-1. **后端API服务**：
-   - 运行在8080端口
-   - 提供API服务和Swagger文档
-   - 管理员登录API路径：`/api/admin/login`
-   - Swagger文档路径：`/api-docs`
-
-2. **前端应用**：
-   - 运行在3000端口
-   - 存在API代理配置问题：
-     ```javascript
-     proxy: {
-       '/api': {
-         target: env.API_URL || 'http://localhost:8080',
-         changeOrigin: true,
-         rewrite: (path) => path.replace(/^\/api/, ''),
-       },
-     }
-     ```
-
-3. **问题根因**：
-   - 前端`rewrite`规则移除了`/api`前缀，导致请求被转发到错误的路径
-   - 后端期望的完整路径是包含`/api`前缀的
-
-4. **解决方案**：
-   - 保留后端API在8080端口运行
-   - 修改Vite配置中的代理设置，移除`rewrite`规则：
-     ```javascript
-     proxy: {
-       '/api': {
-         target: env.API_URL || 'http://localhost:8080',
-         changeOrigin: true,
-         // 移除rewrite以确保路径能正确传递到后端
-         // rewrite: (path) => path.replace(/^\/api/, ''),
-       },
-     }
-     ```
-
-### 使用的技术栈
-- Vite (构建和开发工具)
-- Node.js
-- Express
-- Swagger UI
-
-### 相关文件
-- `mall-admin/vite.config.ts` - 前端代理配置
-- `mall-admin/src/api/request.ts` - API请求配置
-- `mall-server/src/app.js` - 后端API和Swagger配置
-- `mall-server/.env.development` - 后端环境配置
-
-## 解决JWT令牌生成失败问题
-
-### 会话日期和时间
-2023年9月23日
-
-### 会话的主要目的
-解决管理员登录时JWT令牌生成失败的问题
-
-### 完成的主要任务
-1. 排查JWT令牌生成失败的原因
-2. 检查环境变量配置
-3. 添加缺失的JWT配置参数
-4. 重启服务器测试登录功能
-
-### 问题描述
-用户在使用正确的API地址登录时收到以下错误：
-```json
-{
-  "status": "error",
-  "message": "令牌生成失败",
-  "error": {
-    "statusCode": 500,
-    "status": "error"
-  },
-  "stack": "Error: 令牌生成失败\n    at generateToken (/Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/mall-server/src/utils/jwtToken.js:22:15)\n    at /Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/mall-server/src/controllers/adminController.js:175:19\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
-  "errorCode": ""
-}
-```
-
-### 问题分析与解决方案
-1. **问题根因**：
-   - 通过检查`jwtToken.js`文件和环境变量配置，发现登录失败是因为缺少JWT相关的环境变量配置
-   - 虽然在`.env`文件中存在JWT配置，但在`.env.development`中缺少这些配置
-   - JWT令牌生成需要`JWT_SECRET`（密钥）和`JWT_EXPIRES_IN`（过期时间）参数
-
-2. **解决步骤**：
-   1. 在`.env.development`文件中添加JWT配置：
-      ```
-      # JWT配置
-      JWT_SECRET=dev_secret_key_for_jwt_token_2023
-      JWT_EXPIRES_IN=7d
-      ```
-   2. 重启开发服务器，使新的环境变量生效
-   3. 重新测试管理员登录功能
-
-3. **代码分析**：
-   - `jwtToken.js`中的`generateToken`函数使用`process.env.JWT_SECRET`和`process.env.JWT_EXPIRES_IN`作为默认参数
-   - 当这些环境变量不存在时，尝试使用`undefined`值生成令牌会导致失败
-   - `jwt.sign()`函数需要有效的密钥才能生成令牌
-
-4. **最佳实践**：
-   - 所有环境变量都应在各环境配置文件中明确设置
-   - 关键安全参数（如JWT密钥）在生产环境应使用强随机值
-   - 使用环境变量前应进行存在性检查或提供默认值
-
-### 使用的技术栈
-- Node.js
-- Express
-- JWT (JSON Web Token)
-- dotenv (环境变量)
-
-### 修改的文件
-- `mall-server/.env.development` - 添加JWT配置
-
-## 商城后台商品管理模块开发
-
-### 会话日期和时间
-2023年9月12日
-
-### 会话的主要目的
-根据UI示意图和API接口文档，实现商城小程序管理后台的商品管理模块
-
-### 完成的主要任务
-1. 创建商品管理相关API接口
-2. 实现商品列表页面，支持搜索、分页、状态管理和批量操作
-3. 实现商品编辑/新增页面，支持基本信息编辑、图片上传和规格设置
-4. 配置路由，集成商品管理页面到系统中
-
-### 关键决策和解决方案
-1. 采用Element Plus组件库构建UI界面
-2. 使用TypeScript定义接口类型，提高代码质量
-3. 设计合理的表单验证和用户操作逻辑
-4. 实现自定义图片上传和商品规格管理功能
+- 调整El-Select组件样式，解决状态选择器宽度问题
+- 修正层级标签显示逻辑，确保显示正确的层级文本
+- 增强删除确认提示，对父类删除操作提供更明确的警告
+- 使用事务确保分类级联删除的完整性和一致性
+- 实现递归查找子分类功能，支持多级分类结构删除
 
 ### 使用的技术栈
 - Vue 3
 - TypeScript
 - Element Plus
-- Vue Router
-- Axios
-
-### 修改了哪些文件
-1. mall-admin/src/api/product.ts（新建）- 商品管理API接口
-2. mall-admin/src/types/product.d.ts（新建）- 商品类型定义
-3. mall-admin/src/views/products/index.vue（新建）- 商品列表页组件
-4. mall-admin/src/views/products/edit.vue（新建）- 商品编辑/新增页组件
-5. mall-admin/src/router/routes.ts（修改）- 更新路由配置
-
-## 会话日期和时间
-2023年11月25日
-
-## 会话的主要目的
-根据数据库建表语句调整商品管理模块的实现
-
-## 完成的主要任务
-- 对比了数据库建表语句与已实现的商品模型，发现了需要调整的地方
-- 创建了商品分类模型（Category），完成了商品与分类的关联关系定义
-- 调整了商品控制器中的方法，以适应模型的变更
-- 更新了测试数据生成逻辑，添加了分类数据的初始化
-
-## 关键决策和解决方案
-- 修正了字段约束，包括必填项和默认值：
-  - 将`category_id`字段从`allowNull: true`改为`allowNull: false`
-  - 将`main_image`字段从`allowNull: false`改为`allowNull: true`
-  - 将`status`字段默认值从`0`改为`1`
-- 建立了商品与分类的一对多关联关系，实现了更丰富的数据查询功能
-- 增加了与分类的关联查询，在商品列表和详情中显示分类信息
-
-## 使用的技术栈
 - Node.js
 - Express
-- Sequelize ORM
+- Sequelize
 - MySQL
 
-## 修改了哪些文件
-- mall-server/src/models/goods.js（字段调整）
-- mall-server/src/models/category.js（新建商品分类模型）
-- mall-server/src/models/index.js（添加模型关联关系）
-- mall-server/src/controllers/goodsController.js（方法调整）
-- mall-server/src/db/seedData.js（测试数据更新）
+### 修改了哪些文件
+- 修改：`mall-admin/src/views/products/category.vue` 
+  - 调整表格和选择器样式
+  - 修复层级显示问题
+  - 增强删除确认流程
+  - 优化整体UI布局
 
-## 会话日期和时间
-2023年11月26日
+- 修改：`mall-server/src/controllers/categoryController.js`
+  - 修改删除分类API逻辑，支持级联删除
+  - 添加递归查找子分类功能
+  - 使用事务确保删除操作的完整性
 
-## 会话的主要目的
-重新实现商城管理后台的商品管理模块，去除测试数据依赖
+## 修复商品分类模块问题
 
-## 完成的主要任务
-- 修改商品模型，使其与数据库建表语句中的定义保持一致
-- 创建了商品分类模型（Category），并设置了与商品的关联关系
-- 实现了商品控制器，包含创建、查询、更新、删除等功能
-- 实现了分类控制器，支持树形结构的分类管理
-- 配置了相应的API路由
+### 主要目的
+解决商品分类模块中的显示和功能问题，包括层级显示错误、搜索参数传递问题、删除功能异常。
 
-## 关键决策和解决方案
-- 修正模型字段定义与MySQL表结构一致，确保系统与数据库兼容
-- 实现了商品与分类的一对多关联关系
-- 为分类实现了树形结构的构建功能
-- 商品列表查询支持按名称、分类和状态筛选
-- 添加了完整的数据验证和错误处理
+### 完成的主要任务
+1. 修复分类层级显示为"NaN级"的问题
+2. 改进前后端搜索参数传递机制
+3. 修复分类删除接口事务处理错误
 
-## 使用的技术栈
-- Node.js + Express
-- Sequelize ORM
+### 关键决策和解决方案
+- 修改后端 `buildCategoryTree` 函数，为每个分类明确设置 level 属性
+- 增强前端 `getLevelText` 和 `levelTagType` 函数，增加对 undefined 和 null 值的处理
+- 优化表格中层级显示的模板，添加错误处理逻辑
+- 修复前端搜索参数构建逻辑，避免传递无效参数值
+- 修正后端 `sequelize` 对象的导入方式，解决事务处理错误
+
+### 使用的技术栈
+- Vue 3
+- TypeScript
+- Element Plus
+- Node.js
+- Express
+- Sequelize
 - MySQL
-- RESTful API设计
-- 分层架构（路由-控制器-模型）
 
-## 修改了哪些文件
-- mall-server/src/models/goods.js（更新字段定义）
-- mall-server/src/models/category.js（创建分类模型）
-- mall-server/src/models/index.js（添加模型关联）
-- mall-server/src/controllers/goodsController.js（商品控制器实现）
-- mall-server/src/controllers/categoryController.js（分类控制器实现）
-- mall-server/src/routes/goodsRoutes.js（商品路由配置）
-- mall-server/src/routes/categoryRoutes.js（分类路由配置）
-- mall-server/src/routes/index.js（注册路由）
-
-# Cursor 编辑器日志
-
-## 2023年5月25日
-
-### 会话总结: 分类管理功能实现
-
-#### 主要目的
-将商城小程序管理端的分类管理页面从模拟数据升级为使用真实API的功能完整版本
-
-#### 完成的主要任务
-- 将分类管理页面(category.vue)从使用模拟数据改为与后端API集成
-- 实现了分类的CRUD操作(创建、读取、更新、删除)功能
-- 修复了类型错误和属性名称不一致的问题
-- 调整了父级分类选择和层级管理逻辑
-
-#### 关键决策和解决方案
-- 从API获取分类列表并展示树形结构
-- 处理分类状态变更并实时更新UI
-- 实现父子分类的层级管理
-- 使用Element Plus组件库实现UI交互
-- 修复了parent_id类型问题(从number|null改为number)
-
-#### 使用的技术栈
-- Vue 3 + TypeScript
-- Element Plus UI组件库
-- Axios用于API请求
-- Pinia状态管理
-
-#### 修改的文件
-- `mall-admin/src/views/products/category.vue` - 实现分类管理UI和业务逻辑
-- `mall-admin/src/api/category.ts` - 已存在，用于API调用
-
-#### 下一步计划
-- 实现图片上传功能
-- 添加更多的分类筛选功能
-- 增强错误处理和表单验证
+### 修改了哪些文件
+- 修改：`mall-server/src/controllers/categoryController.js`
+  - 修复 sequelize 导入问题，从 '../db' 直接导入 sequelize 实例
+  - 改进 buildCategoryTree 函数，确保每个节点都有正确的 level 属性
+  
+- 修改：`mall-admin/src/views/products/category.vue`
+  - 增强 getLevelText 函数，添加对 undefined 和 null 值的处理
+  - 优化 levelTagType 函数，增加类型检查
+  - 修改表格层级显示模板，添加条件渲染
+  - 改进 fetchCategoryList 函数的参数传递逻辑

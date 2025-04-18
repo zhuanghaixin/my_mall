@@ -3,6 +3,7 @@
  * 处理商品分类相关的业务逻辑
  */
 const { Op } = require('sequelize');
+const sequelize = require('../db'); // 直接导入sequelize实例
 const { Category } = require('../models');
 const catchAsync = require('../utils/catchAsync');
 const { ValidationError, NotFoundError } = require('../utils/errorTypes');
@@ -103,8 +104,20 @@ const logger = require('../utils/logger');
  * /api/admin/category/list:
  *   get:
  *     summary: 获取分类列表
- *     description: 获取所有分类列表，返回树形结构
+ *     description: 获取所有分类列表，返回树形结构，支持按名称和状态筛选
  *     tags: [分类管理]
+ *     parameters:
+ *       - in: query
+ *         name: keyword
+ *         schema:
+ *           type: string
+ *         description: 搜索关键词，模糊匹配分类名称
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: integer
+ *           enum: [0, 1]
+ *         description: 分类状态，0禁用，1启用
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -120,8 +133,25 @@ const logger = require('../utils/logger');
  *         description: 服务器错误
  */
 exports.getCategoryList = catchAsync(async (req, res) => {
+    // 获取查询参数
+    const { keyword, status } = req.query;
+
+    // 构建查询条件
+    const where = {};
+
+    // 关键词搜索
+    if (keyword) {
+        where.name = { [Op.like]: `%${keyword}%` };
+    }
+
+    // 状态筛选
+    if (status !== undefined) {
+        where.status = parseInt(status);
+    }
+
     // 获取所有分类
     const categories = await Category.findAll({
+        where,
         order: [
             ['sort', 'ASC'],
             ['id', 'ASC']
@@ -352,7 +382,7 @@ exports.updateCategory = catchAsync(async (req, res) => {
  * /api/admin/category/{id}:
  *   delete:
  *     summary: 删除分类
- *     description: 根据ID删除分类，只有没有子分类时才能删除
+ *     description: 根据ID删除分类及其所有子分类
  *     tags: [分类管理]
  *     parameters:
  *       - in: path
@@ -379,8 +409,6 @@ exports.updateCategory = catchAsync(async (req, res) => {
  *                 data:
  *                   type: object
  *                   nullable: true
- *       400:
- *         description: 请求参数错误或存在子分类
  *       401:
  *         description: 未授权
  *       404:
@@ -398,19 +426,30 @@ exports.deleteCategory = catchAsync(async (req, res) => {
         throw new NotFoundError('分类不存在');
     }
 
-    // 检查是否有子分类
-    const childCount = await Category.count({
-        where: { parent_id: id }
+    // 查找所有子分类ID（包括孙子分类）
+    const allChildIds = await findAllChildCategoryIds(id);
+
+    // 执行事务，确保所有删除操作要么全部成功，要么全部失败
+    await sequelize.transaction(async (t) => {
+        // 先删除所有子分类
+        if (allChildIds.length > 0) {
+            await Category.destroy({
+                where: {
+                    id: {
+                        [Op.in]: allChildIds
+                    }
+                },
+                transaction: t
+            });
+
+            logger.info(`删除了 ${allChildIds.length} 个子分类`);
+        }
+
+        // 最后删除自身
+        await category.destroy({ transaction: t });
     });
 
-    if (childCount > 0) {
-        throw new ValidationError('存在子分类，无法删除');
-    }
-
-    // 删除分类
-    await category.destroy();
-
-    logger.info(`分类删除成功: ${id}`);
+    logger.info(`分类及其子分类删除成功: ${id}`);
 
     res.status(200).json({
         code: 200,
@@ -418,6 +457,31 @@ exports.deleteCategory = catchAsync(async (req, res) => {
         data: null
     });
 });
+
+/**
+ * 递归查找所有子分类ID
+ * @param {Number} parentId - 父分类ID
+ * @returns {Promise<Array>} 所有子分类ID数组
+ */
+const findAllChildCategoryIds = async (parentId) => {
+    // 查找直接子分类
+    const children = await Category.findAll({
+        where: { parent_id: parentId },
+        attributes: ['id']
+    });
+
+    const childIds = children.map(child => child.id);
+
+    // 递归查找每个子分类的子分类
+    const grandChildPromises = childIds.map(childId => findAllChildCategoryIds(childId));
+    const grandChildIdsArrays = await Promise.all(grandChildPromises);
+
+    // 合并所有子分类ID（扁平化）
+    const allGrandChildIds = grandChildIdsArrays.flatMap(ids => ids);
+
+    // 返回所有子分类ID（包括直接子分类和所有后代）
+    return [...childIds, ...allGrandChildIds];
+};
 
 /**
  * @swagger
@@ -504,18 +568,26 @@ exports.updateCategoryStatus = catchAsync(async (req, res) => {
  * 构建分类树形结构
  * @param {Array} categories - 所有分类数据
  * @param {Number} parentId - 父分类ID
+ * @param {Number} level - 当前层级，顶级为0
  * @returns {Array} 树形结构的分类数据
  */
-const buildCategoryTree = (categories, parentId = 0) => {
+const buildCategoryTree = (categories, parentId = 0, level = 0) => {
     const result = [];
 
     for (const category of categories) {
         if (category.parent_id === parentId) {
-            const children = buildCategoryTree(categories, category.id);
+            // 递归构建子分类树，层级+1
+            const children = buildCategoryTree(categories, category.id, level + 1);
+
+            // 提取纯对象并添加正确的层级信息
+            const plainCategory = category.get({ plain: true });
+
             const treeNode = {
-                ...category.get({ plain: true }),
+                ...plainCategory,
+                level: level, // 确保存在层级信息
                 children: children.length > 0 ? children : undefined
             };
+
             result.push(treeNode);
         }
     }

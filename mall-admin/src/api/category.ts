@@ -3,10 +3,14 @@ import request from './request'
 /**
  * 获取分类列表 (树形结构)
  */
-export function getCategoryList() {
+export function getCategoryList(params?: {
+  keyword?: string
+  status?: number
+}) {
   return request({
     url: '/admin/category/list',
-    method: 'get'
+    method: 'get',
+    params
   })
 }
 

@@ -7,7 +7,7 @@
                     <el-input v-model="queryParams.keyword" placeholder="请输入分类名称" clearable></el-input>
                 </el-form-item>
                 <el-form-item label="状态">
-                    <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
+                    <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="min-width: 120px">
                         <el-option :value="1" label="启用"></el-option>
                         <el-option :value="0" label="禁用"></el-option>
                     </el-select>
@@ -28,11 +28,15 @@
             </template>
 
             <el-table v-loading="loading" :data="categoryList" row-key="id" border default-expand-all
-                :tree-props="{ children: 'children' }">
-                <el-table-column prop="name" label="分类名称" width="250"></el-table-column>
+                :tree-props="{ children: 'children' }" style="width: 100%">
+                <el-table-column prop="name" label="分类名称" min-width="200"></el-table-column>
                 <el-table-column prop="level" label="层级" width="100">
                     <template #default="scope">
-                        <el-tag :type="levelTagType(scope.row.level)">{{ getLevelText(scope.row.level) }}</el-tag>
+                        <el-tag :type="levelTagType(scope.row.level)"
+                            v-if="scope.row.level !== undefined && scope.row.level !== null">
+                            {{ getLevelText(scope.row.level) }}
+                        </el-tag>
+                        <el-tag type="info" v-else>未知</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column prop="sort" label="排序" width="100"></el-table-column>
@@ -42,7 +46,7 @@
                             @change="handleStatusChange(scope.row)"></el-switch>
                     </template>
                 </el-table-column>
-                <el-table-column label="操作" width="220">
+                <el-table-column label="操作" width="280">
                     <template #default="scope">
                         <el-button size="small" type="primary" @click="editCategory(scope.row)">编辑</el-button>
                         <el-button size="small" type="success" v-if="scope.row.level < 2"
@@ -62,7 +66,7 @@
                 <el-form-item label="父级分类" v-if="dialogType === 'add'">
                     <el-cascader v-model="selectedParent" :options="parentOptions"
                         :props="{ checkStrictly: true, value: 'id', label: 'name' }" clearable placeholder="请选择父级分类"
-                        @change="handleParentChange"></el-cascader>
+                        @change="handleParentChange" style="width: 100%"></el-cascader>
                 </el-form-item>
                 <el-form-item label="排序" prop="sort">
                     <el-input-number v-model="categoryForm.sort" :min="0" :max="100"></el-input-number>
@@ -83,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { getCategoryList, getCategoryDetail, createCategory, updateCategory as updateCategoryApi, deleteCategory as deleteCategoryApi, updateCategoryStatus } from '@/api/category'
@@ -158,7 +162,12 @@ const parentOptions = computed(() => {
 });
 
 // 获取层级文本
-const getLevelText = (level: number) => {
+const getLevelText = (level: number | undefined | null) => {
+    // 处理undefined或null的情况
+    if (level === undefined || level === null) {
+        return '未知';
+    }
+
     switch (level) {
         case 0: return '一级';
         case 1: return '二级';
@@ -168,7 +177,12 @@ const getLevelText = (level: number) => {
 };
 
 // 层级标签类型
-const levelTagType = (level: number) => {
+const levelTagType = (level: number | undefined | null) => {
+    // 处理undefined或null的情况
+    if (level === undefined || level === null) {
+        return '';
+    }
+
     switch (level) {
         case 0: return 'success';
         case 1: return 'warning';
@@ -207,66 +221,43 @@ const handleParentChange = (value: any) => {
 
 // 搜索
 const handleSearch = () => {
-    applyFilters();
+    fetchCategoryList();
 };
 
 // 重置搜索条件
 const resetQuery = () => {
     queryParams.keyword = '';
     queryParams.status = undefined;
-    applyFilters();
+    fetchCategoryList();
 };
 
-// 应用筛选条件
-const applyFilters = () => {
-    // 深拷贝所有分类，保持原始数据不变
-    const filterCategories = (categories: Category[]): Category[] => {
-        const result: Category[] = [];
+// 获取分类列表
+const fetchCategoryList = async () => {
+    loading.value = true;
+    try {
+        // 确保undefined不会被传递为字符串"undefined"
+        const params: { keyword?: string; status?: number } = {};
 
-        for (const category of categories) {
-            // 检查当前分类是否满足筛选条件
-            const matchesKeyword = !queryParams.keyword ||
-                category.name.toLowerCase().includes(queryParams.keyword.toLowerCase());
-            const matchesStatus = queryParams.status === undefined ||
-                category.status === queryParams.status;
-
-            if (matchesKeyword && matchesStatus) {
-                // 当前分类满足条件，复制一份添加到结果中
-                const newCategory = { ...category };
-
-                // 如果有子分类，递归过滤
-                if (category.children && category.children.length > 0) {
-                    const filteredChildren = filterCategories(category.children);
-                    if (filteredChildren.length > 0) {
-                        newCategory.children = filteredChildren;
-                    } else {
-                        newCategory.children = [];
-                    }
-                }
-
-                result.push(newCategory);
-            } else if (category.children && category.children.length > 0) {
-                // 当前分类不满足条件，但其子分类可能满足
-                const filteredChildren = filterCategories(category.children);
-                if (filteredChildren.length > 0) {
-                    // 如果子分类中有满足条件的，也将当前分类加入结果
-                    result.push({
-                        ...category,
-                        children: filteredChildren
-                    });
-                }
-            }
+        if (queryParams.keyword) {
+            params.keyword = queryParams.keyword;
         }
 
-        return result;
-    };
+        if (queryParams.status !== undefined) {
+            params.status = queryParams.status;
+        }
 
-    if (!queryParams.keyword && queryParams.status === undefined) {
-        // 如果没有筛选条件，直接显示所有分类
-        categoryList.value = JSON.parse(JSON.stringify(allCategories.value));
-    } else {
-        // 应用筛选
-        categoryList.value = filterCategories(JSON.parse(JSON.stringify(allCategories.value)));
+        const res = await getCategoryList(params);
+        if (res && res.data) {
+            // 存储所有分类
+            allCategories.value = res.data;
+            // 直接显示API返回的数据
+            categoryList.value = res.data;
+        }
+    } catch (error) {
+        ElMessage.error('获取分类列表失败');
+        console.error('获取分类列表失败:', error);
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -311,13 +302,20 @@ const editCategory = async (row: Category) => {
 
 // 删除分类
 const deleteCategory = (row: Category) => {
+    // 检查是否有子分类，如果有，显示特别提示
+    const hasChildren = row.children && row.children.length > 0;
+
     ElMessageBox.confirm(
-        `确定要删除分类 "${row.name}" 吗？${row.children && row.children.length > 0 ? '该操作将连同子分类一起删除！' : ''}`,
-        '警告',
+        hasChildren
+            ? `确定要删除分类 "${row.name}" 吗？该操作将连同所有子分类一起删除！请再次确认操作。`
+            : `确定要删除分类 "${row.name}" 吗？`,
+        hasChildren ? '危险操作' : '警告',
         {
-            confirmButtonText: '确定',
+            confirmButtonText: '确定删除',
             cancelButtonText: '取消',
-            type: 'warning'
+            type: hasChildren ? 'error' : 'warning',
+            distinguishCancelAndClose: true,
+            closeOnClickModal: false
         }
     ).then(async () => {
         loading.value = true;
@@ -429,25 +427,6 @@ const resetForm = () => {
     categoryFormRef.value?.resetFields();
 };
 
-// 获取分类列表
-const fetchCategoryList = async () => {
-    loading.value = true;
-    try {
-        const res = await getCategoryList();
-        if (res && res.data) {
-            // 存储所有分类用于筛选和父级分类选择
-            allCategories.value = res.data;
-            // 应用当前的筛选条件
-            applyFilters();
-        }
-    } catch (error) {
-        ElMessage.error('获取分类列表失败');
-        console.error('获取分类列表失败:', error);
-    } finally {
-        loading.value = false;
-    }
-};
-
 // 页面加载时获取分类列表
 onMounted(() => {
     fetchCategoryList();
@@ -478,8 +457,11 @@ onMounted(() => {
     }
 
     .el-table {
-        max-width: 100%;
-        overflow-x: auto;
+        width: 100%;
+    }
+
+    .el-select {
+        width: 120px;
     }
 }
 </style>
