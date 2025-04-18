@@ -4,7 +4,16 @@
  */
 
 const Admin = require('./admin');
+const Goods = require('./goods');
+const Category = require('./category');
+
+// 设置模型之间的关联关系
+// 分类与商品的一对多关系
+Category.hasMany(Goods, { foreignKey: 'category_id', as: 'goods' });
+Goods.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
 
 module.exports = {
-    Admin
+    Admin,
+    Goods,
+    Category
 }; 

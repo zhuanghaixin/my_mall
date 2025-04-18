@@ -4,6 +4,8 @@
  */
 const express = require('express');
 const adminRoutes = require('./adminRoutes');
+const goodsRoutes = require('./goodsRoutes');
+const categoryRoutes = require('./categoryRoutes');
 
 const router = express.Router();
 
@@ -44,5 +46,7 @@ router.get('/health', (req, res) => {
 
 // 注册各模块路由
 router.use('/admin', adminRoutes);
+router.use('/admin/goods', goodsRoutes);
+router.use('/admin/category', categoryRoutes);
 
 module.exports = router; 
