@@ -58,7 +58,11 @@
           </template>
         </el-table-column>
         <el-table-column label="商品名称" prop="name" show-overflow-tooltip />
-        <el-table-column label="分类" prop="category_name" width="120" />
+        <el-table-column label="分类" prop="category_name" width="120">
+          <template #default="scope">
+            <span>{{ scope.row.category?.name || '未分类' }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="价格" prop="price" width="100">
           <template #default="scope">
             <span class="price">¥{{ scope.row.price }}</span>
