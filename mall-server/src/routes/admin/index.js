@@ -10,11 +10,13 @@ const bannerRoutes = require('./bannerRoutes');
 const categoryRoutes = require('./categoryRoutes');
 const goodsRoutes = require('./goodsRoutes');
 const userRoutes = require('./userRoutes');
+const orderRoutes = require('./orderRoutes');
 
 // 注册各模块路由
 router.use('/banner', bannerRoutes);
 router.use('/category', categoryRoutes);
 router.use('/goods', goodsRoutes);
 router.use('/user', userRoutes);
+router.use('/order', orderRoutes);
 
 module.exports = router; 

@@ -91,4 +91,67 @@
 - 请求方式：GET
 - 请求路径：/admin/orders/stats
 - 参数：无
-- 响应：订单统计信息，包含各状态订单数量、销售额等 
+- 响应：订单统计信息，包含各状态订单数量、销售额等
+
+## 2023-06-20：重构订单管理模块路由
+
+### 会话的主要目的
+按照系统现有规范，重新改写订单管理模块的路由，使其与其他模块（如轮播图管理）的路由结构保持一致。
+
+### 完成的主要任务
+1. 参考bannerRoutes.js的结构和风格，重新设计orderRoutes.js
+2. 调整orderController.js的响应格式，与系统其他控制器保持一致
+3. 更新管理后台路由注册方式
+
+### 关键决策和解决方案
+1. 路由路径调整：
+   - 将路径从`/admin/orders`调整为`/api/admin/order`
+   - 遵循其他模块的路由命名规范（单数形式）
+
+2. 响应格式统一：
+   - 将`success: true/false`改为`code: 200/400/404/500`
+   - 统一成功消息为"获取成功"、"更新成功"、"删除成功"
+   - 调整数据结构，使用`list`作为列表字段，`pageSize`替代`limit`
+
+3. 权限控制统一：
+   - 使用与其他模块相同的`protect`中间件进行认证
+   - 采用路由级中间件方式，对所有订单管理路由进行统一认证
+
+### 修改了哪些文件
+1. routes/admin/orderRoutes.js：完全重写，遵循bannerRoutes.js的结构和风格
+2. controllers/orderController.js：修改响应格式，保持与系统一致
+3. routes/admin/index.js：调整订单路由注册方式
+
+### 接口详情（更新后）
+#### 1. 获取订单列表
+- 请求方式：GET
+- 请求路径：/api/admin/order/list （或简化版 /api/admin/order）
+- 参数：
+  - page：页码
+  - pageSize：每页数量（替代原来的limit）
+  - status：订单状态
+  - order_no：订单号
+  - user_id：用户ID
+  - start_time：开始时间
+  - end_time：结束时间
+- 响应格式：统一使用code、message和data结构
+
+#### 2. 获取订单统计信息
+- 请求方式：GET
+- 请求路径：/api/admin/order/stats
+- 响应格式：统一使用code、message和data结构
+
+#### 3. 获取订单详情
+- 请求方式：GET
+- 请求路径：/api/admin/order/:id
+- 响应格式：统一使用code、message和data结构
+
+#### 4. 更新订单状态
+- 请求方式：PUT
+- 请求路径：/api/admin/order/:id/status
+- 响应格式：统一使用code、message和data结构
+
+#### 5. 删除订单
+- 请求方式：DELETE
+- 请求路径：/api/admin/order/:id
+- 响应格式：统一使用code、message和data结构 

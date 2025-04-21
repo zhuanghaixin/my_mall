@@ -46,6 +46,7 @@ const options = {
     // API文件路径
     apis: [
         path.join(__dirname, '../routes/*.js'),
+        path.join(__dirname, '../routes/admin/*.js'),
         path.join(__dirname, '../controllers/*.js'),
         path.join(__dirname, '../models/*.js')
     ]
