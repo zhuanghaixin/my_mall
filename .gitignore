@@ -136,3 +136,6 @@ docker-compose.override.yml
 
 # SSR 临时文件
 /ssr-dist 
+
+
+resume*.md
