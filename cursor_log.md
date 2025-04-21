@@ -1034,3 +1034,37 @@ MySQL限制每个表最多只能有64个索引（键）。当表已经接近这�
    - status：状态（0禁用，1正常）
    - create_time：创建时间
    - update_time：更新时间
+
+## 2024年7月22日
+
+### 会话目的
+解决订单列表接口报错"Unknown column 'orders.delivery_company' in 'field list'"的问题。
+
+### 完成的主要任务
+1. 分析了数据库错误，确定是orders表缺少delivery_company字段导致的
+2. 修改了数据库连接配置，启用了Sequelize的alter模式，使模型变更能自动同步到数据库
+3. 创建了数据库迁移脚本，用于手动添加缺少的字段
+4. 提供了SQL脚本文件，用于直接修复数据库表结构
+5. 更新了README.md，添加了数据库迁移和问题解决的指南
+6. 在package.json中添加了migrate命令，方便执行迁移脚本
+
+### 关键决策和解决方案
+- 通过查看模型定义，确认delivery_company字段在代码中已定义，但数据库表中缺失
+- 提供了两种解决方案：
+  1. 通过Sequelize自动同步（更改alter参数为true）
+  2. 通过手动迁移脚本添加缺少的字段
+- 添加了详细的文档，帮助开发者理解和解决类似问题
+
+### 使用的技术栈
+- Node.js
+- Express
+- Sequelize ORM
+- MySQL
+- JavaScript
+
+### 修改的文件
+1. mall-server/src/db/index.js - 修改数据库连接配置，启用alter模式
+2. mall-server/src/db/migrate.js - 创建数据库迁移脚本
+3. mall-server/src/db/fix-orders-table.sql - 添加SQL修复脚本
+4. mall-server/package.json - 添加migrate命令
+5. mall-server/README.md - 增加数据库迁移和问题解决指南
