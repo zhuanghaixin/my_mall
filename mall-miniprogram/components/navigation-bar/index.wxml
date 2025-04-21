@@ -1,0 +1,10 @@
+<view class="custom-nav-bar {{fixed ? 'fixed' : ''}}" style="padding-top: {{statusBarHeight}}px; background-color: {{background}};">
+  <view class="nav-bar" style="height: {{navBarHeight}}px;">
+    <view class="nav-bar-left" bindtap="handleBack" wx:if="{{back}}">
+      <van-icon name="arrow-left" size="20px" />
+    </view>
+    <view class="nav-bar-title" style="color: {{color}};">{{title}}</view>
+    <view class="nav-bar-right"></view>
+  </view>
+</view>
+<view wx:if="{{fixed}}" style="height: {{statusBarHeight + navBarHeight}}px;"></view> 

@@ -1,5 +1,51 @@
 <!--pages/user/index.wxml-->
 <view class="container">
-  <view class="user-title">个人中心</view>
-  <view class="user-content">开发中...</view>
+  <navigation-bar title="个人中心"></navigation-bar>
+  
+  <view class="user-info">
+    <block wx:if="{{isLogin}}">
+      <view class="avatar-container">
+        <van-image
+          round
+          width="80px"
+          height="80px"
+          src="{{userInfo.avatarUrl}}"
+        />
+      </view>
+      <view class="nickname">{{userInfo.nickName}}</view>
+    </block>
+    <block wx:else>
+      <view class="avatar-container">
+        <van-image
+          round
+          width="80px"
+          height="80px"
+          src="/assets/images/default-avatar.png"
+        />
+      </view>
+      <view class="login-btn-container">
+        <van-button type="danger" size="small" bind:click="onLogin">登录/注册</van-button>
+      </view>
+    </block>
+  </view>
+  
+  <view class="order-section">
+    <van-cell title="我的订单" value="查看全部订单" is-link url="/pages/order/list/index" />
+    <van-grid column-num="4">
+      <van-grid-item icon="pending-payment" text="待付款" url="/pages/order/list/index?status=1" />
+      <van-grid-item icon="logistics" text="待发货" url="/pages/order/list/index?status=2" />
+      <van-grid-item icon="send-gift-o" text="待收货" url="/pages/order/list/index?status=3" />
+      <van-grid-item icon="comment-o" text="待评价" url="/pages/order/list/index?status=4" />
+    </van-grid>
+  </view>
+  
+  <view class="menu-section">
+    <van-cell-group title="我的服务">
+      <van-cell title="收货地址" icon="location-o" is-link url="/pages/address/list/index" />
+      <van-cell title="我的收藏" icon="star-o" is-link url="/pages/collect/index" />
+      <van-cell title="优惠券" icon="coupon-o" is-link url="/pages/coupon/index" />
+      <van-cell title="客服中心" icon="service-o" is-link url="/pages/service/index" />
+      <van-cell title="关于我们" icon="info-o" is-link url="/pages/about/index" />
+    </van-cell-group>
+  </view>
 </view>

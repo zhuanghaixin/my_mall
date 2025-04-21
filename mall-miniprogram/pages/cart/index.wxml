@@ -1,5 +1,43 @@
 <!--pages/cart/index.wxml-->
 <view class="container">
-  <view class="cart-title">购物车</view>
-  <view class="cart-content">开发中...</view>
+  <navigation-bar title="购物车"></navigation-bar>
+  
+  <block wx:if="{{cartList.length > 0}}">
+    <view class="cart-list">
+      <van-swipe-cell
+        wx:for="{{cartList}}"
+        wx:key="id"
+        right-width="{{ 65 }}"
+      >
+        <van-card
+          num="{{item.quantity}}"
+          price="{{item.price}}"
+          title="{{item.title}}"
+          thumb="{{item.image}}"
+        >
+          <view slot="footer">
+            <van-stepper value="{{ item.quantity }}" bind:change="onChangeQuantity" data-id="{{item.id}}" min="1" />
+          </view>
+        </van-card>
+        <view slot="right" class="delete-btn" bindtap="onDeleteItem" data-id="{{item.id}}">删除</view>
+      </van-swipe-cell>
+    </view>
+    
+    <van-submit-bar
+      price="{{ totalPrice * 100 }}"
+      button-text="结算"
+      bind:submit="onSubmit"
+      tip="{{ true }}"
+    >
+      <van-checkbox value="{{ checkedAll }}" bind:change="onToggleAll" custom-class="select-all">全选</van-checkbox>
+      <view slot="tip">
+        共计 {{totalItems}} 件商品
+      </view>
+    </van-submit-bar>
+  </block>
+  
+  <view wx:else class="empty-cart">
+    <van-empty description="购物车是空的" />
+    <van-button type="danger" custom-class="start-shopping" bind:click="goShopping">去购物</van-button>
+  </view>
 </view>

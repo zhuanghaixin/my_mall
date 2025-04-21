@@ -17,6 +17,7 @@
     "selectedColor": "#e4393c",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
+    "custom": true,
     "list": [{
       "pagePath": "pages/index/index",
       "text": "首页",
@@ -54,5 +55,9 @@
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
-  "usingComponents": {}
+  "usingComponents": {
+    "tab-bar-icon": "/components/tab-bar-icon/index",
+    "icon": "/components/icon/index",
+    "navigation-bar": "/components/navigation-bar/index"
+  }
 }

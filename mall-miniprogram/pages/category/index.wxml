@@ -1,5 +1,28 @@
 <!--pages/category/index.wxml-->
 <view class="container">
-  <view class="category-title">分类页面</view>
-  <view class="category-content">开发中...</view>
+  <navigation-bar title="商品分类"></navigation-bar>
+  
+  <view class="category-container">
+    <van-sidebar class="sidebar" active-key="{{ activeCategory }}" bind:change="onCategoryChange">
+      <van-sidebar-item 
+        wx:for="{{ categories }}" 
+        wx:key="id" 
+        title="{{ item.name }}" 
+      />
+    </van-sidebar>
+    
+    <scroll-view scroll-y class="content">
+      <view class="subcategory-title">{{ currentCategory.name }}</view>
+      <van-grid column-num="3" border="{{ false }}" class="subcategory-grid">
+        <van-grid-item 
+          wx:for="{{ currentSubcategories }}" 
+          wx:key="id"
+          icon="{{ item.icon }}"
+          text="{{ item.name }}"
+          bind:click="onSubcategoryTap"
+          data-id="{{ item.id }}"
+        />
+      </van-grid>
+    </scroll-view>
+  </view>
 </view>

@@ -163,3 +163,48 @@
 
 ## 修改的文件
 - pages/index/index.json：修改了van-search组件的引用路径 
+
+# 项目开发日志
+
+## 会话总结：2023-06-28
+
+### 会话主要目的
+解决小程序顶部标题不显示、底部TabBar显示异常，以及尽可能使用Vant组件实现各页面的问题。
+
+### 完成的主要任务
+1. 创建了自定义导航栏组件并添加到各页面
+2. 修复了底部TabBar，使用Vant Tabbar组件实现
+3. 使用Vant组件重构了首页、分类页、购物车页和个人中心页
+
+### 关键决策和解决方案
+1. 创建了自定义导航栏组件，解决顶部标题不显示的问题
+2. 修改TabBar组件WXML，使用Vant的icon系统替代原有的图标
+3. 使用Vant的Cell、Grid、Card等组件美化各页面UI
+
+### 使用的技术栈
+- 微信小程序原生开发
+- Vant Weapp组件库
+
+### 修改了哪些文件
+1. components/navigation-bar/index.js (新建)
+2. components/navigation-bar/index.wxml (新建)
+3. components/navigation-bar/index.wxss (新建)
+4. components/navigation-bar/index.json (新建)
+5. custom-tab-bar/index.wxml (重建)
+6. custom-tab-bar/index.js (更新)
+7. custom-tab-bar/index.json (更新)
+8. app.json (更新)
+9. pages/index/index.wxml (更新)
+10. pages/index/index.json (更新)
+11. pages/category/index.wxml (更新)
+12. pages/category/index.json (更新)
+13. pages/category/index.js (更新)
+14. pages/category/index.wxss (更新)
+15. pages/cart/index.wxml (更新)
+16. pages/cart/index.json (更新)
+17. pages/cart/index.js (更新)
+18. pages/cart/index.wxss (更新)
+19. pages/user/index.wxml (更新)
+20. pages/user/index.json (更新)
+21. pages/user/index.js (更新)
+22. pages/user/index.wxss (更新) 

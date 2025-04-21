@@ -5,14 +5,16 @@ Page({
    * 页面的初始数据
    */
   data: {
-    // 页面数据
+    isLogin: false,
+    userInfo: null
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
-
+    // 检查是否已登录
+    this.checkLogin();
   },
 
   /**
@@ -26,7 +28,8 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-
+    // 每次显示页面时更新登录状态
+    this.checkLogin();
   },
 
   /**
@@ -62,5 +65,36 @@ Page({
    */
   onShareAppMessage() {
 
+  },
+
+  checkLogin: function () {
+    const userInfo = wx.getStorageSync('userInfo');
+    if (userInfo) {
+      this.setData({
+        isLogin: true,
+        userInfo: JSON.parse(userInfo)
+      });
+    } else {
+      this.setData({
+        isLogin: false,
+        userInfo: null
+      });
+    }
+  },
+
+  onLogin: function () {
+    // 模拟用户登录
+    wx.navigateTo({
+      url: '/pages/login/index'
+    });
+  },
+
+  // 模拟登录后回调
+  loginCallback: function (userInfo) {
+    this.setData({
+      isLogin: true,
+      userInfo
+    });
+    wx.setStorageSync('userInfo', JSON.stringify(userInfo));
   }
 })
