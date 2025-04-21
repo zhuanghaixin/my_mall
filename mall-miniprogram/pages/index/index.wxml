@@ -1,15 +1,17 @@
 <!--index.wxml-->
-<navigation-bar title="首页"></navigation-bar>
-
-<!-- 固定在顶部的搜索框 -->
-<view class="search-container fixed">
-  <van-search
-    value="{{ searchValue }}"
-    placeholder="请输入搜索关键词"
-    shape="round"
-    background="#ffffff"
-    bind:focus="onSearchFocus"
-  />
+<view class="page-header">
+  <navigation-bar title="首页"></navigation-bar>
+  
+  <!-- 固定在标题下方的搜索框 -->
+  <view class="search-container fixed">
+    <van-search
+      value="{{ searchValue }}"
+      placeholder="请输入搜索关键词"
+      shape="round"
+      background="#ffffff"
+      bind:focus="onSearchFocus"
+    />
+  </view>
 </view>
 
 <!-- 下拉刷新提示 -->
@@ -24,8 +26,8 @@
 </view>
 
 <view class="container">
-  <!-- 占位元素，与固定搜索框高度相同 -->
-  <view class="search-placeholder"></view>
+  <!-- 占位元素，用于标题和搜索框的高度 -->
+  <view class="header-placeholder"></view>
   
   <!-- 轮播图区域 -->
   <view class="banner">
