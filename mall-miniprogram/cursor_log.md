@@ -207,4 +207,46 @@
 19. pages/user/index.wxml (更新)
 20. pages/user/index.json (更新)
 21. pages/user/index.js (更新)
-22. pages/user/index.wxss (更新) 
+22. pages/user/index.wxss (更新)
+
+## 会话总结：2023-07-10 (更新)
+
+### 会话主要目的
+继续修复app.json文件中组件路径错误问题，解决编译错误。
+
+### 完成的主要任务
+1. 修复了app.json文件中引用不存在的"icon"组件路径问题
+2. 移除了不存在的"icon"组件引用，因为已经在其他地方使用了Vant的icon组件
+
+### 关键决策和解决方案
+将app.json中usingComponents配置里不存在的自定义icon组件引用移除，只保留navigation-bar组件。项目中使用的图标都通过Vant组件库的van-icon实现，不需要自定义的icon组件。
+
+### 使用的技术栈
+- 微信小程序配置管理
+- Vant Weapp组件库
+
+### 修改了哪些文件
+1. app.json (更新：移除了不存在的icon组件引用) 
+
+## 会话总结：2023-07-11
+
+### 会话主要目的
+修复首页轮播图组件引用错误问题，解决编译错误。
+
+### 完成的主要任务
+1. 修复了pages/index/index.json文件中Vant组件引用路径问题
+2. 将不存在的van-swipe组件替换为微信原生的swiper组件
+3. 修改了首页WXML中的轮播图组件代码
+
+### 关键决策和解决方案
+1. 使用微信原生swiper组件代替van-swipe，因为Vant中没有swiper组件
+2. 修正了组件引用路径，使用绝对路径"/miniprogram_npm/@vant/weapp/..."
+3. 保持其他Vant组件的正确引用
+
+### 使用的技术栈
+- 微信小程序原生组件
+- Vant Weapp组件库
+
+### 修改了哪些文件
+1. pages/index/index.json (更新：修复组件引用路径)
+2. pages/index/index.wxml (更新：轮播图组件替换) 

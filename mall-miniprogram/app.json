@@ -56,8 +56,6 @@
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
   "usingComponents": {
-    "tab-bar-icon": "/components/tab-bar-icon/index",
-    "icon": "/components/icon/index",
     "navigation-bar": "/components/navigation-bar/index"
   }
 }
