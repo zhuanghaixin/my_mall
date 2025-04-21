@@ -5,8 +5,8 @@
 
 const { Order, OrderGoods, User, Goods } = require('../models');
 const logger = require('../utils/logger');
-const { Op } = require('sequelize');
-const sequelize = require('../db').sequelize;
+const { Op, fn, col } = require('sequelize');
+const sequelize = require('../db'); // 直接导入sequelize实例
 
 /**
  * 获取订单列表
@@ -240,7 +240,7 @@ exports.getOrderStats = async (req, res) => {
         const statusCounts = await Order.findAll({
             attributes: [
                 'status',
-                [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+                [fn('COUNT', col('id')), 'count']
             ],
             group: ['status']
         });
