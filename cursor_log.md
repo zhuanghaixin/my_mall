@@ -410,3 +410,96 @@ npm run dev
 4. 修复前端环境配置，确保API地址正确
 5. 安装所需依赖（uuid）
 6. 启动服务器测试上传功能
+
+## 会话总结 - 2024-03-21 15:30
+
+### 会话主要目的
+- 分析商城小程序的文件上传功能实现
+- 了解前后端文件上传的具体实现方式
+
+### 完成的主要任务
+1. 分析了前端文件上传实现：
+   - 使用 el-upload 组件实现文件上传
+   - 通过 FormData 处理文件数据
+   - 实现了图片预览和删除功能
+
+2. 分析了后端文件上传实现：
+   - 使用 multer 中间件处理文件上传
+   - 文件存储在 /uploads 目录
+   - 通过静态文件服务提供文件访问
+
+### 关键决策和解决方案
+1. 前端实现：
+   - 使用 Element Plus 的 Upload 组件
+   - 自定义上传请求处理
+   - 支持多文件上传和预览
+
+2. 后端实现：
+   - 使用 multer 处理文件上传
+   - 文件存储在 public/uploads 目录
+   - 通过 express.static 提供文件访问
+
+### 使用的技术栈
+- 前端：Vue 3 + Element Plus
+- 后端：Node.js + Express + Multer
+- 文件存储：本地文件系统
+
+### 修改的文件
+- mall-admin/src/api/product.ts
+- mall-admin/src/views/products/edit.vue
+- mall-server/src/routes/admin/productRoutes.js
+- mall-server/src/controllers/goodsController.js
+
+## 会话总结 - 2024-03-21 15:45
+
+### 会话主要目的
+- 分析商城小程序中数据库存储上传文件地址的实现方式
+- 了解文件上传和存储的完整流程
+
+### 完成的主要任务
+1. 分析了数据库表结构设计：
+   - 商品表（goods）中的图片存储字段
+   - 主图和商品图片集的存储方式
+
+2. 分析了文件上传处理机制：
+   - 文件存储位置和命名规则
+   - 上传中间件的配置和使用
+   - 文件URL的生成和返回
+
+### 关键决策和解决方案
+1. 数据库设计：
+   - 使用 STRING(255) 类型存储主图URL
+   - 使用 TEXT 类型存储多图URL，采用逗号分隔
+   - 分离存储策略：文件存文件系统，数据库存URL
+
+2. 文件上传实现：
+   - 使用 multer 中间件处理上传
+   - 采用 UUID 生成唯一文件名
+   - 限制文件类型和大小
+   - 统一的文件命名规则
+
+### 使用的技术栈
+- Node.js
+- Express
+- Sequelize (数据库ORM)
+- Multer (文件上传中间件)
+- UUID (生成唯一标识符)
+
+### 修改的文件
+- mall-server/src/models/goods.js
+- mall-server/src/middlewares/upload.js
+- mall-server/src/controllers/uploadController.js
+- mall-server/src/routes/uploadRoutes.js
+
+### 注意事项
+1. 文件存储：
+   - 确保 public/uploads 目录存在且有写入权限
+   - 定期清理未使用的图片文件
+   - 考虑添加图片压缩功能
+   - 可以考虑使用云存储服务替代本地存储
+
+2. 性能优化：
+   - 使用 UUID 避免文件名冲突
+   - 限制上传文件大小和类型
+   - 统一的文件命名和存储规则
+   - 支持单图和多图上传，多图限制最多10张
