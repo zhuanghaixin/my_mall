@@ -710,3 +710,36 @@ npm run dev
 1. 使用Sequelize的`destroy`和`truncate`选项清空表并重新初始化数据
 2. 通过配置不同状态的轮播图数据，确保系统能够正确显示和管理不同状态的轮播图
 3. 直接使用已存在的JPG图片文件，无需动态生成图片，提高了系统性能和图片质量
+
+## 解决MySQL数据库索引数量超限问题
+
+### 主要目的
+解决MySQL数据库中出现的"Too many keys specified; max 64 keys allowed"错误。
+
+### 完成的主要任务
+1. 诊断了索引数量超过MySQL限制的问题
+2. 修改了Admin模型中的unique约束定义
+3. 调整了Sequelize的数据库同步策略
+
+### 关键决策和解决方案
+- 移除了Admin模型username字段的`unique: true`约束
+- 修改了数据库连接配置，将Sequelize自动同步选项从`alter: true`改为`{ force: false, alter: false }`
+- 禁用了Sequelize的自动表结构同步功能，避免它尝试修改数据库表结构添加唯一索引
+
+### 使用的技术栈
+- Node.js
+- Express
+- Sequelize
+- MySQL
+
+### 修改了哪些文件
+- 修改：`mall-server/src/models/admin.js` - 移除unique约束
+- 修改：`mall-server/src/db/index.js` - 禁用自动同步
+
+### 解决方案说明
+MySQL限制每个表最多只能有64个索引（键）。当表已经接近这个限制时，再添加新的索引就会触发错误。
+解决方法有两种：
+1. 禁用自动同步结构（本次采用）
+2. 手动整理表结构，删除不必要的索引
+
+后续建议对数据库结构的修改采用手动迁移的方式，而不是依赖Sequelize的自动同步功能，这样可以更精确地控制索引的创建和删除。

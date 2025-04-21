@@ -64,9 +64,9 @@ const connectToDatabase = async () => {
 
             // 开发环境下同步模型 - 采用更安全的方式
             if (process.env.NODE_ENV === 'development') {
-                // 使用alter模式更新表结构，但保留数据
-                await sequelize.sync({ alter: true });
-                logger.info('数据库模型同步完成 (alter)');
+                // 更改为false，禁用自动同步以避免索引问题
+                await sequelize.sync({ force: false, alter: false });
+                logger.info('数据库连接已建立，禁用自动同步以避免索引问题');
             }
 
             return sequelize;

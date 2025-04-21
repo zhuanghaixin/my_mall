@@ -16,7 +16,6 @@ const Admin = db.define('Admin', {
     username: {
         type: DataTypes.STRING(50),
         allowNull: false,
-        unique: true,
         validate: {
             len: [3, 50],
             notEmpty: true
