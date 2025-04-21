@@ -24,7 +24,7 @@ const options = {
         },
         servers: [
             {
-                url: `http://localhost:${process.env.PORT || 8080}${process.env.API_PREFIX || '/api'}`,
+                url: `http://localhost:${process.env.PORT || 8080}`,
                 description: '开发环境服务器'
             }
         ],
