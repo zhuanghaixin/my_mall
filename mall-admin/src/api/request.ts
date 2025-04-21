@@ -27,9 +27,14 @@ request.interceptors.request.use(
     if (userStore.token) {
       config.headers.Authorization = `Bearer ${userStore.token}`
     }
+    
+    // 添加调试日志
+    console.log('API请求:', config.method?.toUpperCase(), config.url, config.params || config.data)
+    
     return config
   },
   error => {
+    console.error('请求拦截器错误:', error)
     return Promise.reject(error)
   }
 )
@@ -37,10 +42,19 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   response => {
+    // 添加调试日志
+    console.log('API响应成功:', response.config.url, response.status, response.data)
     // 只返回响应的数据部分
     return response.data
   },
   error => {
+    // 添加详细错误日志
+    console.error('API响应错误:', 
+      error.config?.url, 
+      error.response?.status, 
+      error.response?.data || error.message
+    )
+    
     const userStore = useUserStore()
     
     // 处理401错误（未授权）
@@ -48,6 +62,8 @@ request.interceptors.response.use(
       userStore.logout()
       router.push('/login')
       ElMessage.error('登录已过期，请重新登录')
+    } else if (error.response && error.response.status === 404) {
+      ElMessage.error(`接口不存在: ${error.config?.url}`)
     } else {
       // 显示错误消息
       const errorMessage = error.response?.data?.message || '请求失败'

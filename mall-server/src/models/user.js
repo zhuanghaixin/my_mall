@@ -45,13 +45,15 @@ const User = db.define('User', {
             isIn: [[0, 1]]
         }
     },
-    email: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-        validate: {
-            isEmail: true
-        }
-    },
+    // 注意: email字段已被移除，因为数据库中不存在该字段
+    // 如果需要添加email字段，请先修改数据库表结构
+    // email: {
+    //     type: DataTypes.STRING(100),
+    //     allowNull: true,
+    //     validate: {
+    //         isEmail: true
+    //     }
+    // },
     createdAt: {
         type: DataTypes.DATE,
         field: 'create_time',

@@ -141,8 +141,7 @@ exports.getUserList = catchAsync(async (req, res) => {
     if (keyword) {
         where[Op.or] = [
             { nickname: { [Op.like]: `%${keyword}%` } },
-            { phone: { [Op.like]: `%${keyword}%` } },
-            { email: { [Op.like]: `%${keyword}%` } }
+            { phone: { [Op.like]: `%${keyword}%` } }
         ];
     }
 

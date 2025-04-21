@@ -42,7 +42,7 @@ export function getUserList(params: {
   pageSize?: number;
 }) {
   return request({
-    url: '/api/admin/user/list',
+    url: '/admin/user/list',
     method: 'get',
     params
   })
@@ -51,7 +51,7 @@ export function getUserList(params: {
 // 获取小程序用户详情
 export function getUserDetail(id: number) {
   return request({
-    url: `/api/admin/user/${id}`,
+    url: `/admin/user/${id}`,
     method: 'get'
   })
 }
@@ -59,7 +59,7 @@ export function getUserDetail(id: number) {
 // 更新用户状态
 export function updateUserStatus(id: number, status: number) {
   return request({
-    url: `/api/admin/user/${id}/status`,
+    url: `/admin/user/${id}/status`,
     method: 'put',
     data: { status }
   })
@@ -68,7 +68,7 @@ export function updateUserStatus(id: number, status: number) {
 // 重置用户密码
 export function resetUserPassword(id: number) {
   return request({
-    url: `/api/admin/user/${id}/reset-password`,
+    url: `/admin/user/${id}/reset-password`,
     method: 'post'
   })
 } 

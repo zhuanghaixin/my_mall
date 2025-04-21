@@ -145,45 +145,40 @@ const initUsers = async () => {
                 {
                     nickname: '张三',
                     openid: 'wx_openid_12345',
-                    avatar: 'http://localhost:8080/uploads/avatars/avatar1.jpg',
+                    avatar: '/uploads/avatars/avatar1.jpg',
                     phone: '13812345678',
-                    email: 'zhangsan@example.com',
                     gender: 1,
                     status: 1
                 },
                 {
                     nickname: '李四',
                     openid: 'wx_openid_23456',
-                    avatar: 'http://localhost:8080/uploads/avatars/avatar2.jpg',
+                    avatar: '/uploads/avatars/avatar2.jpg',
                     phone: '13987654321',
-                    email: 'lisi@example.com',
                     gender: 1,
                     status: 1
                 },
                 {
                     nickname: '王五',
                     openid: 'wx_openid_34567',
-                    avatar: 'http://localhost:8080/uploads/avatars/avatar3.jpg',
+                    avatar: '/uploads/avatars/avatar3.jpg',
                     phone: '13500123456',
-                    email: 'wangwu@example.com',
                     gender: 1,
                     status: 0
                 },
                 {
                     nickname: '赵六',
                     openid: 'wx_openid_45678',
-                    avatar: 'http://localhost:8080/uploads/avatars/avatar4.jpg',
+                    avatar: '/uploads/avatars/avatar4.jpg',
                     phone: '13611112222',
-                    email: 'zhaoliu@example.com',
                     gender: 1,
                     status: 1
                 },
                 {
                     nickname: '小红',
                     openid: 'wx_openid_56789',
-                    avatar: 'http://localhost:8080/uploads/avatars/avatar5.jpg',
+                    avatar: '/uploads/avatars/avatar5.jpg',
                     phone: '13922223333',
-                    email: 'xiaohong@example.com',
                     gender: 2,
                     status: 1
                 }
@@ -197,6 +192,7 @@ const initUsers = async () => {
         }
     } catch (error) {
         logger.error('初始化用户数据失败:', error.message);
+        logger.error('错误详情:', error);
     }
 };
 
