@@ -444,6 +444,20 @@ Page({
             loadingMore: true
         });
 
+        // 滚动到加载提示区域
+        wx.createSelectorQuery()
+            .select('.loading-more')
+            .boundingClientRect(rect => {
+                if (rect) {
+                    // 滚动到加载提示的上方位置，确保用户看到加载状态
+                    wx.pageScrollTo({
+                        scrollTop: rect.top - 200,
+                        duration: 300
+                    });
+                }
+            })
+            .exec();
+
         const nextPage = this.data.currentPage + 1;
         this.loadCategoryGoods(this.data.currentCategory, nextPage);
     },

@@ -1,7 +1,7 @@
 /**index.wxss**/
 /* 容器样式 */
 .container {
-  padding-bottom: 180rpx;
+  padding-bottom: 250rpx;
   box-sizing: border-box;
 }
 
@@ -240,16 +240,19 @@
 /* 加载更多样式 */
 .loading-more {
   width: 100%;
-  padding: 30rpx 0;
+  padding: 30rpx 0 120rpx;
   text-align: center;
   color: #999;
   font-size: 26rpx;
+  position: relative;
+  z-index: 50;
 }
 
 .loading {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-bottom: 30rpx;
 }
 
 .loading-icon {
