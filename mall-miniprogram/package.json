@@ -1,14 +1,18 @@
 {
   "name": "mall-miniprogram",
   "version": "1.0.0",
-  "description": "商城小程序前端",
+  "description": "商城小程序",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [
+    "小程序",
+    "商城"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@vant/weapp": "^1.10.19"
+    "@vant/weapp": "^1.11.7"
   }
-} 
+}

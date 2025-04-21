@@ -1,0 +1,5 @@
+<!--pages/category/index.wxml-->
+<view class="container">
+  <view class="category-title">分类页面</view>
+  <view class="category-content">开发中...</view>
+</view>

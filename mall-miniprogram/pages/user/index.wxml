@@ -1,0 +1,5 @@
+<!--pages/user/index.wxml-->
+<view class="container">
+  <view class="user-title">个人中心</view>
+  <view class="user-content">开发中...</view>
+</view>
