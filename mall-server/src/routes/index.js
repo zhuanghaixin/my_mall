@@ -46,6 +46,81 @@ router.get('/health', (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /api/banners:
+ *   get:
+ *     summary: 获取轮播图列表(小程序前端使用)
+ *     tags: [小程序接口]
+ *     description: 获取所有启用状态的轮播图，按排序值升序排列
+ *     responses:
+ *       200:
+ *         description: 成功获取轮播图列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 获取成功
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: 轮播图ID
+ *                         example: 1
+ *                       title:
+ *                         type: string
+ *                         description: 轮播图标题
+ *                         example: 夏季新品上市
+ *                       image:
+ *                         type: string
+ *                         description: 图片地址
+ *                         example: /uploads/banners/summer.jpg
+ *                       url:
+ *                         type: string
+ *                         description: 跳转链接
+ *                         example: /pages/goods/list?categoryId=1
+ *                       sort:
+ *                         type: integer
+ *                         description: 排序值
+ *                         example: 1
+ *                       status:
+ *                         type: integer
+ *                         description: 状态(1表示启用)
+ *                         example: 1
+ *                       create_time:
+ *                         type: string
+ *                         format: date-time
+ *                         description: 创建时间
+ *                       update_time:
+ *                         type: string
+ *                         format: date-time
+ *                         description: 更新时间
+ *       500:
+ *         description: 服务器错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: 服务器错误
+ *                 error:
+ *                   type: string
+ *                   description: 错误详情
+ */
 // 小程序API接口 - 无需身份验证
 router.get('/banners', async (req, res) => {
     try {
