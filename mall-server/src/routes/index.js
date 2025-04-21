@@ -4,10 +4,8 @@
  */
 const express = require('express');
 const adminRoutes = require('./adminRoutes');
-const goodsRoutes = require('./goodsRoutes');
-const categoryRoutes = require('./categoryRoutes');
+const adminModuleRoutes = require('./admin');
 const uploadRoutes = require('./uploadRoutes');
-const bannerRoutes = require('./bannerRoutes');
 
 const router = express.Router();
 
@@ -149,11 +147,13 @@ router.get('/banners', async (req, res) => {
     }
 });
 
-// 注册各模块路由
+// 注册管理员认证相关路由
 router.use('/admin', adminRoutes);
-router.use('/admin/goods', goodsRoutes);
-router.use('/admin/category', categoryRoutes);
-router.use('/admin/banner', bannerRoutes);
+
+// 注册管理后台模块路由
+router.use('/admin', adminModuleRoutes);
+
+// 注册上传接口路由
 router.use('/upload', uploadRoutes);
 
 module.exports = router; 

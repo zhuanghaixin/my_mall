@@ -7,8 +7,8 @@
  *     description: 商品相关的操作
  */
 const express = require('express');
-const goodsController = require('../controllers/goodsController');
-const { protect } = require('../middlewares/authMiddleware');
+const goodsController = require('../../controllers/goodsController');
+const { protect } = require('../../middlewares/authMiddleware');
 
 const router = express.Router();
 

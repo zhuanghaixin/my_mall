@@ -1,25 +1,25 @@
 /**
- * 轮播图管理路由
+ * 轮播图相关路由
  * 
  * @swagger
  * tags:
  *   - name: 轮播图管理
- *     description: 轮播图相关的管理操作
+ *     description: 轮播图相关的操作
  */
 const express = require('express');
 const bannerController = require('../../controllers/bannerController');
-const { verifyToken, checkPermission } = require('../../middlewares/authMiddleware');
+const { protect } = require('../../middlewares/authMiddleware');
 
 const router = express.Router();
 
-// 使用认证中间件，保证只有登录后的管理员才能访问这些接口
-// router.use(authMiddleware.adminAuth);
+// 所有轮播图管理路由都需要管理员身份验证
+router.use(protect);
 
 /**
  * @swagger
- * /api/admin/banner:
+ * /api/admin/banner/list:
  *   get:
- *     summary: 获取轮播图列表
+ *     summary: 获取轮播图列表 (带分页和搜索)
  *     tags: [轮播图管理]
  *     security:
  *       - bearerAuth: []
@@ -78,13 +78,58 @@ const router = express.Router();
  *                       description: 每页条数
  *                       example: 10
  */
-router.get('/', verifyToken, checkPermission('banner:list'), bannerController.getBannerList);
+router.get('/list', bannerController.getBannerList);
+
+/**
+ * @swagger
+ * /api/admin/banner:
+ *   get:
+ *     summary: 获取轮播图列表 (简单版本)
+ *     tags: [轮播图管理]
+ *     security:
+ *       - bearerAuth: []
+ *     description: 获取轮播图列表的简单版本，保留向后兼容性
+ *     responses:
+ *       200:
+ *         description: 成功获取轮播图列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 获取成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     list:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Banner'
+ *                     total:
+ *                       type: integer
+ *                       description: 总记录数
+ *                       example: 15
+ *                     page:
+ *                       type: integer
+ *                       description: 当前页码
+ *                       example: 1
+ *                     pageSize:
+ *                       type: integer
+ *                       description: 每页条数
+ *                       example: 10
+ */
+router.get('/', bannerController.getBannerList);
 
 /**
  * @swagger
  * /api/admin/banner/{id}:
  *   get:
- *     summary: 获取指定轮播图详情
+ *     summary: 获取轮播图详情
  *     tags: [轮播图管理]
  *     security:
  *       - bearerAuth: []
@@ -125,13 +170,13 @@ router.get('/', verifyToken, checkPermission('banner:list'), bannerController.ge
  *                   type: string
  *                   example: 轮播图不存在
  */
-router.get('/:id', verifyToken, checkPermission('banner:info'), bannerController.getBanner);
+router.get('/:id', bannerController.getBanner);
 
 /**
  * @swagger
  * /api/admin/banner:
  *   post:
- *     summary: 添加新轮播图
+ *     summary: 创建轮播图
  *     tags: [轮播图管理]
  *     security:
  *       - bearerAuth: []
@@ -168,7 +213,7 @@ router.get('/:id', verifyToken, checkPermission('banner:info'), bannerController
  *                 example: 1
  *     responses:
  *       201:
- *         description: 成功添加轮播图
+ *         description: 成功创建轮播图
  *         content:
  *           application/json:
  *             schema:
@@ -196,7 +241,7 @@ router.get('/:id', verifyToken, checkPermission('banner:info'), bannerController
  *                   type: string
  *                   example: 标题、图片和链接为必填项
  */
-router.post('/', verifyToken, checkPermission('banner:create'), bannerController.addBanner);
+router.post('/', bannerController.addBanner);
 
 /**
  * @swagger
@@ -264,7 +309,7 @@ router.post('/', verifyToken, checkPermission('banner:create'), bannerController
  *                   type: string
  *                   example: 轮播图不存在
  */
-router.put('/:id', verifyToken, checkPermission('banner:update'), bannerController.updateBanner);
+router.put('/:id', bannerController.updateBanner);
 
 /**
  * @swagger
@@ -309,7 +354,7 @@ router.put('/:id', verifyToken, checkPermission('banner:update'), bannerControll
  *                   type: string
  *                   example: 轮播图不存在
  */
-router.delete('/:id', verifyToken, checkPermission('banner:delete'), bannerController.deleteBanner);
+router.delete('/:id', bannerController.deleteBanner);
 
 /**
  * @swagger
@@ -382,7 +427,7 @@ router.delete('/:id', verifyToken, checkPermission('banner:delete'), bannerContr
  *                   type: string
  *                   example: 轮播图不存在
  */
-router.put('/:id/status', verifyToken, checkPermission('banner:update'), bannerController.updateBannerStatus);
+router.put('/:id/status', bannerController.updateBannerStatus);
 
 /**
  * @swagger
@@ -455,7 +500,7 @@ router.put('/:id/status', verifyToken, checkPermission('banner:update'), bannerC
  *                   type: string
  *                   example: 轮播图不存在
  */
-router.put('/:id/sort', verifyToken, checkPermission('banner:update'), bannerController.updateBannerSort);
+router.put('/:id/sort', bannerController.updateBannerSort);
 
 /**
  * @swagger
