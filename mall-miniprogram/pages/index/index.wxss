@@ -1,12 +1,31 @@
 /**index.wxss**/
+page {
+  height: 100%;
+  overflow-y: auto;
+  background-color: #f5f5f5;
+}
+
 /* 容器样式 */
 .container {
   padding-bottom: 250rpx;
   box-sizing: border-box;
+  overflow-y: visible;
 }
 
-.scrollarea {
-  height: 100vh;
+/* 搜索框固定样式 */
+.search-container.fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background-color: #fff;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 搜索占位符 - 确保内容不被固定搜索框遮挡 */
+.search-placeholder {
+  height: 108rpx; /* 与搜索框高度一致 */
 }
 
 /* 下拉刷新样式 */

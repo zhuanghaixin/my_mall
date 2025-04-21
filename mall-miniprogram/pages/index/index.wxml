@@ -1,108 +1,102 @@
 <!--index.wxml-->
 <navigation-bar title="首页"></navigation-bar>
 
+<!-- 固定在顶部的搜索框 -->
+<view class="search-container fixed">
+  <van-search
+    value="{{ searchValue }}"
+    placeholder="请输入搜索关键词"
+    shape="round"
+    background="#ffffff"
+    bind:focus="onSearchFocus"
+  />
+</view>
+
 <!-- 下拉刷新提示 -->
 <view class="refresh-tips {{ isRefreshing ? 'refreshing' : '' }}">
   <view class="refresh-loading">
     <view class="loading-icon"></view>
-    <text>正在刷新...</text>
+    <text>——— 加载中 ———</text>
   </view>
   <view class="refresh-success" wx:if="{{ refreshSuccess }}">
     <text>刷新成功</text>
   </view>
 </view>
 
-<scroll-view 
-  class="scrollarea" 
-  scroll-y 
-  type="list"
-  bindscroll="onPageScroll" 
-  lower-threshold="200"
-  bindscrolltolower="onScrollToLower"
->
-  <view class="container">
-    <!-- 搜索框 -->
-    <view class="search-container">
-      <van-search
-        value="{{ searchValue }}"
-        placeholder="请输入搜索关键词"
-        shape="round"
-        background="#ffffff"
-        bind:focus="onSearchFocus"
-      />
-    </view>
-    
-    <!-- 轮播图区域 -->
-    <view class="banner">
-      <swiper class="swipe-container" indicator-dots autoplay interval="3000" circular>
-        <swiper-item wx:for="{{banners}}" wx:key="id">
-          <image src="{{item.image_url}}" mode="widthFix" class="swipe-image" bindtap="onBannerTap" data-item="{{ item }}"></image>
-        </swiper-item>
-      </swiper>
-    </view>
-    
-    <!-- 推荐商品 -->
-    <view class="recommend-section">
-      <view class="section-title">推荐商品</view>
-      <scroll-view class="recommend-scroll" scroll-x>
-        <view class="recommend-list">
-          <block wx:for="{{ recommendGoods }}" wx:key="id">
-            <view class="recommend-item" bindtap="onGoodsTap" data-id="{{ item.id }}">
-              <image src="{{ item.primary_pic_url }}" class="recommend-image" mode="aspectFill"></image>
-              <view class="recommend-name text-ellipsis">{{ item.name }}</view>
-              <view class="recommend-price price">¥{{ item.retail_price }}</view>
-            </view>
-          </block>
+<view class="container">
+  <!-- 占位元素，与固定搜索框高度相同 -->
+  <view class="search-placeholder"></view>
+  
+  <!-- 轮播图区域 -->
+  <view class="banner">
+    <swiper class="swipe-container" indicator-dots autoplay interval="3000" circular>
+      <swiper-item wx:for="{{banners}}" wx:key="id">
+        <image src="{{item.image_url}}" mode="widthFix" class="swipe-image" bindtap="onBannerTap" data-item="{{ item }}"></image>
+      </swiper-item>
+    </swiper>
+  </view>
+  
+  <!-- 推荐商品 -->
+  <view class="recommend-section">
+    <view class="section-title">推荐商品</view>
+    <scroll-view class="recommend-scroll" scroll-x>
+      <view class="recommend-list">
+        <block wx:for="{{ recommendGoods }}" wx:key="id">
+          <view class="recommend-item" bindtap="onGoodsTap" data-id="{{ item.id }}">
+            <image src="{{ item.primary_pic_url }}" class="recommend-image" mode="aspectFill"></image>
+            <view class="recommend-name text-ellipsis">{{ item.name }}</view>
+            <view class="recommend-price price">¥{{ item.retail_price }}</view>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+  
+  <!-- 分类列表 -->
+  <view class="category-section">
+    <view class="section-title">分类列表</view>
+    <view class="category-tabs">
+      <block wx:for="{{ categories }}" wx:key="id">
+        <view class="category-tab {{ currentCategory === item.id ? 'active' : '' }}" bindtap="onCategoryTap" data-id="{{ item.id }}">
+          {{ item.name }}
         </view>
-      </scroll-view>
+      </block>
     </view>
     
-    <!-- 分类列表 -->
-    <view class="category-section">
-      <view class="section-title">分类列表</view>
-      <view class="category-tabs">
-        <block wx:for="{{ categories }}" wx:key="id">
-          <view class="category-tab {{ currentCategory === item.id ? 'active' : '' }}" bindtap="onCategoryTap" data-id="{{ item.id }}">
-            {{ item.name }}
+    <!-- 分类商品 -->
+    <view class="goods-section" wx:if="{{ categoryGoods.length > 0 }}">
+      <view class="goods-grid">
+        <block wx:for="{{ categoryGoods }}" wx:key="id">
+          <view class="goods-item" bindtap="onGoodsTap" data-id="{{ item.id }}">
+            <image src="{{ item.primary_pic_url }}" class="goods-image" mode="aspectFill"></image>
+            <view class="goods-name text-ellipsis">{{ item.name }}</view>
+            <view class="goods-price price">¥{{ item.retail_price }}</view>
+            <view class="goods-stock">库存: {{ item.goods_number }}</view>
+            <view class="add-cart" catchtap="onAddCart" data-id="{{ item.id }}">
+              <text>+加入购物车</text>
+            </view>
           </view>
         </block>
       </view>
       
-      <!-- 分类商品 -->
-      <view class="goods-section" wx:if="{{ categoryGoods.length > 0 }}">
-        <view class="goods-grid">
-          <block wx:for="{{ categoryGoods }}" wx:key="id">
-            <view class="goods-item" bindtap="onGoodsTap" data-id="{{ item.id }}">
-              <image src="{{ item.primary_pic_url }}" class="goods-image" mode="aspectFill"></image>
-              <view class="goods-name text-ellipsis">{{ item.name }}</view>
-              <view class="goods-price price">¥{{ item.retail_price }}</view>
-              <view class="goods-stock">库存: {{ item.goods_number }}</view>
-              <view class="add-cart" catchtap="onAddCart" data-id="{{ item.id }}">
-                <text>+加入购物车</text>
-              </view>
-            </view>
-          </block>
+      <!-- 加载更多提示 -->
+      <view class="loading-more">
+        <view wx:if="{{ loadingMore }}" class="loading">
+          <view class="loading-icon"></view>
+          <text>——— 加载中 ———</text>
         </view>
-        
-        <!-- 加载更多提示 -->
-        <view class="loading-more">
-          <view wx:if="{{ loadingMore }}" class="loading">
-            <view class="loading-icon"></view>
-            <text>——— 加载中 ———</text>
-          </view>
-          <view wx:elif="{{ !hasMore }}" class="no-more">
-            <text>——— 已经到底了 ———</text>
-          </view>
-          <view wx:else class="has-more">
-            <text>——— 加载更多数据 ———</text>
-          </view>
+        <view wx:elif="{{ !hasMore }}" class="no-more">
+          <text>——— 已经到底了 ———</text>
         </view>
-      </view>
-      
-      <!-- 无数据状态 -->
-      <view class="no-data" wx:if="{{ categoryGoods.length === 0 }}">
-        <text>暂无商品数据</text>
+        <view wx:else class="has-more">
+          <text>——— 加载更多数据 ———</text>
+        </view>
       </view>
     </view>
+    
+    <!-- 无数据状态 -->
+    <view class="no-data" wx:if="{{ categoryGoods.length === 0 }}">
+      <text>暂无商品数据</text>
+    </view>
   </view>
-</scroll-view>
+</view>

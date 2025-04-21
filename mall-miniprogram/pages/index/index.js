@@ -27,11 +27,7 @@ Page({
 
         // 刷新相关
         isRefreshing: false, // 是否正在刷新
-        refreshSuccess: false, // 刷新成功提示
-
-        // 滚动相关
-        scrollTop: 0,
-        lastLoadedItemCount: 0 // 上次加载时的商品数量
+        refreshSuccess: false // 刷新成功提示
     },
 
     // 页面加载
@@ -63,12 +59,12 @@ Page({
 
     // 页面下拉刷新
     onPullDownRefresh() {
+        console.log('触发下拉刷新');
         this.setData({
             isRefreshing: true,
             refreshSuccess: false,
             currentPage: 1,
-            hasMore: true,
-            lastLoadedItemCount: 0
+            hasMore: true
         });
 
         // 重新加载所有数据
@@ -98,6 +94,13 @@ Page({
                     refreshSuccess: false
                 });
             }, 3000);
+
+            // 显示成功提示
+            wx.showToast({
+                title: '刷新成功',
+                icon: 'success',
+                duration: 1500
+            });
         }).catch(err => {
             console.error('刷新数据失败', err);
             // 停止下拉刷新动画
@@ -112,38 +115,10 @@ Page({
         });
     },
 
-    // 监听页面滚动
-    onPageScroll(e) {
-        this.setData({
-            scrollTop: e.detail.scrollTop
-        });
-
-        // 如果已经在加载或者没有更多数据，直接返回
-        if (this.data.loadingMore || !this.data.hasMore) {
-            return;
-        }
-
-        // 如果当前显示的商品数量比上次加载的多，表示用户正在浏览新加载的商品
-        // 如果商品数量已达到或超过下一页的阈值，自动加载更多
-        const visibleItems = this.data.categoryGoods.length;
-
-        if (visibleItems > 0 && visibleItems >= this.data.lastLoadedItemCount + (this.data.pageSize / 2)) {
-            this.loadMoreCategoryGoods();
-            this.setData({
-                lastLoadedItemCount: visibleItems
-            });
-        }
-    },
-
-    // 滚动到底部触发
-    onScrollToLower() {
-        if (this.data.currentCategory !== 0 && this.data.hasMore && !this.data.loadingMore) {
-            this.loadMoreCategoryGoods();
-        }
-    },
-
-    // 页面上拉触底 (保留此方法以兼容)
+    // 页面上拉触底
     onReachBottom() {
+        console.log('触发上拉触底');
+        // 加载更多分类商品
         if (this.data.currentCategory !== 0 && this.data.hasMore && !this.data.loadingMore) {
             this.loadMoreCategoryGoods();
         }
@@ -294,8 +269,7 @@ Page({
                 categories: categories,
                 currentCategory: categories[0].id,
                 currentPage: 1,
-                hasMore: true,
-                lastLoadedItemCount: 0
+                hasMore: true
             });
 
             // 加载第一个分类的商品
@@ -365,18 +339,15 @@ Page({
                         categoryGoods: pageData,
                         currentPage: page,
                         hasMore: hasMore,
-                        loadingMore: false,
-                        lastLoadedItemCount: pageData.length
+                        loadingMore: false
                     });
                 } else {
                     // 加载更多，追加数据
-                    const newCategoryGoods = this.data.categoryGoods.concat(pageData);
                     this.setData({
-                        categoryGoods: newCategoryGoods,
+                        categoryGoods: this.data.categoryGoods.concat(pageData),
                         currentPage: page,
                         hasMore: hasMore,
-                        loadingMore: false,
-                        lastLoadedItemCount: newCategoryGoods.length
+                        loadingMore: false
                     });
                 }
 
@@ -444,20 +415,6 @@ Page({
             loadingMore: true
         });
 
-        // 滚动到加载提示区域
-        wx.createSelectorQuery()
-            .select('.loading-more')
-            .boundingClientRect(rect => {
-                if (rect) {
-                    // 滚动到加载提示的上方位置，确保用户看到加载状态
-                    wx.pageScrollTo({
-                        scrollTop: rect.top - 200,
-                        duration: 300
-                    });
-                }
-            })
-            .exec();
-
         const nextPage = this.data.currentPage + 1;
         this.loadCategoryGoods(this.data.currentCategory, nextPage);
     },
@@ -502,8 +459,7 @@ Page({
             currentCategory: id,
             currentPage: 1,
             hasMore: true,
-            loadingMore: false,
-            lastLoadedItemCount: 0
+            loadingMore: false
         });
 
         // 加载该分类的商品
