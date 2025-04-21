@@ -9,10 +9,12 @@ const router = express.Router();
 const bannerRoutes = require('./bannerRoutes');
 const categoryRoutes = require('./categoryRoutes');
 const goodsRoutes = require('./goodsRoutes');
+const userRoutes = require('./userRoutes');
 
 // 注册各模块路由
 router.use('/banner', bannerRoutes);
 router.use('/category', categoryRoutes);
 router.use('/goods', goodsRoutes);
+router.use('/user', userRoutes);
 
 module.exports = router; 

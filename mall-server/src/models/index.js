@@ -7,6 +7,7 @@ const Admin = require('./admin');
 const Goods = require('./goods');
 const Category = require('./category');
 const Banner = require('./banner');
+const User = require('./user');
 
 // 设置模型之间的关联关系
 // 分类与商品的一对多关系
@@ -17,5 +18,6 @@ module.exports = {
     Admin,
     Goods,
     Category,
-    Banner
+    Banner,
+    User
 }; 

@@ -2,7 +2,7 @@
  * 数据库初始化工具
  * 负责填充基础数据，确保系统首次运行时有基本的数据支持
  */
-const { Category, Banner } = require('../models');
+const { Category, Banner, User } = require('../models');
 const logger = require('./logger');
 
 /**
@@ -129,12 +129,85 @@ const initBanners = async () => {
 };
 
 /**
+ * 初始化用户数据
+ * 只在用户表为空时添加初始数据
+ */
+const initUsers = async () => {
+    try {
+        // 检查用户表是否为空
+        const count = await User.count();
+
+        if (count === 0) {
+            logger.info('用户表为空，开始初始化示例用户数据...');
+
+            // 定义示例用户数据
+            const users = [
+                {
+                    nickname: '张三',
+                    openid: 'wx_openid_12345',
+                    avatar: 'http://localhost:8080/uploads/avatars/avatar1.jpg',
+                    phone: '13812345678',
+                    email: 'zhangsan@example.com',
+                    gender: 1,
+                    status: 1
+                },
+                {
+                    nickname: '李四',
+                    openid: 'wx_openid_23456',
+                    avatar: 'http://localhost:8080/uploads/avatars/avatar2.jpg',
+                    phone: '13987654321',
+                    email: 'lisi@example.com',
+                    gender: 1,
+                    status: 1
+                },
+                {
+                    nickname: '王五',
+                    openid: 'wx_openid_34567',
+                    avatar: 'http://localhost:8080/uploads/avatars/avatar3.jpg',
+                    phone: '13500123456',
+                    email: 'wangwu@example.com',
+                    gender: 1,
+                    status: 0
+                },
+                {
+                    nickname: '赵六',
+                    openid: 'wx_openid_45678',
+                    avatar: 'http://localhost:8080/uploads/avatars/avatar4.jpg',
+                    phone: '13611112222',
+                    email: 'zhaoliu@example.com',
+                    gender: 1,
+                    status: 1
+                },
+                {
+                    nickname: '小红',
+                    openid: 'wx_openid_56789',
+                    avatar: 'http://localhost:8080/uploads/avatars/avatar5.jpg',
+                    phone: '13922223333',
+                    email: 'xiaohong@example.com',
+                    gender: 2,
+                    status: 1
+                }
+            ];
+
+            // 批量创建用户
+            await User.bulkCreate(users);
+            logger.info(`成功初始化 ${users.length} 条用户数据`);
+        } else {
+            logger.info(`用户表已存在 ${count} 条数据，跳过初始化`);
+        }
+    } catch (error) {
+        logger.error('初始化用户数据失败:', error.message);
+    }
+};
+
+/**
  * 初始化所有种子数据
  * 按需添加其他数据初始化函数
  */
 const initAllSeedData = async () => {
     await initCategories();
     await initBanners();
+    await initUsers();
     // 可以添加其他数据初始化函数
     // await initProducts();
     // 等等...
@@ -143,5 +216,6 @@ const initAllSeedData = async () => {
 module.exports = {
     initAllSeedData,
     initCategories,
-    initBanners
+    initBanners,
+    initUsers
 }; 
