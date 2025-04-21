@@ -2,7 +2,7 @@
  * 数据库初始化工具
  * 负责填充基础数据，确保系统首次运行时有基本的数据支持
  */
-const { Category } = require('../models');
+const { Category, Banner } = require('../models');
 const logger = require('./logger');
 
 /**
@@ -72,18 +72,76 @@ const initCategories = async () => {
 };
 
 /**
+ * 初始化轮播图数据
+ * 清空轮播图表并重新初始化
+ */
+const initBanners = async () => {
+    try {
+        // 清空轮播图表并重新初始化
+        await Banner.destroy({ where: {}, truncate: true });
+        logger.info('轮播图表已清空，开始初始化轮播图数据...');
+
+        // 定义示例轮播图数据，注意这里使用根路径开始的完整路径
+        const banners = [
+            {
+                title: '新品上市',
+                image: 'http://localhost:8080/uploads/banners/banner1.svg',
+                url: '/pages/products?category=new',
+                sort: 1,
+                status: 1  // 启用状态
+            },
+            {
+                title: '限时折扣',
+                image: 'http://localhost:8080/uploads/banners/banner2.svg',
+                url: '/pages/products?type=discount',
+                sort: 2,
+                status: 1  // 启用状态
+            },
+            {
+                title: '热门推荐',
+                image: 'http://localhost:8080/uploads/banners/banner3.svg',
+                url: '/pages/products?type=hot',
+                sort: 3,
+                status: 1  // 启用状态
+            },
+            {
+                title: '夏季专享',
+                image: 'http://localhost:8080/uploads/banners/banner4.svg',
+                url: '/pages/products?season=summer',
+                sort: 4,
+                status: 0  // 禁用状态
+            },
+            {
+                title: '品牌特卖',
+                image: 'http://localhost:8080/uploads/banners/banner5.svg',
+                url: '/pages/products?type=brand',
+                sort: 5,
+                status: 0  // 禁用状态
+            }
+        ];
+
+        // 批量创建轮播图
+        await Banner.bulkCreate(banners);
+        logger.info(`成功初始化 ${banners.length} 条轮播图数据`);
+    } catch (error) {
+        logger.error('初始化轮播图数据失败:', error.message);
+    }
+};
+
+/**
  * 初始化所有种子数据
  * 按需添加其他数据初始化函数
  */
 const initAllSeedData = async () => {
     await initCategories();
+    await initBanners();
     // 可以添加其他数据初始化函数
     // await initProducts();
-    // await initBanners();
     // 等等...
 };
 
 module.exports = {
     initAllSeedData,
     initCategories,
+    initBanners
 }; 
