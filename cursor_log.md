@@ -783,3 +783,48 @@ MySQL限制每个表最多只能有64个索引（键）。当表已经接近这�
 3. 为每个接口详细定义了请求参数、响应结构和可能的错误情况
 4. 添加了安全认证相关的文档说明
 5. 规范化了轮播图管理相关的所有接口表述
+
+## 优化后台路由结构
+
+### 会话日期和时间
+2024-08-15 18:00
+
+### 主要目的
+重构后端项目的路由结构，将后台管理相关的接口从routes根目录移动到routes/admin目录下，提高代码组织的清晰度和可维护性。
+
+### 完成的主要任务
+1. 创建了新的`routes/admin`目录，用于集中管理所有后台路由
+2. 将商品、分类、轮播图等后台管理路由从根目录移动到admin目录
+3. 创建了`routes/admin/index.js`文件，统一导出和管理所有admin子路由
+4. 更新了主路由文件，引用新的admin路由架构
+5. 删除了不再需要的根目录下的旧路由文件
+
+### 关键决策和解决方案
+- 采用多层嵌套的路由结构，提高路由文件的组织性
+- 在移动路由文件时，更新了所有控制器和中间件的引用路径
+- 保持了API接口路径不变，确保前端不需要修改任何代码
+- 保持了所有Swagger文档注释，确保API文档的完整性
+- 将公共接口（如小程序前端使用的/api/banners）保留在主路由文件中
+
+### 使用的技术栈
+- Node.js
+- Express
+- RESTful API
+- Swagger/OpenAPI
+
+### 修改了哪些文件
+- 新建：`mall-server/src/routes/admin/index.js` - 创建admin路由索引
+- 新建：`mall-server/src/routes/admin/bannerRoutes.js` - 移动轮播图路由
+- 新建：`mall-server/src/routes/admin/categoryRoutes.js` - 移动分类路由
+- 新建：`mall-server/src/routes/admin/goodsRoutes.js` - 移动商品路由
+- 修改：`mall-server/src/routes/index.js` - 更新主路由文件
+- 删除：`mall-server/src/routes/bannerRoutes.js` - 删除旧路由文件
+- 删除：`mall-server/src/routes/categoryRoutes.js` - 删除旧路由文件
+- 删除：`mall-server/src/routes/goodsRoutes.js` - 删除旧路由文件
+
+### 技术实现要点
+1. 路由模块化：将不同功能模块的路由分离到独立的文件中
+2. 路径层次化：通过目录结构反映API的层次和归属关系
+3. 引用路径调整：修改了所有涉及的相对路径引用（如 '../controllers' 改为 '../../controllers'）
+4. 路由注册统一化：在admin/index.js中统一注册所有admin子路由，简化主路由文件
+5. 保持API一致性：重构过程中确保所有API路径和功能保持不变
