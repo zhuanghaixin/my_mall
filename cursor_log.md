@@ -503,3 +503,31 @@ npm run dev
    - 限制上传文件大小和类型
    - 统一的文件命名和存储规则
    - 支持单图和多图上传，多图限制最多10张
+
+## 2024-06-10 商品详情富文本编辑器集成
+
+### 会话的主要目的
+在商城管理后台的商品详情编辑页面中集成wangeditor富文本编辑器，替换原有的普通文本框，提供更丰富的编辑功能。
+
+### 完成的主要任务
+1. 创建了RichTextEditor.vue组件，封装了wangeditor-for-vue
+2. 在商品编辑页面中将商品描述和商品详情字段替换为富文本编辑器
+3. 集成了现有的图片上传API，使编辑器支持图片上传
+4. 优化了编辑器的样式和高度设置
+
+### 关键决策和解决方案
+- 使用v-model双向绑定实现表单数据与编辑器内容的同步
+- 使用现有的uploadImage API处理图片上传
+- 为不同用途的编辑区域设置不同的高度
+- 优化编辑器样式，与Element Plus风格统一
+
+### 使用的技术栈
+- Vue 3
+- TypeScript
+- Element Plus
+- wangeditor (@wangeditor/editor, @wangeditor/editor-for-vue)
+
+### 修改了哪些文件
+- 新增: mall-admin/src/components/RichTextEditor.vue
+- 修改: mall-admin/src/views/products/edit.vue
+- 修改: cursor_log.md

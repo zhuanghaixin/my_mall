@@ -72,7 +72,7 @@
         </el-form-item>
 
         <el-form-item label="商品详情" prop="detail">
-          <el-input v-model="form.detail" type="textarea" :rows="8" placeholder="请输入商品详细介绍" />
+          <RichTextEditor v-model="form.detail" placeholder="请输入商品详细介绍" height="400px" />
         </el-form-item>
 
         <!-- 商品规格 -->
@@ -147,6 +147,7 @@ import {
 } from '@/api/product'
 import type { Product, Category, ProductSpec } from '@/types/product'
 import type { ApiResponse } from '@/api/request'
+import RichTextEditor from '@/components/RichTextEditor.vue'
 
 const route = useRoute()
 const router = useRouter()

@@ -10,8 +10,8 @@
     "lint": "eslint src --ext .ts,.vue"
   },
   "dependencies": {
-    "@wangeditor/editor": "^5.1.23",
-    "@wangeditor/editor-for-vue": "^1.0.2",
+    "@wangeditor/editor": "^5.0.1",
+    "@wangeditor/editor-for-vue": "^5.1.11",
     "axios": "^1.8.4",
     "element-plus": "^2.9.7",
     "pinia": "^3.0.2",
