@@ -27,7 +27,11 @@ Page({
 
         // 刷新相关
         isRefreshing: false, // 是否正在刷新
-        refreshSuccess: false // 刷新成功提示
+        refreshSuccess: false, // 刷新成功提示
+
+        // 滚动相关
+        scrollTop: 0,
+        lastLoadedItemCount: 0 // 上次加载时的商品数量
     },
 
     // 页面加载
@@ -63,7 +67,8 @@ Page({
             isRefreshing: true,
             refreshSuccess: false,
             currentPage: 1,
-            hasMore: true
+            hasMore: true,
+            lastLoadedItemCount: 0
         });
 
         // 重新加载所有数据
@@ -107,9 +112,38 @@ Page({
         });
     },
 
-    // 页面上拉触底
+    // 监听页面滚动
+    onPageScroll(e) {
+        this.setData({
+            scrollTop: e.detail.scrollTop
+        });
+
+        // 如果已经在加载或者没有更多数据，直接返回
+        if (this.data.loadingMore || !this.data.hasMore) {
+            return;
+        }
+
+        // 如果当前显示的商品数量比上次加载的多，表示用户正在浏览新加载的商品
+        // 如果商品数量已达到或超过下一页的阈值，自动加载更多
+        const visibleItems = this.data.categoryGoods.length;
+
+        if (visibleItems > 0 && visibleItems >= this.data.lastLoadedItemCount + (this.data.pageSize / 2)) {
+            this.loadMoreCategoryGoods();
+            this.setData({
+                lastLoadedItemCount: visibleItems
+            });
+        }
+    },
+
+    // 滚动到底部触发
+    onScrollToLower() {
+        if (this.data.currentCategory !== 0 && this.data.hasMore && !this.data.loadingMore) {
+            this.loadMoreCategoryGoods();
+        }
+    },
+
+    // 页面上拉触底 (保留此方法以兼容)
     onReachBottom() {
-        // 加载更多分类商品
         if (this.data.currentCategory !== 0 && this.data.hasMore && !this.data.loadingMore) {
             this.loadMoreCategoryGoods();
         }
@@ -260,7 +294,8 @@ Page({
                 categories: categories,
                 currentCategory: categories[0].id,
                 currentPage: 1,
-                hasMore: true
+                hasMore: true,
+                lastLoadedItemCount: 0
             });
 
             // 加载第一个分类的商品
@@ -330,15 +365,18 @@ Page({
                         categoryGoods: pageData,
                         currentPage: page,
                         hasMore: hasMore,
-                        loadingMore: false
+                        loadingMore: false,
+                        lastLoadedItemCount: pageData.length
                     });
                 } else {
                     // 加载更多，追加数据
+                    const newCategoryGoods = this.data.categoryGoods.concat(pageData);
                     this.setData({
-                        categoryGoods: this.data.categoryGoods.concat(pageData),
+                        categoryGoods: newCategoryGoods,
                         currentPage: page,
                         hasMore: hasMore,
-                        loadingMore: false
+                        loadingMore: false,
+                        lastLoadedItemCount: newCategoryGoods.length
                     });
                 }
 
@@ -450,7 +488,8 @@ Page({
             currentCategory: id,
             currentPage: 1,
             hasMore: true,
-            loadingMore: false
+            loadingMore: false,
+            lastLoadedItemCount: 0
         });
 
         // 加载该分类的商品

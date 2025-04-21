@@ -12,7 +12,14 @@
   </view>
 </view>
 
-<scroll-view class="scrollarea" scroll-y type="list">
+<scroll-view 
+  class="scrollarea" 
+  scroll-y 
+  type="list"
+  bindscroll="onPageScroll" 
+  lower-threshold="200"
+  bindscrolltolower="onScrollToLower"
+>
   <view class="container">
     <!-- 搜索框 -->
     <view class="search-container">
@@ -87,7 +94,7 @@
             <text>已经到底了~</text>
           </view>
           <view wx:else class="has-more">
-            <text>上拉加载更多</text>
+            <text>加载更多数据</text>
           </view>
         </view>
       </view>
