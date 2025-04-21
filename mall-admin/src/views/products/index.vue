@@ -84,7 +84,12 @@
                 <Edit />
               </el-icon>编辑
             </el-button>
-            <el-button type="primary" link :type="scope.row.status === 1 ? 'warning' : 'success'"
+            <el-button type="info" link @click="showDetail(scope.row)">
+              <el-icon>
+                <View />
+              </el-icon>详情
+            </el-button>
+            <el-button link :type="scope.row.status === 1 ? 'warning' : 'success'"
               @click="handleStatusChange(scope.row)">
               {{ scope.row.status === 1 ? '下架' : '上架' }}
             </el-button>
@@ -103,22 +108,61 @@
           @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
+
+    <!-- 添加商品详情对话框 -->
+    <el-dialog v-model="detailDialogVisible" title="商品详情" width="70%" destroy-on-close>
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="商品名称">{{ currentProduct?.name }}</el-descriptions-item>
+        <el-descriptions-item label="商品分类">{{ currentProduct?.category?.name || '未分类' }}</el-descriptions-item>
+        <el-descriptions-item label="价格">
+          <span class="price">¥{{ currentProduct?.price }}</span>
+          <span v-if="currentProduct?.original_price"
+            style="text-decoration: line-through; margin-left: 10px; color: #999;">
+            ¥{{ currentProduct?.original_price }}
+          </span>
+        </el-descriptions-item>
+        <el-descriptions-item label="库存">{{ currentProduct?.stock }}</el-descriptions-item>
+        <el-descriptions-item label="销量">{{ currentProduct?.sales }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="currentProduct?.status === 1 ? 'success' : 'info'">
+            {{ currentProduct?.status === 1 ? '已上架' : '已下架' }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ currentProduct?.created_at }}</el-descriptions-item>
+        <el-descriptions-item label="商品图片">
+          <div class="image-list">
+            <el-image v-if="currentProduct?.main_image" :src="currentProduct.main_image"
+              style="width: 100px; height: 100px; margin-right: 10px" :preview-src-list="[currentProduct.main_image]" />
+            <el-image v-for="(img, index) in productImages" :key="index" :src="img"
+              style="width: 100px; height: 100px; margin-right: 10px" :preview-src-list="productImages" />
+          </div>
+        </el-descriptions-item>
+        <el-descriptions-item label="商品描述">{{ currentProduct?.description }}</el-descriptions-item>
+      </el-descriptions>
+
+      <div class="detail-content">
+        <h3>商品详情</h3>
+        <div v-html="currentProduct?.detail" class="rich-text-content"></div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, TopRight, BottomRight } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, TopRight, BottomRight, View } from '@element-plus/icons-vue'
 import {
   getProductList,
   updateProductStatus,
   deleteProduct,
-  batchOperateProducts
+  batchOperateProducts,
+  getProductDetail
 } from '@/api/product'
 import { getCategoryList } from '@/api/category'
 import type { Product, Category, PaginationData, ProductQueryParams } from '@/types/product'
+import type { ApiResponse } from '@/api/request'
 
 const router = useRouter()
 const loading = ref(false)
@@ -136,6 +180,14 @@ const queryParams = reactive<ProductQueryParams>({
   pageSize: 10
 })
 
+// 商品详情相关
+const detailDialogVisible = ref(false)
+const currentProduct = ref<Product | null>(null)
+const productImages = computed(() => {
+  if (!currentProduct.value?.images) return []
+  return currentProduct.value.images.split(',')
+})
+
 // 初始化
 onMounted(() => {
   console.log('商品列表组件已加载')
@@ -148,11 +200,7 @@ const fetchProductList = async () => {
   loading.value = true
   try {
     console.log('获取商品列表...')
-    const res = await getProductList(queryParams) as {
-      code: number
-      message: string
-      data: PaginationData<Product>
-    }
+    const res = await getProductList(queryParams) as unknown as ApiResponse<PaginationData<Product>>
 
     if (res.code === 200) {
       productList.value = res.data.list
@@ -172,11 +220,7 @@ const fetchProductList = async () => {
 // 获取分类列表
 const fetchCategoryList = async () => {
   try {
-    const res = await getCategoryList() as {
-      code: number
-      message: string
-      data: Category[]
-    }
+    const res = await getCategoryList() as unknown as ApiResponse<Category[]>
 
     if (res.code === 200) {
       categoryOptions.value = res.data
@@ -206,13 +250,6 @@ const handleSelectionChange = (selection: Product[]) => {
   selectedIds.value = selection.map(item => item.id)
 }
 
-// API响应类型
-interface ApiResponse<T = any> {
-  code: number
-  message: string
-  data: T
-}
-
 // 处理批量操作
 const handleBatchOperation = async (operation: string) => {
   if (selectedIds.value.length === 0) {
@@ -240,7 +277,7 @@ const handleBatchOperation = async (operation: string) => {
     const res = await batchOperateProducts({
       ids: selectedIds.value,
       operation: operation
-    }) as ApiResponse
+    }) as unknown as ApiResponse
 
     if (res.code === 200) {
       ElMessage.success(res.message || '批量操作成功')
@@ -266,7 +303,7 @@ const handleStatusChange = (row: Product) => {
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await updateProductStatus(row.id, status) as { code: number, message: string }
+      const res = await updateProductStatus(row.id, status) as unknown as ApiResponse
 
       if (res.code === 200) {
         ElMessage.success(`${statusText}成功`)
@@ -291,7 +328,7 @@ const handleDelete = (row: Product) => {
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await deleteProduct(row.id) as { code: number, message: string }
+      const res = await deleteProduct(row.id) as unknown as ApiResponse
 
       if (res.code === 200) {
         ElMessage.success('删除成功')
@@ -316,6 +353,22 @@ const handleAdd = () => {
 // 编辑商品
 const handleEdit = (row: Product) => {
   router.push(`/products/edit/${row.id}`)
+}
+
+// 查看商品详情
+const showDetail = async (row: Product) => {
+  try {
+    const res = await getProductDetail(row.id) as unknown as ApiResponse<Product>
+    if (res.code === 200) {
+      currentProduct.value = res.data
+      detailDialogVisible.value = true
+    } else {
+      ElMessage.error(res.message || '获取商品详情失败')
+    }
+  } catch (error) {
+    console.error('获取商品详情失败', error)
+    ElMessage.error('获取商品详情失败')
+  }
 }
 
 // 处理分页大小变化
@@ -356,5 +409,34 @@ const handleCurrentChange = (page: number) => {
 .price {
   color: #f56c6c;
   font-weight: bold;
+}
+
+.image-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.detail-content {
+  margin-top: 20px;
+  border-top: 1px solid #ebeef5;
+  padding-top: 20px;
+}
+
+.rich-text-content {
+  padding: 15px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  min-height: 150px;
+}
+
+/* 解除scoped限制，确保富文本内容样式生效 */
+:deep(.rich-text-content img) {
+  max-width: 100%;
+}
+
+:deep(.rich-text-content p) {
+  margin: 0.5em 0;
 }
 </style>
