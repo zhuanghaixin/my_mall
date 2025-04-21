@@ -19,6 +19,9 @@ const OrderList = () => import('@/views/orders/index.vue')
 // 用户管理
 const UserList = () => import('@/views/users/index.vue')
 
+// 轮播图管理
+const BannerList = () => import('@/views/banner/index.vue')
+
 // 系统设置
 const SystemSettings = () => import('@/views/system/settings.vue')
 
@@ -175,6 +178,27 @@ export const constantRoutes: RouteRecordRaw[] = [
       },
     ],
   },
+  // 轮播图管理
+  {
+    path: '/banner',
+    component: BasicLayout,
+    redirect: '/banner/list',
+    meta: {
+      title: '轮播图管理',
+      icon: 'Picture',
+    },
+    children: [
+      {
+        path: 'list',
+        name: 'BannerList',
+        component: BannerList,
+        meta: {
+          title: '轮播图列表',
+          icon: 'PictureFilled',
+        },
+      },
+    ],
+  },
   // 系统设置
   {
     path: '/system',
@@ -211,4 +235,4 @@ export const asyncRoutes: RouteRecordRaw[] = [
   // 根据项目实际需求，后续添加
 ]
 
-export default [...constantRoutes, ...asyncRoutes] 
+export default [...constantRoutes, ...asyncRoutes]
