@@ -53,7 +53,8 @@
         <el-table-column label="ID" prop="id" width="80" />
         <el-table-column label="商品图片" width="100">
           <template #default="scope">
-            <el-image :src="scope.row.main_image" :preview-src-list="[scope.row.main_image]"
+            <el-image :src="scope.row.main_image || (scope.row.images ? scope.row.images.split(',')[0] : '')"
+              :preview-src-list="scope.row.images ? scope.row.images.split(',') : [scope.row.main_image]"
               style="width: 60px; height: 60px" fit="cover" />
           </template>
         </el-table-column>
@@ -131,10 +132,17 @@
         <el-descriptions-item label="创建时间">{{ currentProduct?.created_at }}</el-descriptions-item>
         <el-descriptions-item label="商品图片">
           <div class="image-list">
+            <!-- 先显示主图 -->
             <el-image v-if="currentProduct?.main_image" :src="currentProduct.main_image"
-              style="width: 100px; height: 100px; margin-right: 10px" :preview-src-list="[currentProduct.main_image]" />
+              style="width: 100px; height: 100px; margin-right: 10px" :preview-src-list="currentProduct.images ?
+                [currentProduct.main_image, ...productImages] :
+                [currentProduct.main_image]" />
+
+            <!-- 再显示其他图片 -->
             <el-image v-for="(img, index) in productImages" :key="index" :src="img"
-              style="width: 100px; height: 100px; margin-right: 10px" :preview-src-list="productImages" />
+              style="width: 100px; height: 100px; margin-right: 10px" :preview-src-list="currentProduct?.main_image ?
+                [currentProduct.main_image, ...productImages] :
+                productImages" />
           </div>
         </el-descriptions-item>
         <el-descriptions-item label="商品描述">{{ currentProduct?.description }}</el-descriptions-item>
@@ -185,7 +193,14 @@ const detailDialogVisible = ref(false)
 const currentProduct = ref<Product | null>(null)
 const productImages = computed(() => {
   if (!currentProduct.value?.images) return []
-  return currentProduct.value.images.split(',')
+  const imageList = currentProduct.value.images.split(',')
+
+  // 如果main_image存在且在images列表中，过滤掉重复的main_image
+  if (currentProduct.value.main_image) {
+    return imageList.filter(img => img !== currentProduct.value?.main_image)
+  }
+
+  return imageList
 })
 
 // 初始化

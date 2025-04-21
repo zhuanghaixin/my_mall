@@ -274,10 +274,24 @@ const fetchProductDetail = async () => {
           }
         })
 
-        // 设置主图
-        if (!form.main_image && imagesList.length > 0) {
+        // 确保主图正确设置
+        if (productData.main_image) {
+          // 如果后端返回了main_image，使用它
+          form.main_image = productData.main_image
+        } else if (!form.main_image && imagesList.length > 0) {
+          // 否则使用第一张图片
           form.main_image = imagesList[0]
         }
+      } else if (productData.main_image) {
+        // 如果只有main_image没有images，确保也添加到images列表
+        form.main_image = productData.main_image
+        form.images_list = [productData.main_image]
+        form.images = productData.main_image
+
+        fileList.value = [{
+          name: 'main-image',
+          url: productData.main_image
+        }]
       }
 
       // TODO: 获取商品规格信息（需要后端接口支持）
