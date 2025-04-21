@@ -2,8 +2,8 @@
 <navigation-bar title="首页"></navigation-bar>
 <scroll-view class="scrollarea" scroll-y type="list">
   <view class="container">
-    <!-- 自定义导航栏 -->
-    <view class="custom-nav">
+    <!-- 搜索框 -->
+    <view class="search-container">
       <van-search
         value="{{ searchValue }}"
         placeholder="请输入搜索关键词"
@@ -17,15 +17,10 @@
     <view class="banner">
       <swiper class="swipe-container" indicator-dots autoplay interval="3000" circular>
         <swiper-item wx:for="{{banners}}" wx:key="id">
-          <image src="{{item.image_url}}" mode="aspectFill" class="swipe-image" bindtap="onBannerTap" data-item="{{ item }}"></image>
+          <image src="{{item.image_url}}" mode="widthFix" class="swipe-image" bindtap="onBannerTap" data-item="{{ item }}"></image>
         </swiper-item>
       </swiper>
     </view>
-    
-    <!-- 商品分类导航 -->
-    <van-grid column-num="5" border="{{false}}" class="category-grid">
-      <van-grid-item wx:for="{{categories}}" wx:key="id" icon="{{item.icon}}" text="{{item.name}}" bindtap="onCategoryTap" data-id="{{ item.id }}" />
-    </van-grid>
     
     <!-- 推荐商品 -->
     <view class="recommend-section">
@@ -68,6 +63,21 @@
           </view>
         </block>
       </view>
+      
+      <!-- 加载更多提示 -->
+      <view class="loading-more" wx:if="{{ categoryGoods.length > 0 }}">
+        <view wx:if="{{ loadingMore }}" class="loading">
+          <view class="loading-icon"></view>
+          <text>加载中...</text>
+        </view>
+        <view wx:elif="{{ !hasMore }}" class="no-more">
+          <text>已经到底了~</text>
+        </view>
+        <view wx:else class="has-more">
+          <text>上拉加载更多</text>
+        </view>
+      </view>
+      
     </view>
   </view>
 </scroll-view>

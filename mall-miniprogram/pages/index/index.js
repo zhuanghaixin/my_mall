@@ -16,7 +16,14 @@ Page({
         // 分类相关
         categories: [],
         currentCategory: 0,
-        categoryGoods: []
+        categoryGoods: [],
+
+        // 分页相关
+        currentPage: 1,
+        pageSize: 20,
+        hasMore: true, // 是否还有更多数据
+        loadingMore: false, // 是否正在加载更多
+        allCategoryGoods: [] // 存储100条模拟数据
     },
 
     // 页面加载
@@ -24,6 +31,7 @@ Page({
         this.loadBanners();
         this.loadRecommendGoods();
         this.loadCategories();
+        this.generateMockCategoryGoods(); // 生成100条模拟商品数据
     },
 
     // 页面显示
@@ -36,6 +44,11 @@ Page({
         this.loadBanners();
         this.loadRecommendGoods();
         this.loadCategories();
+        this.setData({
+            currentPage: 1,
+            hasMore: true
+        });
+        this.loadCategoryGoods(this.data.currentCategory, 1);
         // 停止下拉刷新
         wx.stopPullDownRefresh();
     },
@@ -43,9 +56,26 @@ Page({
     // 页面上拉触底
     onReachBottom() {
         // 加载更多分类商品
-        if (this.data.currentCategory !== 0) {
+        if (this.data.currentCategory !== 0 && this.data.hasMore && !this.data.loadingMore) {
             this.loadMoreCategoryGoods();
         }
+    },
+
+    // 生成100条模拟商品数据
+    generateMockCategoryGoods() {
+        const allGoods = [];
+        for (let i = 1; i <= 100; i++) {
+            allGoods.push({
+                id: i + 10, // 避免ID冲突
+                name: `分类商品${i}`,
+                primary_pic_url: 'https://img.yzcdn.cn/vant/cat.jpeg',
+                retail_price: (Math.random() * 200 + 50).toFixed(2),
+                goods_number: Math.floor(Math.random() * 200 + 20)
+            });
+        }
+        this.setData({
+            allCategoryGoods: allGoods
+        });
     },
 
     // 加载轮播图
@@ -165,11 +195,13 @@ Page({
 
         this.setData({
             categories: categories,
-            currentCategory: categories[0].id
+            currentCategory: categories[0].id,
+            currentPage: 1,
+            hasMore: true
         });
 
         // 加载第一个分类的商品
-        this.loadCategoryGoods(categories[0].id);
+        this.loadCategoryGoods(categories[0].id, 1);
 
         // 实际API调用，等后端API准备好时替换上面的模拟数据
         /*
@@ -181,7 +213,7 @@ Page({
             });
             
             // 加载第一个分类的商品
-            this.loadCategoryGoods(res[0].id);
+            this.loadCategoryGoods(res[0].id, 1);
           }
         }).catch(err => {
           console.error('获取分类失败', err);
@@ -190,45 +222,50 @@ Page({
     },
 
     // 加载分类商品
-    loadCategoryGoods(categoryId, page = 1, size = 6) {
+    loadCategoryGoods(categoryId, page = 1) {
+        const size = this.data.pageSize;
         util.showLoading();
 
-        // 使用本地模拟数据
-        const categoryGoods = [
-            {
-                id: 5,
-                name: '分类商品1',
-                primary_pic_url: 'https://img.yzcdn.cn/vant/cat.jpeg',
-                retail_price: '59.00',
-                goods_number: 100
-            },
-            {
-                id: 6,
-                name: '分类商品2',
-                primary_pic_url: 'https://img.yzcdn.cn/vant/cat.jpeg',
-                retail_price: '79.00',
-                goods_number: 50
-            },
-            {
-                id: 7,
-                name: '分类商品3',
-                primary_pic_url: 'https://img.yzcdn.cn/vant/cat.jpeg',
-                retail_price: '89.00',
-                goods_number: 85
-            },
-            {
-                id: 8,
-                name: '分类商品4',
-                primary_pic_url: 'https://img.yzcdn.cn/vant/cat.jpeg',
-                retail_price: '109.00',
-                goods_number: 120
-            }
-        ];
+        if (page === 1) {
+            this.setData({
+                categoryGoods: [],
+                loadingMore: false
+            });
+        }
 
-        this.setData({
-            categoryGoods: categoryGoods
-        });
-        util.hideLoading();
+        // 使用本地模拟数据，从全部100条数据中取指定页的数据
+        const startIndex = (page - 1) * size;
+        const endIndex = startIndex + size;
+
+        // 模拟从服务器获取数据的延迟
+        setTimeout(() => {
+            const pageData = this.data.allCategoryGoods.slice(startIndex, endIndex);
+
+            let hasMore = true;
+            if (endIndex >= this.data.allCategoryGoods.length) {
+                hasMore = false;
+            }
+
+            if (page === 1) {
+                // 第一页数据直接替换
+                this.setData({
+                    categoryGoods: pageData,
+                    currentPage: page,
+                    hasMore: hasMore,
+                    loadingMore: false
+                });
+            } else {
+                // 加载更多，追加数据
+                this.setData({
+                    categoryGoods: this.data.categoryGoods.concat(pageData),
+                    currentPage: page,
+                    hasMore: hasMore,
+                    loadingMore: false
+                });
+            }
+
+            util.hideLoading();
+        }, 500);
 
         // 实际API调用，等后端API准备好时替换上面的模拟数据
         /*
@@ -240,26 +277,43 @@ Page({
           if (page === 1) {
             // 第一页数据直接替换
             this.setData({
-              categoryGoods: res.list
+              categoryGoods: res.list,
+              hasMore: res.totalPages > page,
+              currentPage: page,
+              loadingMore: false
             });
           } else {
             // 加载更多，追加数据
             this.setData({
-              categoryGoods: this.data.categoryGoods.concat(res.list)
+              categoryGoods: this.data.categoryGoods.concat(res.list),
+              hasMore: res.totalPages > page,
+              currentPage: page,
+              loadingMore: false
             });
           }
           util.hideLoading();
         }).catch(err => {
           console.error('获取分类商品失败', err);
           util.hideLoading();
+          this.setData({
+            loadingMore: false
+          });
         });
         */
     },
 
     // 加载更多分类商品
     loadMoreCategoryGoods() {
-        // 实际实现时，这里需要记录当前页码，然后加载下一页
-        // this.loadCategoryGoods(this.data.currentCategory, this.data.currentPage + 1);
+        if (!this.data.hasMore || this.data.loadingMore) {
+            return;
+        }
+
+        this.setData({
+            loadingMore: true
+        });
+
+        const nextPage = this.data.currentPage + 1;
+        this.loadCategoryGoods(this.data.currentCategory, nextPage);
     },
 
     // 点击搜索框
@@ -299,11 +353,13 @@ Page({
     onCategoryTap(e) {
         const id = e.currentTarget.dataset.id;
         this.setData({
-            currentCategory: id
+            currentCategory: id,
+            currentPage: 1,
+            hasMore: true
         });
 
         // 加载该分类的商品
-        this.loadCategoryGoods(id);
+        this.loadCategoryGoods(id, 1);
     },
 
     // 点击加入购物车
