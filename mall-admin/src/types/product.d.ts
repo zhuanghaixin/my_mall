@@ -12,9 +12,10 @@ export interface Product {
   description: string
   detail: string
   status: number
-  create_time: string
+  created_at: string
   update_time: string
   category_name?: string
+  category?: Category
 }
 
 // 商品列表查询参数
@@ -34,7 +35,7 @@ export interface Category {
   icon: string
   sort: number
   status: number
-  create_time: string
+  created_at: string
   update_time: string
   level?: number  // 分类层级，扁平化树形结构时使用
   fullPath?: string  // 完整分类路径，用于显示如"电子产品/手机/iPhone"的层级关系
