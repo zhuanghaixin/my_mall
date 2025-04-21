@@ -1,5 +1,17 @@
 <!--index.wxml-->
 <navigation-bar title="首页"></navigation-bar>
+
+<!-- 下拉刷新提示 -->
+<view class="refresh-tips {{ isRefreshing ? 'refreshing' : '' }}">
+  <view class="refresh-loading">
+    <view class="loading-icon"></view>
+    <text>正在刷新...</text>
+  </view>
+  <view class="refresh-success" wx:if="{{ refreshSuccess }}">
+    <text>刷新成功</text>
+  </view>
+</view>
+
 <scroll-view class="scrollarea" scroll-y type="list">
   <view class="container">
     <!-- 搜索框 -->
@@ -50,34 +62,40 @@
       </view>
       
       <!-- 分类商品 -->
-      <view class="goods-grid">
-        <block wx:for="{{ categoryGoods }}" wx:key="id">
-          <view class="goods-item" bindtap="onGoodsTap" data-id="{{ item.id }}">
-            <image src="{{ item.primary_pic_url }}" class="goods-image" mode="aspectFill"></image>
-            <view class="goods-name text-ellipsis">{{ item.name }}</view>
-            <view class="goods-price price">¥{{ item.retail_price }}</view>
-            <view class="goods-stock">库存: {{ item.goods_number }}</view>
-            <view class="add-cart" catchtap="onAddCart" data-id="{{ item.id }}">
-              <text>+加入购物车</text>
+      <view class="goods-section" wx:if="{{ categoryGoods.length > 0 }}">
+        <view class="goods-grid">
+          <block wx:for="{{ categoryGoods }}" wx:key="id">
+            <view class="goods-item" bindtap="onGoodsTap" data-id="{{ item.id }}">
+              <image src="{{ item.primary_pic_url }}" class="goods-image" mode="aspectFill"></image>
+              <view class="goods-name text-ellipsis">{{ item.name }}</view>
+              <view class="goods-price price">¥{{ item.retail_price }}</view>
+              <view class="goods-stock">库存: {{ item.goods_number }}</view>
+              <view class="add-cart" catchtap="onAddCart" data-id="{{ item.id }}">
+                <text>+加入购物车</text>
+              </view>
             </view>
+          </block>
+        </view>
+        
+        <!-- 加载更多提示 -->
+        <view class="loading-more">
+          <view wx:if="{{ loadingMore }}" class="loading">
+            <view class="loading-icon"></view>
+            <text>加载中...</text>
           </view>
-        </block>
-      </view>
-      
-      <!-- 加载更多提示 -->
-      <view class="loading-more" wx:if="{{ categoryGoods.length > 0 }}">
-        <view wx:if="{{ loadingMore }}" class="loading">
-          <view class="loading-icon"></view>
-          <text>加载中...</text>
-        </view>
-        <view wx:elif="{{ !hasMore }}" class="no-more">
-          <text>已经到底了~</text>
-        </view>
-        <view wx:else class="has-more">
-          <text>上拉加载更多</text>
+          <view wx:elif="{{ !hasMore }}" class="no-more">
+            <text>已经到底了~</text>
+          </view>
+          <view wx:else class="has-more">
+            <text>上拉加载更多</text>
+          </view>
         </view>
       </view>
       
+      <!-- 无数据状态 -->
+      <view class="no-data" wx:if="{{ categoryGoods.length === 0 }}">
+        <text>暂无商品数据</text>
+      </view>
     </view>
   </view>
 </scroll-view>
