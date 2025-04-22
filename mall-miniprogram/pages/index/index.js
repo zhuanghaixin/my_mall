@@ -308,9 +308,6 @@ Page({
      * 添加到购物车
      */
     onAddCart: function (e) {
-        // 阻止事件冒泡
-        e.stopPropagation();
-
         // 获取商品ID
         const goodsId = e.currentTarget.dataset.id;
 
