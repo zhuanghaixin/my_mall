@@ -1,0 +1,66 @@
+<view class="container">
+  <!-- 搜索区域 -->
+  <view class="search-section">
+    <van-search
+      value="{{ keyword }}"
+      placeholder="搜索商品"
+      shape="round"
+      bind:search="onSearchConfirm"
+      bind:cancel="onSearchCancel"
+      show-action
+    />
+  </view>
+  
+  <!-- 筛选排序区域 -->
+  <view class="filter-section">
+    <van-dropdown-menu active-color="#ff6b81">
+      <van-dropdown-item 
+        value="{{ sortOption }}" 
+        options="{{ sortOptions }}" 
+        bind:change="onSortChange"
+      />
+    </van-dropdown-menu>
+  </view>
+  
+  <!-- 商品列表 -->
+  <view class="goods-section">
+    <!-- 无商品时显示空状态 -->
+    <view wx:if="{{ !loading && goodsList.length === 0 }}" class="empty-view">
+      <van-empty 
+        description="暂无相关商品" 
+        image="search"
+      />
+    </view>
+    
+    <!-- 商品列表 -->
+    <view wx:else class="goods-list">
+      <view 
+        wx:for="{{ goodsList }}" 
+        wx:key="id" 
+        class="goods-item" 
+        bindtap="onGoodsTap" 
+        data-id="{{ item.id }}"
+      >
+        <image class="goods-image" src="{{ item.main_image }}" mode="aspectFill"></image>
+        <view class="goods-info">
+          <view class="goods-name">{{ item.name }}</view>
+          <view class="goods-price">
+            <text class="price">¥{{ item.price }}</text>
+            <text wx:if="{{ item.original_price > 0 && item.original_price > item.price }}" class="original-price">¥{{ item.original_price }}</text>
+          </view>
+          <view class="goods-sales">销量: {{ item.sales || 0 }}</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 加载中状态 -->
+    <view wx:if="{{ loadingMore && hasMore }}" class="loading-more">
+      <van-loading size="24px" color="#999">加载中...</van-loading>
+    </view>
+    
+    <!-- 无更多数据状态 -->
+    <view wx:if="{{ !hasMore && goodsList.length > 0 }}" class="no-more">
+      没有更多商品了
+    </view>
+  </view>
+</view> 

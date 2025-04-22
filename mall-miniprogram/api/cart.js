@@ -12,47 +12,47 @@ function getCartList() {
 }
 
 /**
- * 添加购物车
- * @param {Object} data - 商品信息
+ * 添加商品到购物车
+ * @param {Object} data - 添加的商品信息
  */
-function addCart(data) {
+function addToCart(data) {
     return request.post(api.CartAdd, data);
 }
 
 /**
- * 更新购物车
- * @param {Object} data - 更新的购物车信息
+ * 更新购物车商品数量
+ * @param {Object} data - 更新的商品信息
  */
 function updateCart(data) {
-    return request.put(api.CartUpdate, data);
+    return request.post(api.CartUpdate, data);
 }
 
 /**
  * 删除购物车商品
- * @param {Object} data - 删除的商品信息
+ * @param {Object} data - 商品ID信息
  */
 function deleteCart(data) {
-    return request.del(api.CartDelete, data);
+    return request.post(api.CartDelete, data);
 }
 
 /**
  * 清空购物车
  */
 function clearCart() {
-    return request.del(api.CartClear);
+    return request.post(api.CartClear);
 }
 
 /**
  * 选择/取消选择购物车商品
- * @param {Object} data - 商品信息
+ * @param {Object} data - 商品选择信息
  */
 function checkCart(data) {
-    return request.put(api.CartCheck, data);
+    return request.post(api.CartCheck, data);
 }
 
 module.exports = {
     getCartList,
-    addCart,
+    addToCart,
     updateCart,
     deleteCart,
     clearCart,

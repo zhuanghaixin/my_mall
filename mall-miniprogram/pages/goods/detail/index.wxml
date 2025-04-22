@@ -1,0 +1,142 @@
+<van-toast id="van-toast" />
+
+<!-- 加载中展示骨架屏 -->
+<view wx:if="{{ loading }}" class="goods-skeleton">
+  <van-skeleton title row="5" />
+</view>
+
+<!-- 商品详情展示 -->
+<view wx:else class="container">
+  <!-- 商品轮播图 -->
+  <view class="goods-swiper">
+    <swiper 
+      indicator-dots="{{ true }}" 
+      indicator-color="rgba(255, 255, 255, .6)" 
+      indicator-active-color="#ffffff" 
+      autoplay="{{ true }}" 
+      interval="{{ 5000 }}" 
+      duration="{{ 500 }}" 
+      circular="{{ true }}"
+      bindchange="onSwiperChange"
+      class="goods-swiper-box"
+    >
+      <swiper-item wx:for="{{ imageUrls }}" wx:key="index">
+        <image 
+          src="{{ item }}" 
+          mode="aspectFill" 
+          class="slide-image" 
+          bindtap="previewImage" 
+          data-url="{{ item }}"
+        ></image>
+      </swiper-item>
+    </swiper>
+    <view class="swiper-count">{{ current + 1 }}/{{ imageUrls.length }}</view>
+  </view>
+  
+  <!-- 商品基本信息 -->
+  <view class="goods-info">
+    <view class="price-section">
+      <view class="price">¥{{ goods.price }}</view>
+      <view wx:if="{{ goods.original_price }}" class="original-price">¥{{ goods.original_price }}</view>
+      <view class="sales">销量: {{ goods.sales || 0 }}</view>
+    </view>
+    <view class="goods-name">{{ goods.name }}</view>
+    <view class="goods-desc">{{ goods.description || '' }}</view>
+  </view>
+  
+  <!-- 商品详情介绍 -->
+  <view class="detail-section">
+    <view class="section-title">商品详情</view>
+    <view class="goods-detail">
+      <!-- 处理富文本内容 -->
+      <rich-text nodes="{{ goods.detail }}"></rich-text>
+      
+      <!-- 如果没有富文本，则显示默认描述 -->
+      <view wx:if="{{ !goods.detail }}" class="default-detail">
+        <view class="detail-item">
+          <view class="item-title">商品介绍</view>
+          <view class="item-content">{{ goods.description || '暂无介绍' }}</view>
+        </view>
+        <view class="detail-item">
+          <view class="item-title">商品参数</view>
+          <view class="item-content">暂无参数</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 底部操作栏 -->
+  <view class="footer">
+    <!-- 左侧操作图标 -->
+    <view class="footer-left">
+      <view class="action-item" bindtap="toggleCollect">
+        <van-icon name="{{ isCollected ? 'star' : 'star-o' }}" size="22px" color="{{ isCollected ? '#ff6b81' : '#666' }}" />
+        <text>收藏</text>
+      </view>
+      <view class="action-item" bindtap="goToCart">
+        <van-icon name="cart-o" size="22px" info="{{ cartCount || '' }}" />
+        <text>购物车</text>
+      </view>
+    </view>
+    
+    <!-- 右侧按钮 -->
+    <view class="footer-right">
+      <van-button 
+        type="warning" 
+        class="cart-btn" 
+        bindtap="addToCart" 
+        custom-class="btn-custom"
+      >加入购物车</van-button>
+      <van-button 
+        type="danger" 
+        class="buy-btn" 
+        bindtap="buyNow" 
+        custom-class="btn-custom"
+      >立即购买</van-button>
+    </view>
+  </view>
+  
+  <!-- 规格选择弹出层 -->
+  <van-popup 
+    show="{{ showSku }}" 
+    position="bottom" 
+    bind:close="onCloseSkuPopup" 
+    round
+    custom-style="padding-bottom: calc(env(safe-area-inset-bottom) + 20px);"
+  >
+    <view class="sku-popup">
+      <!-- 商品信息 -->
+      <view class="sku-header">
+        <image src="{{ goods.main_image }}" class="sku-image"></image>
+        <view class="sku-info">
+          <view class="sku-price">¥{{ goods.price }}</view>
+          <view class="sku-name">{{ goods.name }}</view>
+          <view class="sku-stock">库存: {{ goods.stock || 0 }}</view>
+        </view>
+        <van-icon name="close" class="close-icon" bindtap="onCloseSkuPopup" />
+      </view>
+      
+      <!-- 数量选择 -->
+      <view class="sku-quantity">
+        <view class="quantity-title">数量</view>
+        <van-stepper 
+          value="{{ quantity }}" 
+          bind:change="onQuantityChange" 
+          min="1" 
+          max="{{ goods.stock || 999 }}" 
+          step="1"
+          input-width="40px"
+        />
+      </view>
+      
+      <!-- 确认按钮 -->
+      <view class="sku-actions">
+        <van-button 
+          block 
+          type="{{ buyType === 'cart' ? 'warning' : 'danger' }}" 
+          bindtap="confirmAction"
+        >{{ buyType === 'cart' ? '加入购物车' : '立即购买' }}</van-button>
+      </view>
+    </view>
+  </van-popup>
+</view> 
