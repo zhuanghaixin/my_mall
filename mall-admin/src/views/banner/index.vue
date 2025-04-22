@@ -36,7 +36,7 @@
                     <el-table-column label="图片" width="180">
                         <template #default="scope">
                             <el-image :src="scope.row.image" style="width: 100px; height: 60px" fit="cover"
-                                :preview-src-list="[scope.row.image]" />
+                                :preview-src-list="[scope.row.image]" :preview-teleported="true" />
                         </template>
                     </el-table-column>
                     <el-table-column prop="url" label="链接" show-overflow-tooltip />
@@ -452,6 +452,11 @@ const handlePreview = (row: Banner) => {
 
 .table-container {
     margin-bottom: 20px;
+}
+
+/* 确保图片预览弹窗在最高层级 */
+:deep(.el-image-viewer__wrapper) {
+    z-index: 2100 !important;
 }
 
 .banner-upload {
