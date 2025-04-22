@@ -19,27 +19,19 @@ function request(url, data = {}, method = "GET") {
             },
             success: function (res) {
                 if (res.statusCode == 200) {
-                    if (res.data.code == 200) {
-                        resolve(res.data.data);
-                    } else if (res.data.code == 401) {
-                        // 登录失效，重新登录
-                        util.showErrorToast('登录已失效');
-                        setTimeout(() => {
-                            wx.redirectTo({
-                                url: '/pages/login/index',
-                            });
-                        }, 1500);
-                        reject(res);
-                    } else {
-                        // 其他错误
-                        util.showErrorToast(res.data.message);
-                        reject(res);
-                    }
+                    // 直接返回完整的响应对象，让调用者处理code码
+                    resolve(res.data);
                 } else {
-                    reject(res.errMsg);
+                    // 处理HTTP错误
+                    const errorMsg = res.errMsg || '服务器错误';
+                    util.showErrorToast(errorMsg);
+                    reject(errorMsg);
                 }
             },
             fail: function (err) {
+                // 处理请求失败
+                const errorMsg = err.errMsg || '网络错误';
+                util.showErrorToast(errorMsg);
                 reject(err);
             }
         })

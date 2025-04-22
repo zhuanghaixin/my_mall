@@ -30,24 +30,24 @@
   <view class="header-placeholder"></view>
   
   <!-- 轮播图区域 -->
-  <view class="banner">
+  <view class="banner" wx:if="{{banners.length > 0}}">
     <swiper class="swipe-container" indicator-dots autoplay interval="3000" circular>
       <swiper-item wx:for="{{banners}}" wx:key="id">
-        <image src="{{item.image_url}}" mode="widthFix" class="swipe-image" bindtap="onBannerTap" data-item="{{ item }}"></image>
+        <image src="{{item.image}}" mode="widthFix" class="swipe-image" bindtap="onBannerTap" data-item="{{ item }}"></image>
       </swiper-item>
     </swiper>
   </view>
   
   <!-- 推荐商品 -->
-  <view class="recommend-section">
+  <view class="recommend-section" wx:if="{{recommendGoods.length > 0}}">
     <view class="section-title">推荐商品</view>
     <scroll-view class="recommend-scroll" scroll-x>
       <view class="recommend-list">
         <block wx:for="{{ recommendGoods }}" wx:key="id">
           <view class="recommend-item" bindtap="onGoodsTap" data-id="{{ item.id }}">
-            <image src="{{ item.primary_pic_url }}" class="recommend-image" mode="aspectFill"></image>
+            <image src="{{ item.main_image || item.cover_image }}" class="recommend-image" mode="aspectFill"></image>
             <view class="recommend-name text-ellipsis">{{ item.name }}</view>
-            <view class="recommend-price price">¥{{ item.retail_price }}</view>
+            <view class="recommend-price price">¥{{ item.price }}</view>
           </view>
         </block>
       </view>
@@ -55,7 +55,7 @@
   </view>
   
   <!-- 分类列表 -->
-  <view class="category-section">
+  <view class="category-section" wx:if="{{categories.length > 0}}">
     <view class="section-title">分类列表</view>
     <view class="category-tabs">
       <block wx:for="{{ categories }}" wx:key="id">
@@ -70,10 +70,10 @@
       <view class="goods-grid">
         <block wx:for="{{ categoryGoods }}" wx:key="id">
           <view class="goods-item" bindtap="onGoodsTap" data-id="{{ item.id }}">
-            <image src="{{ item.primary_pic_url }}" class="goods-image" mode="aspectFill"></image>
+            <image src="{{ item.main_image || item.cover_image }}" class="goods-image" mode="aspectFill"></image>
             <view class="goods-name text-ellipsis">{{ item.name }}</view>
-            <view class="goods-price price">¥{{ item.retail_price }}</view>
-            <view class="goods-stock">库存: {{ item.goods_number }}</view>
+            <view class="goods-price price">¥{{ item.price }}</view>
+            <view class="goods-stock">库存: {{ item.stock }}</view>
             <view class="add-cart" catchtap="onAddCart" data-id="{{ item.id }}">
               <text>+加入购物车</text>
             </view>

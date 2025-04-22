@@ -14,12 +14,13 @@ module.exports = {
     // 首页相关
     Banner: ApiBaseUrl + '/home/banner', // 获取轮播图
     HomeData: ApiBaseUrl + '/home/data', // 获取首页数据
+    GoodsRecommend: ApiBaseUrl + '/home/recommend', // 获取推荐商品
+    HomeCategories: ApiBaseUrl + '/home/categories', // 获取首页分类及商品
 
     // 商品相关
     GoodsList: ApiBaseUrl + '/goods/list', // 获取商品列表
     GoodsDetail: ApiBaseUrl + '/goods/detail', // 获取商品详情
     GoodsHot: ApiBaseUrl + '/goods/hot', // 获取热门商品
-    GoodsRecommend: ApiBaseUrl + '/goods/recommend', // 获取推荐商品
 
     // 分类相关
     CategoryList: ApiBaseUrl + '/category/list', // 获取分类列表
