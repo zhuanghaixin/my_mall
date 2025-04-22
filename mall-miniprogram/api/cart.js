@@ -2,7 +2,7 @@
  * 购物车相关API请求
  */
 const api = require('../config/api.js');
-const request = require('./request.js');
+const request = require('../utils/request.js');
 
 /**
  * 获取购物车列表

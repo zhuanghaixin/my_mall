@@ -519,3 +519,60 @@
 ### 修改了哪些文件
 1. pages/index/index.wxml (更新：重构搜索框位置，添加占位元素)
 2. pages/index/index.wxss (更新：添加固定搜索框样式，修复滚动问题) 
+
+## 会话日期：2023年10月9日
+
+### 会话目的
+完善商城小程序的用户认证和网络请求功能，创建和优化用户API模块及请求工具。
+
+### 完成的主要任务
+1. 创建和优化了用户API模块 (api/user.js)，包含登录、注册、用户信息等接口
+2. 创建了网络请求工具 (utils/request.js)，封装了微信小程序的网络请求
+3. 分析了导航栏组件的实现方式
+4. 检查了项目结构和配置
+
+### 关键决策和解决方案
+1. 在网络请求工具中增加了统一的错误处理和登录状态检查
+2. 为用户API模块添加了详细的注释和返回值类型说明
+3. 采用了Promise封装网络请求，提高了代码可读性和可维护性
+4. 网络请求工具实现了对401状态码的统一处理，自动跳转登录页面
+
+### 使用的技术栈
+- 微信小程序原生框架
+- Promise异步处理
+- RESTful API设计规范
+- 模块化开发
+
+### 修改的文件
+- mall-miniprogram/api/user.js：优化了用户相关API
+- mall-miniprogram/utils/request.js：创建了网络请求工具函数 
+
+## 会话日期：2023年10月10日
+
+### 会话目的
+解决商城小程序的网络请求工具重复问题，统一使用utils/request.js。
+
+### 完成的主要任务
+1. 删除了重复的api/request.js文件
+2. 修改了所有API模块中request的导入路径为'../utils/request.js'
+3. 确保所有API模块使用统一的网络请求工具
+
+### 关键决策和解决方案
+1. 保留功能更完善的utils/request.js作为统一的网络请求工具
+2. 修改api目录下所有模块的导入路径，包括user、search、goods、home、category和cart模块
+3. 修改api/index.js中的导入路径，确保统一导出
+
+### 使用的技术栈
+- 微信小程序原生框架
+- 模块化开发和依赖管理
+- Promise网络请求封装
+
+### 修改的文件
+- 删除：mall-miniprogram/api/request.js
+- 修改：mall-miniprogram/api/user.js（更新导入路径）
+- 修改：mall-miniprogram/api/search.js（更新导入路径）
+- 修改：mall-miniprogram/api/goods.js（更新导入路径）
+- 修改：mall-miniprogram/api/home.js（更新导入路径）
+- 修改：mall-miniprogram/api/category.js（更新导入路径）
+- 修改：mall-miniprogram/api/cart.js（更新导入路径）
+- 修改：mall-miniprogram/api/index.js（更新导入路径） 

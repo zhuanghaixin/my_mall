@@ -2,7 +2,7 @@
  * API模块统一入口
  */
 const api = require('../config/api.js');
-const request = require('./request.js');
+const request = require('../utils/request.js');
 const user = require('./user.js');
 const home = require('./home.js');
 const goods = require('./goods.js');
