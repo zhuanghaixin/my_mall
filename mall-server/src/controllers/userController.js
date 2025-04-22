@@ -405,6 +405,9 @@ exports.resetPassword = catchAsync(async (req, res) => {
  *               iv:
  *                 type: string
  *                 description: 加密算法的初始向量
+ *               mockPhone:
+ *                 type: string
+ *                 description: 开发环境使用的模拟手机号(只在开发环境生效)
  *     responses:
  *       200:
  *         description: 登录成功
@@ -433,9 +436,60 @@ exports.resetPassword = catchAsync(async (req, res) => {
  *         description: 服务器错误
  */
 exports.phoneNumberLogin = catchAsync(async (req, res) => {
-    const { code, encryptedData, iv } = req.body;
+    const { code, encryptedData, iv, mockPhone } = req.body;
 
-    // 验证必要参数
+    // 开发环境下支持模拟数据
+    const isDev = process.env.NODE_ENV === 'development';
+
+    // 在开发环境中，如果提供了mockPhone，则使用模拟数据
+    if (isDev && mockPhone) {
+        logger.info(`开发环境：使用模拟手机号 ${mockPhone} 登录`);
+
+        // 生成一个模拟的openid
+        const mockOpenid = `mock_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+
+        // 查找或创建用户
+        let user = await User.findOne({ where: { phone: mockPhone } });
+
+        if (!user) {
+            // 创建新用户
+            const nickname = mockPhone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+            user = await User.create({
+                openid: mockOpenid,
+                phone: mockPhone,
+                nickname,
+                status: 1,
+                register_time: new Date()
+            });
+            logger.info(`开发环境：创建模拟用户成功: ${user.id}`);
+        }
+
+        // 生成JWT令牌
+        const token = jwt.sign(
+            { id: user.id, phone: user.phone },
+            config.jwt.secret,
+            { expiresIn: config.jwt.expiresIn }
+        );
+
+        logger.info(`开发环境：模拟用户 ${user.id} 登录成功`);
+
+        return res.status(200).json({
+            code: 200,
+            message: '开发环境模拟登录成功',
+            data: {
+                token,
+                userInfo: {
+                    id: user.id,
+                    nickname: user.nickname,
+                    avatar: user.avatar,
+                    phone: user.phone,
+                    gender: user.gender
+                }
+            }
+        });
+    }
+
+    // 生产环境或开发环境未使用模拟数据时，验证必要参数
     if (!code || !encryptedData || !iv) {
         throw new ValidationError('缺少必要参数');
     }
