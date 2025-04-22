@@ -62,11 +62,11 @@ const connectToDatabase = async () => {
             await sequelize.authenticate();
             logger.info('数据库连接成功');
 
-            // 开发环境下同步模型 - 启用alter模式更新表结构
+            // 开发环境下同步模型 - 禁用自动同步以防止索引超限问题
             if (process.env.NODE_ENV === 'development') {
-                // 更改为true的alter，使模型变更能够同步到数据库表结构
-                await sequelize.sync({ force: false, alter: true });
-                logger.info('数据库模型同步完成，表结构已根据模型定义更新');
+                // 更改为false以避免修改表结构
+                await sequelize.sync({ force: false, alter: false });
+                logger.info('数据库连接完成，表结构同步已禁用以避免索引数量超限');
             }
 
             return sequelize;

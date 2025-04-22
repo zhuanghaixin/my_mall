@@ -1352,5 +1352,101 @@ npm run dev
 - JWT认证
 - 环境变量区分处理逻辑
 
+## 2024-07-16 购物车功能实现
+
+### 会话日期和时间
+- 2024年7月16日 14:30
+
+### 会话的主要目的
+实现购物车功能的后端服务，包括购物车的数据模型、控制器、路由以及数据库迁移脚本。
+
+### 完成的主要任务
+1. 创建了购物车数据模型，用于管理用户购物车中的商品
+2. 开发了购物车控制器，实现各种购物车操作功能
+3. 创建了购物车路由，提供API接口
+4. 编写了数据库迁移脚本，用于创建购物车数据表
+5. 确保前后端API接口一致性
+
+### 关键决策和解决方案
+- 使用软删除机制管理购物车项目的删除操作
+- 实现了购物车统计功能，包括总数量、总价格等计算
+- 添加了外键约束，确保数据完整性
+- 使用事务保证数据一致性
+
+### 使用的技术栈
+- Node.js
+- Express.js
+- Sequelize ORM
+- MySQL数据库
+- RESTful API设计
+
+### 修改了哪些文件
+1. 创建了 `mall-server/src/models/cart.js` - 购物车数据模型
+2. 修改了 `mall-server/src/models/index.js` - 添加购物车模型到索引
+3. 创建了 `mall-server/src/controllers/cartController.js` - 购物车控制器
+4. 创建了 `mall-server/src/routes/api/cart.js` - 购物车路由
+5. 修改了 `mall-server/src/routes/index.js` - 添加购物车路由到路由索引
+6. 创建了 `mall-server/src/db/cart-migration.js` - 购物车表迁移脚本
+7. 创建了 `mall-server/src/db/sequelize.js` - Sequelize配置文件
+8. 创建了 `mall-server/scripts/create-cart-table.js` - 迁移脚本入口
+9. 修改了 `mall-server/package.json` - 添加创建购物车表的命令
+
+### 后续步骤
+1. 运行迁移脚本创建购物车表: `npm run create-cart-table`
+2. 启动服务器测试购物车功能: `npm run dev`
+3. 在小程序端验证购物车API是否正常工作
+
+# 会话日志
+
+## 2023年6月10日
+
+### 会话主要目的
+修复购物车控制器中的引用问题
+
+### 完成的主要任务
+- 修复了cartController.js中对不存在的`makeResponse`和`makeError`函数的引用
+- 创建了新的`makeResponse`函数实现标准化响应格式
+- 替换所有`makeError`调用为直接返回错误对象
+
+### 关键决策和解决方案
+- 发现项目中没有`../utils/response.js`文件
+- 检查了项目中的错误处理相关文件（如appError.js和errorTypes.js）
+- 决定在controller内部实现`makeResponse`函数
+- 对所有错误响应使用统一的格式：`{ success: false, code: statusCode, message: errorMessage }`
+
+### 使用的技术栈
+- Node.js
+- Express.js
+- Sequelize ORM
+
 ### 修改的文件
-- mall-server/src/controllers/userController.js - 增加开发环境下的模拟数据支持
+- mall-server/src/controllers/cartController.js
+
+## 2023年6月11日
+
+### 会话主要目的
+重新实现购物车控制器，参考userController.js的实现方式
+
+### 完成的主要任务
+- 重写了cartController.js，使用catchAsync函数进行异步错误处理
+- 添加了完整的Swagger API文档注释
+- 使用ValidationError, NotFoundError等自定义错误类
+- 添加日志记录功能
+- 统一响应格式为 { code: 状态码, message: 消息, data: 数据 }
+
+### 关键决策和解决方案
+- 参考userController.js的实现方式进行重构
+- 使用catchAsync函数包装所有异步控制器函数
+- 直接抛出具体类型的错误，让全局错误处理中间件处理
+- 为每个API添加Swagger文档注释
+- 在关键操作处添加了日志记录
+
+### 使用的技术栈
+- Node.js
+- Express.js
+- Sequelize ORM
+- Winston (日志)
+- Swagger (API文档)
+
+### 修改的文件
+- mall-server/src/controllers/cartController.js

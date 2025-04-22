@@ -11,6 +11,7 @@ const categoryRoutes = require('./api/category');
 const goodsRoutes = require('./api/goods');
 const searchRoutes = require('./api/search');
 const userRoutes = require('./api/user');
+const cartRoutes = require('./api/cart');
 
 const router = express.Router();
 
@@ -175,5 +176,8 @@ router.use('/goods', goodsRoutes);
 
 // 注册搜索相关路由
 router.use('/search', searchRoutes);
+
+// 注册购物车相关路由
+router.use('/cart', cartRoutes);
 
 module.exports = router; 
