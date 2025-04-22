@@ -1,25 +1,28 @@
 /* 商品列表页样式 */
-.container {
-  display: flex;
-  flex-direction: column;
+page {
   background-color: #f7f8fa;
-  min-height: 100vh;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 页面容器 */
+.container {
   padding-bottom: 30rpx;
+  box-sizing: border-box;
 }
 
 /* 搜索区域 */
 .search-section {
-  position: sticky;
-  top: 0;
-  z-index: 100;
   background-color: #fff;
+  width: 100%;
 }
 
 /* 筛选排序区域 */
 .filter-section {
-  position: sticky;
-  top: 54px;
-  z-index: 99;
+  background-color: #fff;
+  width: 100%;
 }
 
 /* 商品列表区域 */
@@ -28,6 +31,8 @@
   width: 100%;
   padding: 20rpx;
   box-sizing: border-box;
+  overflow: visible; /* 确保内容可见且可滚动 */
+  height: calc(100vh - 180rpx); /* 减去头部导航和搜索栏的高度 */
 }
 
 /* 空状态样式 */
@@ -48,11 +53,12 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+  padding: 20rpx;
 }
 
 /* 商品项 */
 .goods-item {
-  width: 49%;
+  width: calc(50% - 10rpx);
   background-color: #fff;
   margin-bottom: 20rpx;
   border-radius: 12rpx;
@@ -125,4 +131,15 @@
   padding: 30rpx 0;
   color: #999;
   font-size: 24rpx;
+}
+
+/* 触摸区域 */
+.touch-area {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100rpx;
+  height: 100vh;
+  z-index: 1000;
+  opacity: 0;
 } 

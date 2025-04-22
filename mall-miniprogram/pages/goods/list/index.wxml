@@ -1,32 +1,35 @@
-<view class="container" bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd">
+<view class="container" 
+  catchhorizontal="onTouchStart" 
+  bindtouchmove="onTouchMove" 
+  bindtouchend="onTouchEnd">
   <!-- 自定义导航栏 -->
   <navigation-bar title="{{pageTitle || '商品列表'}}" back="{{true}}" />
   
-  <!-- 搜索区域 -->
-  <view class="search-section">
-    <van-search
-      value="{{ keyword }}"
-      placeholder="搜索商品"
-      shape="round"
-      bind:search="onSearchConfirm"
-      bind:cancel="onSearchCancel"
-      show-action
-    />
-  </view>
-  
-  <!-- 筛选排序区域 -->
-  <view class="filter-section">
-    <van-dropdown-menu active-color="#ff6b81">
-      <van-dropdown-item 
-        value="{{ sortOption }}" 
-        options="{{ sortOptions }}" 
-        bind:change="onSortChange"
+  <!-- 页面内容 -->
+  <view class="container">
+    <!-- 搜索区域 -->
+    <view class="search-section">
+      <van-search
+        value="{{ keyword }}"
+        placeholder="搜索商品"
+        shape="round"
+        bind:search="onSearchConfirm"
+        bind:cancel="onSearchCancel"
+        show-action
       />
-    </van-dropdown-menu>
-  </view>
-  
-  <!-- 商品列表 -->
-  <view class="goods-section">
+    </view>
+    
+    <!-- 筛选排序区域 -->
+    <view class="filter-section">
+      <van-dropdown-menu active-color="#ff6b81">
+        <van-dropdown-item 
+          value="{{ sortOption }}" 
+          options="{{ sortOptions }}" 
+          bind:change="onSortChange"
+        />
+      </van-dropdown-menu>
+    </view>
+    
     <!-- 加载中状态 -->
     <view wx:if="{{ loading && !loadingMore }}" class="loading-center">
       <van-loading size="24px" color="#999">加载中...</van-loading>
@@ -74,4 +77,7 @@
       没有更多商品了
     </view>
   </view>
+
+  <!-- 右滑触摸区域，用于处理右滑返回 -->
+  <view class="touch-area" bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd"></view>
 </view> 
