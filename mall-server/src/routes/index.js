@@ -9,6 +9,7 @@ const uploadRoutes = require('./uploadRoutes');
 const homeRoutes = require('./api/home');
 const categoryRoutes = require('./api/category');
 const goodsRoutes = require('./api/goods');
+const searchRoutes = require('./api/search');
 
 const router = express.Router();
 
@@ -167,5 +168,8 @@ router.use('/category', categoryRoutes);
 
 // 注册商品相关路由
 router.use('/goods', goodsRoutes);
+
+// 注册搜索相关路由
+router.use('/search', searchRoutes);
 
 module.exports = router; 

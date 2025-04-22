@@ -565,6 +565,46 @@ const initOrders = async () => {
 };
 
 /**
+ * 初始化热门搜索词
+ */
+const initSearchHotData = async () => {
+    try {
+        const { SearchHot } = require('../models');
+
+        // 检查是否已有热门搜索词数据
+        const count = await SearchHot.count();
+        if (count > 0) {
+            console.log('热门搜索词数据已存在，跳过初始化');
+            return;
+        }
+
+        // 预设的热门搜索词
+        const hotKeywords = [
+            { keyword: '连衣裙', search_count: 2000, sort: 100 },
+            { keyword: 'T恤', search_count: 1800, sort: 90 },
+            { keyword: '牛仔裤', search_count: 1500, sort: 80 },
+            { keyword: '运动鞋', search_count: 1300, sort: 70 },
+            { keyword: '手机', search_count: 1200, sort: 60 },
+            { keyword: '电脑', search_count: 1000, sort: 50 },
+            { keyword: '耳机', search_count: 900, sort: 40 },
+            { keyword: '冰箱', search_count: 800, sort: 30 },
+            { keyword: '洗衣机', search_count: 700, sort: 20 },
+            { keyword: '空调', search_count: 600, sort: 10 }
+        ];
+
+        // 添加数据
+        await SearchHot.bulkCreate(hotKeywords.map(item => ({
+            ...item,
+            status: 1
+        })));
+
+        console.log('初始化热门搜索词数据成功！');
+    } catch (error) {
+        console.error('初始化热门搜索词数据失败:', error);
+    }
+};
+
+/**
  * 初始化所有种子数据
  * 按需添加其他数据初始化函数
  */
@@ -574,6 +614,7 @@ const initAllSeedData = async () => {
     await initUsers();
     await initGoods();
     await initOrders();
+    await initSearchHotData();
     // 可以添加其他数据初始化函数
     // await initProducts();
     // 等等...
@@ -585,5 +626,6 @@ module.exports = {
     initBanners,
     initUsers,
     initGoods,
-    initOrders
+    initOrders,
+    initSearchHotData
 }; 
