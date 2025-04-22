@@ -1,0 +1,184 @@
+/* 登录页面样式 */
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #fff;
+  padding: 40rpx 40rpx 80rpx;
+  box-sizing: border-box;
+}
+
+/* 登录方式标签 */
+.login-type-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 60rpx;
+  margin-top: 20rpx;
+}
+
+.tab {
+  position: relative;
+  padding: 20rpx 40rpx;
+  margin: 0 20rpx;
+  font-size: 30rpx;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.tab.active {
+  color: #333;
+  font-weight: 500;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 4rpx;
+  background-color: #ff6b81;
+  border-radius: 2rpx;
+}
+
+/* Logo部分 */
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 60rpx;
+}
+
+.logo {
+  width: 180rpx;
+  height: 180rpx;
+}
+
+/* 标题部分 */
+.title-wrapper {
+  text-align: center;
+  margin-bottom: 80rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.subtitle {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 按钮部分 */
+.button-wrapper {
+  padding: 0 20rpx;
+  margin-bottom: 60rpx;
+}
+
+.login-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 88rpx;
+  margin-top: 30rpx;
+  font-size: 30rpx;
+  border-radius: 44rpx;
+  color: #fff;
+}
+
+.login-btn:first-child {
+  margin-top: 0;
+}
+
+.wechat-btn {
+  background-color: #07c160;
+}
+
+.phone-number-btn {
+  background-color: #1890ff;
+}
+
+.confirm-btn {
+  background-color: #ff6b81;
+}
+
+.btn-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 16rpx;
+}
+
+/* 输入框部分 */
+.input-wrapper {
+  margin-bottom: 60rpx;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  height: 100rpx;
+  border-bottom: 1rpx solid #eee;
+  margin-bottom: 30rpx;
+}
+
+.input-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 20rpx;
+}
+
+.input {
+  flex: 1;
+  height: 100%;
+  font-size: 30rpx;
+}
+
+.code-btn {
+  min-width: 180rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #ff6b81;
+  background-color: #fff;
+  border: 1rpx solid #ff6b81;
+  border-radius: 30rpx;
+}
+
+.code-btn.disabled {
+  color: #999;
+  border-color: #ddd;
+}
+
+/* 隐私协议弹窗 */
+.privacy-content {
+  padding: 30rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #666;
+  max-height: 600rpx;
+  overflow-y: auto;
+}
+
+/* 底部协议提示 */
+.agreement {
+  position: absolute;
+  bottom: 40rpx;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.link {
+  color: #1890ff;
+  margin: 0 4rpx;
+} 

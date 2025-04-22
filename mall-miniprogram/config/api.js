@@ -8,8 +8,12 @@ module.exports = {
 
     // 用户相关
     UserLogin: ApiBaseUrl + '/user/wxlogin', // 微信登录
+    PhoneLogin: ApiBaseUrl + '/user/phonelogin', // 手机号登录
+    PhoneNumberLogin: ApiBaseUrl + '/user/phonenumberlogin', // 微信手机号登录
+    SendSmsCode: ApiBaseUrl + '/user/sendsms', // 发送短信验证码
     UserInfo: ApiBaseUrl + '/user/info', // 获取用户信息
     BindPhone: ApiBaseUrl + '/user/bindphone', // 绑定手机号
+    CheckLogin: ApiBaseUrl + '/user/checklogin', // 检查登录状态
 
     // 首页相关
     Banner: ApiBaseUrl + '/home/banner', // 获取轮播图
@@ -52,7 +56,7 @@ module.exports = {
 
     // 搜索相关
     Search: ApiBaseUrl + '/search', // 搜索商品
-    SearchHot: ApiBaseUrl + '/search/hot', // The 获取热门搜索词
+    SearchHot: ApiBaseUrl + '/search/hot', // 获取热门搜索词
     SearchHistory: ApiBaseUrl + '/search/history', // 获取搜索历史
     SearchClearHistory: ApiBaseUrl + '/search/clearHistory', // 清除搜索历史
 }; 
