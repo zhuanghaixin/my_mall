@@ -22,13 +22,17 @@ Page({
         cartCount: 0,        // 购物车商品数量
         showSku: false,      // 是否显示规格选择
         buyType: 'cart',     // 购买类型：cart-加入购物车，buy-立即购买
-        isCollected: false   // 是否已收藏
+        isCollected: false,  // 是否已收藏
+        startX: 0,           // 触摸开始位置
+        moveX: 0,            // 移动距离
+        moveDirection: ''    // 移动方向
     },
 
     /**
      * 生命周期函数--监听页面加载
      */
     onLoad: function (options) {
+        console.log('[商品详情页] onLoad:', options);
         if (options.id) {
             this.setData({
                 goodsId: parseInt(options.id)
@@ -42,16 +46,94 @@ Page({
      * 生命周期函数--监听页面显示
      */
     onShow: function () {
+        console.log('[商品详情页] onShow');
         // 获取购物车数量
         this.getCartCount();
+    },
+
+    /**
+     * 监听页面初次渲染完成
+     */
+    onReady: function () {
+        console.log('[商品详情页] onReady');
+    },
+
+    /**
+     * 监听页面隐藏
+     */
+    onHide: function () {
+        console.log('[商品详情页] onHide');
+    },
+
+    /**
+     * 监听页面卸载
+     */
+    onUnload: function () {
+        console.log('[商品详情页] onUnload');
+    },
+
+    /**
+     * 触摸开始事件
+     */
+    touchStart: function (e) {
+        console.log('[商品详情页] touchStart:', e.touches[0].pageX);
+        this.setData({
+            startX: e.touches[0].pageX
+        });
+    },
+
+    /**
+     * 触摸移动事件
+     */
+    touchMove: function (e) {
+        const moveX = e.touches[0].pageX - this.data.startX;
+        const direction = moveX > 0 ? 'right' : 'left';
+
+        console.log('[商品详情页] touchMove:', e.touches[0].pageX, '移动距离:', moveX, '方向:', direction);
+
+        this.setData({
+            moveX: moveX,
+            moveDirection: direction
+        });
+    },
+
+    /**
+     * 触摸结束事件
+     */
+    touchEnd: function (e) {
+        console.log('[商品详情页] touchEnd, 最终移动:', this.data.moveX, '方向:', this.data.moveDirection);
+
+        // 如果右滑距离超过100，则触发返回
+        if (this.data.moveDirection === 'right' && this.data.moveX > 100) {
+            console.log('[商品详情页] 触发右滑返回');
+            this.goBack();
+        }
+
+        // 重置
+        this.setData({
+            startX: 0,
+            moveX: 0,
+            moveDirection: ''
+        });
     },
 
     /**
      * 返回上一页
      */
     goBack: function () {
+        console.log('[商品详情页] 执行返回');
         wx.navigateBack({
-            delta: 1
+            delta: 1,
+            success: () => {
+                console.log('[商品详情页] 返回成功');
+            },
+            fail: (err) => {
+                console.error('[商品详情页] 返回失败:', err);
+                // 如果返回失败，尝试跳转到首页
+                wx.switchTab({
+                    url: '/pages/index/index'
+                });
+            }
         });
     },
 

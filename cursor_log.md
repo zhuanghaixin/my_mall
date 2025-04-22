@@ -870,3 +870,41 @@ npm run dev
 2. `mall-miniprogram/pages/goods/detail/index.wxss` - 添加对应样式
 3. `mall-miniprogram/pages/goods/detail/index.js` - 实现收藏功能和返回逻辑
 4. `mall-miniprogram/pages/goods/detail/index.json` - 更新配置支持右滑返回
+
+## 2024-06-11 商品详情页右滑返回功能调试
+
+### 会话主要目的
+解决商城小程序商品详情页右滑返回功能不生效的问题，添加调试功能以便排查原因。
+
+### 完成的主要任务
+1. 实现了触摸事件监听与处理机制
+2. 添加了触摸滑动距离和方向的计算逻辑
+3. 增加了页面调试信息显示区域
+4. 完善了返回功能的成功和失败处理
+5. 添加了全面的日志记录，方便在开发者工具中查看
+
+### 关键决策和解决方案
+1. 触摸事件实现：
+   - 添加了`touchStart`、`touchMove`和`touchEnd`三个处理函数
+   - 计算水平滑动距离和方向，超过阈值(100px)触发返回
+   - 在页面容器上绑定触摸事件，确保全局捕获
+
+2. 调试功能实现：
+   - 添加可视化调试信息显示，实时展示滑动距离和方向
+   - 在关键节点添加日志打印，便于跟踪事件流程
+   - 为返回操作添加成功和失败回调，识别返回问题
+
+3. 错误处理优化：
+   - 添加返回失败的备选方案，跳转到首页
+   - 完善的状态重置机制，避免触摸事件状态残留
+
+### 使用的技术栈
+1. 微信小程序原生开发
+2. 触摸事件处理
+3. 条件渲染
+4. 日志记录与调试
+
+### 修改的文件
+1. `mall-miniprogram/pages/goods/detail/index.js` - 添加触摸事件处理和日志记录
+2. `mall-miniprogram/pages/goods/detail/index.wxml` - 添加触摸事件绑定和调试信息显示
+3. `mall-miniprogram/pages/goods/detail/index.wxss` - 添加调试信息的样式

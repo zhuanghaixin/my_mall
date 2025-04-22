@@ -14,7 +14,7 @@
 </view>
 
 <!-- 商品详情展示 -->
-<view wx:else class="container">
+<view wx:else bindtouchstart="touchStart" bindtouchmove="touchMove" bindtouchend="touchEnd" class="container">
   <!-- 商品轮播图 -->
   <view class="goods-swiper">
     <swiper 
@@ -64,6 +64,12 @@
         button-size="32px"
       />
     </view>
+  </view>
+  
+  <!-- 调试信息 -->
+  <view class="debug-info" wx:if="{{ moveX !== 0 }}">
+    <view>右滑距离: {{ moveX }}px</view>
+    <view>滑动方向: {{ moveDirection }}</view>
   </view>
   
   <!-- 商品详情介绍 -->
