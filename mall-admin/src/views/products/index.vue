@@ -71,7 +71,8 @@
           <template #default="scope">
             <el-image :src="scope.row.main_image || (scope.row.images ? scope.row.images.split(',')[0] : '')"
               :preview-src-list="scope.row.images ? scope.row.images.split(',') : [scope.row.main_image]"
-              style="width: 60px; height: 60px" fit="cover" />
+              style="width: 60px; height: 60px" fit="cover" 
+              :preview-teleported="true" />
           </template>
         </el-table-column>
         <el-table-column label="商品名称" prop="name" show-overflow-tooltip />
@@ -168,13 +169,13 @@
             <el-image v-if="currentProduct?.main_image" :src="currentProduct.main_image"
               style="width: 100px; height: 100px; margin-right: 10px" :preview-src-list="currentProduct.images ?
                 [currentProduct.main_image, ...productImages] :
-                [currentProduct.main_image]" />
+                [currentProduct.main_image]" :preview-teleported="true" />
 
             <!-- 再显示其他图片 -->
             <el-image v-for="(img, index) in productImages" :key="index" :src="img"
               style="width: 100px; height: 100px; margin-right: 10px" :preview-src-list="currentProduct?.main_image ?
                 [currentProduct.main_image, ...productImages] :
-                productImages" />
+                productImages" :preview-teleported="true" />
           </div>
         </el-descriptions-item>
         <el-descriptions-item label="商品描述">{{ currentProduct?.description }}</el-descriptions-item>
@@ -520,5 +521,10 @@ const handleCurrentChange = (page: number) => {
 
 :deep(.rich-text-content p) {
   margin: 0.5em 0;
+}
+
+/* 确保图片预览弹窗在最高层级 */
+:deep(.el-image-viewer__wrapper) {
+  z-index: 2100 !important;
 }
 </style>
