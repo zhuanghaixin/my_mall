@@ -18,7 +18,8 @@ function addToCart(data) {
         // 检查是否已登录
         if (!auth.isLoggedIn()) {
             // 获取当前页面路径作为登录后的重定向目标
-            const currentPage = util.getCurrentPageUrl();
+            const currentPage = util.getCurrentPageUrlWithArgs();
+            console.log('当前页面路径：', currentPage);
 
             // 提示用户
             wx.showModal({
@@ -28,8 +29,11 @@ function addToCart(data) {
                 cancelText: '取消',
                 success: function (res) {
                     if (res.confirm) {
-                        // 用户点击确定，跳转到登录页
+                        // 直接使用auth工具函数跳转到登录页
+                        console.log('用户点击去登录，准备跳转');
                         auth.navigateToLogin(currentPage);
+                    } else {
+                        console.log('用户取消登录');
                     }
                 }
             });
@@ -70,8 +74,26 @@ function deleteFromCart(data) {
     return new Promise((resolve, reject) => {
         // 检查是否已登录
         if (!auth.isLoggedIn()) {
+            // 获取当前页面作为重定向地址
+            const currentPage = util.getCurrentPageUrlWithArgs();
+            console.log('当前页面路径：', currentPage);
+
             // 跳转到登录页
-            auth.navigateToLogin();
+            wx.showModal({
+                title: '提示',
+                content: '请先登录后再操作',
+                confirmText: '去登录',
+                cancelText: '取消',
+                success: function (res) {
+                    if (res.confirm) {
+                        console.log('用户点击去登录，准备跳转');
+                        auth.navigateToLogin(currentPage);
+                    } else {
+                        console.log('用户取消登录');
+                    }
+                }
+            });
+
             // 返回未登录错误
             reject(new Error('用户未登录'));
             return;
@@ -104,8 +126,26 @@ function updateCartItem(data) {
     return new Promise((resolve, reject) => {
         // 检查是否已登录
         if (!auth.isLoggedIn()) {
+            // 获取当前页面作为重定向地址
+            const currentPage = util.getCurrentPageUrlWithArgs();
+            console.log('当前页面路径：', currentPage);
+
             // 跳转到登录页
-            auth.navigateToLogin();
+            wx.showModal({
+                title: '提示',
+                content: '请先登录后再操作',
+                confirmText: '去登录',
+                cancelText: '取消',
+                success: function (res) {
+                    if (res.confirm) {
+                        console.log('用户点击去登录，准备跳转');
+                        auth.navigateToLogin(currentPage);
+                    } else {
+                        console.log('用户取消登录');
+                    }
+                }
+            });
+
             // 返回未登录错误
             reject(new Error('用户未登录'));
             return;
