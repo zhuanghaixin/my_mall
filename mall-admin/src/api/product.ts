@@ -71,11 +71,22 @@ export function updateProductStatus(id: number, status: number) {
 }
 
 /**
+ * 更新商品推荐状态
+ */
+export function updateProductRecommend(id: number, is_recommend: number) {
+  return request({
+    url: `/admin/goods/${id}/recommend`,
+    method: 'put',
+    data: { is_recommend }
+  })
+}
+
+/**
  * 批量操作商品
  */
 export function batchOperateProducts(data: {
   ids: number[]
-  operation: string // 'delete', 'online', 'offline'
+  operation: string // 'delete', 'online', 'offline', 'recommend', 'unrecommend'
 }) {
   return request({
     url: '/admin/goods/batch',

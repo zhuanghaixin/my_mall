@@ -16,6 +16,12 @@
             <el-option :value="0" label="下架" />
           </el-select>
         </el-form-item>
+        <el-form-item label="推荐状态">
+          <el-select v-model="queryParams.is_recommend" placeholder="请选择" clearable>
+            <el-option :value="1" label="推荐" />
+            <el-option :value="0" label="不推荐" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="resetQuery">重置</el-button>
@@ -39,6 +45,16 @@
           <el-icon>
             <BottomRight />
           </el-icon>批量下架
+        </el-button>
+        <el-button v-if="selectedIds.length > 0" type="success" @click="handleBatchOperation('recommend')">
+          <el-icon>
+            <Star />
+          </el-icon>批量推荐
+        </el-button>
+        <el-button v-if="selectedIds.length > 0" type="info" @click="handleBatchOperation('unrecommend')">
+          <el-icon>
+            <StarFilled />
+          </el-icon>批量取消推荐
         </el-button>
         <el-button v-if="selectedIds.length > 0" type="danger" @click="handleBatchOperation('delete')">
           <el-icon>
@@ -77,8 +93,15 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="是否推荐" prop="is_recommend" width="100">
+          <template #default="scope">
+            <el-tag :type="scope.row.is_recommend === 1 ? 'warning' : 'info'">
+              {{ scope.row.is_recommend === 1 ? '推荐' : '普通' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="创建时间" prop="created_at" width="180" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="240" fixed="right">
           <template #default="scope">
             <el-button type="primary" link @click="handleEdit(scope.row)">
               <el-icon>
@@ -93,6 +116,10 @@
             <el-button link :type="scope.row.status === 1 ? 'warning' : 'success'"
               @click="handleStatusChange(scope.row)">
               {{ scope.row.status === 1 ? '下架' : '上架' }}
+            </el-button>
+            <el-button link :type="scope.row.is_recommend === 1 ? 'info' : 'warning'"
+              @click="handleRecommendChange(scope.row)">
+              {{ scope.row.is_recommend === 1 ? '取消推荐' : '推荐' }}
             </el-button>
             <el-button type="danger" link @click="handleDelete(scope.row)">
               <el-icon>
@@ -129,6 +156,11 @@
             {{ currentProduct?.status === 1 ? '已上架' : '已下架' }}
           </el-tag>
         </el-descriptions-item>
+        <el-descriptions-item label="是否推荐">
+          <el-tag :type="currentProduct?.is_recommend === 1 ? 'warning' : 'info'">
+            {{ currentProduct?.is_recommend === 1 ? '推荐' : '普通' }}
+          </el-tag>
+        </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ currentProduct?.created_at }}</el-descriptions-item>
         <el-descriptions-item label="商品图片">
           <div class="image-list">
@@ -160,10 +192,11 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, TopRight, BottomRight, View } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, TopRight, BottomRight, View, Star, StarFilled } from '@element-plus/icons-vue'
 import {
   getProductList,
   updateProductStatus,
+  updateProductRecommend,
   deleteProduct,
   batchOperateProducts,
   getProductDetail
@@ -180,10 +213,11 @@ const selectedIds = ref<number[]>([])
 const categoryOptions = ref<Category[]>([])
 
 // 查询参数
-const queryParams = reactive<ProductQueryParams>({
+const queryParams = reactive<ProductQueryParams & { is_recommend?: number }>({
   keyword: '',
   category_id: undefined,
   status: undefined,
+  is_recommend: undefined,
   page: 1,
   pageSize: 10
 })
@@ -256,6 +290,7 @@ const resetQuery = () => {
   queryParams.keyword = ''
   queryParams.category_id = undefined
   queryParams.status = undefined
+  queryParams.is_recommend = undefined
   queryParams.page = 1
   fetchProductList()
 }
@@ -279,6 +314,10 @@ const handleBatchOperation = async (operation: string) => {
     confirmMessage = '确定要上架所选商品吗？'
   } else if (operation === 'offline') {
     confirmMessage = '确定要下架所选商品吗？'
+  } else if (operation === 'recommend') {
+    confirmMessage = '确定要将所选商品设为推荐吗？'
+  } else if (operation === 'unrecommend') {
+    confirmMessage = '确定要取消所选商品的推荐状态吗？'
   }
 
   try {
@@ -329,6 +368,34 @@ const handleStatusChange = (row: Product) => {
     } catch (error) {
       console.error(`${statusText}失败`, error)
       ElMessage.error(`${statusText}失败`)
+    }
+  }).catch(() => {
+    // 用户取消操作
+  })
+}
+
+// 更改商品推荐状态
+const handleRecommendChange = (row: Product) => {
+  const isRecommend = row.is_recommend === 1 ? 0 : 1
+  const actionText = isRecommend === 1 ? '推荐' : '取消推荐'
+
+  ElMessageBox.confirm(`确认要${actionText}该商品吗？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      const res = await updateProductRecommend(row.id, isRecommend) as unknown as ApiResponse
+
+      if (res.code === 200) {
+        ElMessage.success(`${actionText}成功`)
+        fetchProductList()
+      } else {
+        ElMessage.error(res.message || `${actionText}失败`)
+      }
+    } catch (error) {
+      console.error(`${actionText}失败`, error)
+      ElMessage.error(`${actionText}失败`)
     }
   }).catch(() => {
     // 用户取消操作

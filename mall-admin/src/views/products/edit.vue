@@ -45,6 +45,34 @@
           </el-radio-group>
         </el-form-item>
 
+        <el-form-item label="是否推荐" prop="is_recommend">
+          <el-radio-group v-model="form.is_recommend">
+            <el-radio :label="1">推荐</el-radio>
+            <el-radio :label="0">不推荐</el-radio>
+          </el-radio-group>
+          <div class="form-item-tips">设为推荐的商品会在首页推荐商品区域展示</div>
+        </el-form-item>
+
+        <el-form-item label="商品主图" prop="main_image">
+          <el-upload v-model:file-list="mainImageFileList" action="#" list-type="picture-card" :http-request="uploadMainImage"
+            :limit="1" :on-preview="handlePicturePreview" :on-remove="handleMainImageRemove" :before-upload="beforeUpload">
+            <el-icon>
+              <Plus />
+            </el-icon>
+          </el-upload>
+          <div class="form-item-tips">主图将作为商品的主要展示图片</div>
+        </el-form-item>
+
+        <el-form-item label="封面图" prop="cover_image">
+          <el-upload v-model:file-list="coverImageFileList" action="#" list-type="picture-card" :http-request="uploadCoverImage"
+            :limit="1" :on-preview="handlePicturePreview" :on-remove="handleCoverImageRemove" :before-upload="beforeUpload">
+            <el-icon>
+              <Plus />
+            </el-icon>
+          </el-upload>
+          <div class="form-item-tips">封面图将用于首页推荐商品展示，建议使用方形图片</div>
+        </el-form-item>
+
         <el-form-item label="商品图片" prop="images">
           <el-upload v-model:file-list="fileList" action="#" list-type="picture-card" :http-request="uploadImage"
             :limit="5" :on-preview="handlePicturePreview" :on-remove="handleRemove" :before-upload="beforeUpload">
@@ -165,11 +193,13 @@ const form = reactive<Partial<Product> & { images_list?: string[] }>({
   original_price: 0,
   stock: 0,
   main_image: '',
+  cover_image: '',
   images: '',
   images_list: [],
   description: '',
   detail: '',
-  status: 1
+  status: 1,
+  is_recommend: 0
 })
 
 // 表单验证规则
@@ -189,6 +219,8 @@ const specs = ref<ProductSpec[]>([])
 
 // 图片上传相关
 const fileList = ref<UploadUserFile[]>([])
+const mainImageFileList = ref<UploadUserFile[]>([])
+const coverImageFileList = ref<UploadUserFile[]>([])
 const dialogImageUrl = ref('')
 const dialogVisible = ref(false)
 
@@ -274,24 +306,23 @@ const fetchProductDetail = async () => {
             url
           }
         })
+      }
 
-        // 确保主图正确设置
-        if (productData.main_image) {
-          // 如果后端返回了main_image，使用它
-          form.main_image = productData.main_image
-        } else if (!form.main_image && imagesList.length > 0) {
-          // 否则使用第一张图片
-          form.main_image = imagesList[0]
-        }
-      } else if (productData.main_image) {
-        // 如果只有main_image没有images，确保也添加到images列表
+      // 设置主图
+      if (productData.main_image) {
         form.main_image = productData.main_image
-        form.images_list = [productData.main_image]
-        form.images = productData.main_image
-
-        fileList.value = [{
+        mainImageFileList.value = [{
           name: 'main-image',
           url: productData.main_image
+        }]
+      }
+
+      // 设置封面图
+      if (productData.cover_image) {
+        form.cover_image = productData.cover_image
+        coverImageFileList.value = [{
+          name: 'cover-image',
+          url: productData.cover_image
         }]
       }
 
@@ -391,6 +422,56 @@ const removeSpec = (index: number) => {
   specs.value.splice(index, 1)
 }
 
+// 上传主图
+const uploadMainImage = async (options: any) => {
+  try {
+    const res = await uploadImageApi(options.file) as ApiResponse<{ url: string }>
+
+    if (res.code === 200) {
+      const url = res.data.url
+      form.main_image = url
+      options.onSuccess(url)
+    } else {
+      options.onError(new Error(res.message || '上传失败'))
+      ElMessage.error(res.message || '上传失败')
+    }
+  } catch (error) {
+    console.error('上传图片失败', error)
+    options.onError(new Error('上传失败'))
+    ElMessage.error('上传图片失败')
+  }
+}
+
+// 上传封面图
+const uploadCoverImage = async (options: any) => {
+  try {
+    const res = await uploadImageApi(options.file) as ApiResponse<{ url: string }>
+
+    if (res.code === 200) {
+      const url = res.data.url
+      form.cover_image = url
+      options.onSuccess(url)
+    } else {
+      options.onError(new Error(res.message || '上传失败'))
+      ElMessage.error(res.message || '上传失败')
+    }
+  } catch (error) {
+    console.error('上传图片失败', error)
+    options.onError(new Error('上传失败'))
+    ElMessage.error('上传图片失败')
+  }
+}
+
+// 移除主图
+const handleMainImageRemove = () => {
+  form.main_image = ''
+}
+
+// 移除封面图
+const handleCoverImageRemove = () => {
+  form.cover_image = ''
+}
+
 // 提交表单
 const submitForm = async () => {
   if (!formRef.value) return
@@ -486,5 +567,31 @@ const goBack = () => {
   display: flex;
   justify-content: center;
   gap: 20px;
+}
+
+.form-item-tips {
+  margin-top: 5px;
+  font-size: 0.8em;
+  color: #909399;
+  line-height: 1.4;
+}
+
+.el-radio-group {
+  display: flex;
+  align-items: center;
+}
+
+.el-radio {
+  margin-right: 30px;
+}
+
+.el-radio.is-bordered + .el-radio.is-bordered {
+  margin-left: 10px;
+}
+
+.el-form-item.is-required .el-form-item__label:before {
+  content: '*';
+  color: #f56c6c;
+  margin-right: 4px;
 }
 </style>
