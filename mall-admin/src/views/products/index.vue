@@ -6,18 +6,18 @@
           <el-input v-model="queryParams.keyword" placeholder="请输入商品名称" clearable />
         </el-form-item>
         <el-form-item label="商品分类">
-          <el-select v-model="queryParams.category_id" placeholder="请选择" clearable>
+          <el-select v-model="queryParams.category_id" placeholder="请选择" clearable style="width: 140px;">
             <el-option v-for="item in categoryOptions" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="商品状态">
-          <el-select v-model="queryParams.status" placeholder="请选择" clearable>
+          <el-select v-model="queryParams.status" placeholder="请选择" clearable style="width: 140px;">
             <el-option :value="1" label="上架" />
             <el-option :value="0" label="下架" />
           </el-select>
         </el-form-item>
         <el-form-item label="推荐状态">
-          <el-select v-model="queryParams.is_recommend" placeholder="请选择" clearable>
+          <el-select v-model="queryParams.is_recommend" placeholder="请选择" clearable style="width: 140px;">
             <el-option :value="1" label="推荐" />
             <el-option :value="0" label="不推荐" />
           </el-select>
@@ -520,6 +520,15 @@ const handleCurrentChange = (page: number) => {
 
 :deep(.rich-text-content p) {
   margin: 0.5em 0;
+}
+
+/* 确保下拉菜单宽度足够 */
+:deep(.el-select-dropdown) {
+  min-width: 140px !important;
+}
+
+:deep(.el-select) {
+  width: 140px;
 }
 
 /* 确保图片预览弹窗在最高层级 */

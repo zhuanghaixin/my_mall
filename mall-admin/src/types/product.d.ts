@@ -12,6 +12,7 @@ export interface Product {
   description: string
   detail: string
   status: number
+  is_recommend: number
   created_at: string
   update_time: string
   category_name?: string
