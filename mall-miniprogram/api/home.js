@@ -37,9 +37,22 @@ function getCategories(params = {}) {
     return request.get(api.HomeCategories, params);
 }
 
+/**
+ * 获取分类下的商品列表
+ * @param {number} categoryId - 分类ID
+ * @param {number} page - 页码，默认为1
+ * @param {number} pageSize - 每页数量，默认为10
+ * @returns {Promise} 请求Promise
+ */
+function getCategoryGoods(categoryId, page = 1, pageSize = 10) {
+    const url = api.CategoryGoods.replace(':id', categoryId);
+    return request.get(url, { page, pageSize });
+}
+
 module.exports = {
     getHomeData,
     getBanner,
     getRecommend,
-    getCategories
+    getCategories,
+    getCategoryGoods
 }; 

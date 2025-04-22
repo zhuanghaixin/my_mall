@@ -158,11 +158,12 @@ Page({
                 // 停止下拉刷新动画
                 wx.stopPullDownRefresh();
 
-                // 显示刷新成功提示
-                this.setData({
-                    isRefreshing: false,
-                    refreshSuccess: true
-                });
+                setTimeout(() => {
+                    this.setData({
+                        isRefreshing: false,
+                        refreshSuccess: true
+                    });
+                }, 500);
 
                 // 3秒后隐藏刷新成功提示
                 setTimeout(() => {
@@ -197,23 +198,60 @@ Page({
     // 页面上拉触底
     onReachBottom() {
         console.log('触发上拉触底');
-        // 对于首页，可以加载更多推荐商品或者当前分类的更多商品
-        // 这里暂不实现，因为后端API需要支持分页才能实现
+        // 检查是否有更多数据且当前不在加载中
+        if (!this.data.hasMore || this.data.loadingMore) return;
+
+        this.setData({ loadingMore: true });
+
+        const nextPage = this.data.currentPage + 1;
+
+        // 加载更多商品
+        homeApi.getCategoryGoods(this.data.currentCategory, nextPage, this.data.pageSize)
+            .then(res => {
+                if (res.code === 200) {
+                    const newGoods = res.data.list || [];
+
+                    if (newGoods.length > 0) {
+                        // 合并新商品到现有列表
+                        const allGoods = [...this.data.categoryGoods, ...newGoods];
+
+                        this.setData({
+                            categoryGoods: allGoods,
+                            currentPage: nextPage,
+                            hasMore: newGoods.length >= this.data.pageSize
+                        });
+                    } else {
+                        this.setData({
+                            hasMore: false
+                        });
+                    }
+                } else {
+                    throw new Error(res.message || '加载更多失败');
+                }
+            })
+            .catch(err => {
+                console.error('加载更多失败', err);
+                util.showErrorToast('加载更多失败');
+            })
+            .finally(() => {
+                this.setData({ loadingMore: false });
+            });
     },
 
     // 点击搜索框
     onSearchFocus() {
         wx.navigateTo({
-            url: '/pages/search/search'
+            url: '/pages/search/index'
         });
     },
 
     // 点击轮播图
     onBannerTap(e) {
         const item = e.currentTarget.dataset.item;
-        // 后端API返回的Banner可能包含url和链接类型
+        console.log('点击了轮播图', item);
+
+        // 根据轮播图链接类型跳转
         if (item.url) {
-            // 根据url类型跳转到不同页面
             wx.navigateTo({
                 url: item.url
             });
@@ -224,7 +262,7 @@ Page({
     onGoodsTap(e) {
         const id = e.currentTarget.dataset.id;
         wx.navigateTo({
-            url: '/pages/goods-detail/goods-detail?id=' + id
+            url: `/pages/goods/detail/index?id=${id}`
         });
     },
 
@@ -232,55 +270,47 @@ Page({
     onCategoryTap(e) {
         const id = e.currentTarget.dataset.id;
 
-        // 查找选中的分类
-        const category = this.data.categories.find(item => item.id === id);
+        if (id === this.data.currentCategory) return;
 
-        if (category) {
-            this.setData({
-                currentCategory: id,
-                categoryGoods: category.goods || []
+        this.setData({
+            currentCategory: id,
+            categoryGoods: [],
+            currentPage: 1,
+            hasMore: true,
+            loadingMore: false
+        });
+
+        // 加载所选分类的商品
+        util.showLoading('加载中...');
+
+        homeApi.getCategoryGoods(id, 1, this.data.pageSize)
+            .then(res => {
+                if (res.code === 200) {
+                    this.setData({
+                        categoryGoods: res.data.list || [],
+                        hasMore: (res.data.list || []).length >= this.data.pageSize
+                    });
+                } else {
+                    throw new Error(res.message || '获取分类商品失败');
+                }
+            })
+            .catch(err => {
+                console.error('获取分类商品失败', err);
+                util.showErrorToast('获取商品失败');
+            })
+            .finally(() => {
+                util.hideLoading();
             });
-        }
     },
 
     // 点击加入购物车
     onAddCart(e) {
-        // 阻止冒泡，防止触发商品点击
-        e.stopPropagation();
-
         const id = e.currentTarget.dataset.id;
+        console.log('添加到购物车', id);
 
-        // 判断是否登录
-        const app = getApp();
-        if (!app.globalData.hasLogin) {
-            wx.navigateTo({
-                url: '/pages/login/index'
-            });
-            return;
-        }
+        util.showSuccessToast('添加成功');
 
-        // 添加到购物车
-        util.showLoading('添加中...');
-
-        // 实际API调用，等后端API准备好时使用
-        /*
-        api.cart.addCart({
-          goodsId: id,
-          number: 1
-        }).then(res => {
-          util.hideLoading();
-          util.showSuccessToast('添加成功');
-        }).catch(err => {
-          console.error('添加购物车失败', err);
-          util.hideLoading();
-          util.showErrorToast('添加失败');
-        });
-        */
-
-        // 模拟添加购物车
-        setTimeout(() => {
-            util.hideLoading();
-            util.showSuccessToast('添加成功');
-        }, 500);
+        // 阻止事件冒泡
+        return false;
     }
 })
