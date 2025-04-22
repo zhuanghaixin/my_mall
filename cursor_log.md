@@ -1280,3 +1280,46 @@ npm run dev
 ### 修改的文件
 - mall-server/src/routes/api/user.js - 修复middleware引用和认证方式
 - mall-server/src/routes/index.js - 调整用户路由注册，移除临时接口
+
+## 2024年7月21日
+
+### 会话的主要目的
+修复小程序后端用户登录路由和控制器方法缺失的问题，完善登录相关功能。
+
+### 完成的主要任务
+1. 添加微信登录、手机号登录、验证码发送等缺失的控制器方法
+2. 修复中间件路径引用错误，从`middleware`改为`middlewares`
+3. 添加API_PREFIX环境变量，解决API前缀undefined问题
+4. 修复auth中间件使用方式，替换为`protect`方法
+
+### 关键决策和解决方案
+- 控制器方法补全：
+  - 实现了`wxLogin`微信登录方法，处理code授权和用户创建
+  - 实现了`phoneLogin`手机号登录方法，支持验证码验证和用户创建
+  - 实现了`sendSmsCode`发送短信验证码方法，支持开发环境固定验证码
+  - 实现了`getUserInfo`、`updateUserInfo`等用户信息相关方法
+  - 实现了`bindPhone`和`checkLogin`等辅助功能
+
+- 中间件和路由优化：
+  - 修正了中间件的引用路径，确保文件能被正确导入
+  - 更新了路由中的auth使用方式，替换为`protect`
+  - 解决了`API_PREFIX`未定义的问题，添加默认值'/api'
+  
+- 开发体验改进：
+  - 在开发环境提供固定验证码`123456`用于测试
+  - 添加了详细的日志记录，便于调试
+  - 增强了错误处理和参数验证
+
+### 使用的技术栈
+- Node.js
+- Express
+- JWT认证
+- Sequelize ORM
+- 微信API集成
+- 短信验证码模拟
+
+### 修改的文件
+- mall-server/src/controllers/userController.js - 添加缺失的控制器方法
+- mall-server/src/routes/api/user.js - 修复中间件引用
+- mall-server/src/middleware/auth.js - 创建用户认证中间件
+- mall-server/.env.development - 添加API_PREFIX环境变量

@@ -10,6 +10,7 @@ const homeRoutes = require('./api/home');
 const categoryRoutes = require('./api/category');
 const goodsRoutes = require('./api/goods');
 const searchRoutes = require('./api/search');
+const userRoutes = require('./api/user');
 
 const router = express.Router();
 
@@ -159,6 +160,9 @@ router.use('/admin', adminModuleRoutes);
 
 // 注册上传接口路由
 router.use('/upload', uploadRoutes);
+
+// 注册用户相关路由
+router.use('/user', userRoutes);
 
 // 注册首页相关路由
 router.use('/home', homeRoutes);

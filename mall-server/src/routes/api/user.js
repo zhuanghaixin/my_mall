@@ -4,7 +4,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../../controllers/userController');
-const auth = require('../../middleware/auth');
+const { protect } = require('../../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -41,24 +41,24 @@ router.post('/sendsms', userController.sendSmsCode);
  * 获取用户信息
  * GET /api/user/info
  */
-router.get('/info', auth, userController.getUserInfo);
+router.get('/info', protect, userController.getUserInfo);
 
 /**
  * 更新用户信息
  * POST /api/user/info
  */
-router.post('/info', auth, userController.updateUserInfo);
+router.post('/info', protect, userController.updateUserInfo);
 
 /**
  * 绑定手机号
  * POST /api/user/bindphone
  */
-router.post('/bindphone', auth, userController.bindPhone);
+router.post('/bindphone', protect, userController.bindPhone);
 
 /**
  * 检查登录状态
  * GET /api/user/checklogin
  */
-router.get('/checklogin', auth, userController.checkLogin);
+router.get('/checklogin', protect, userController.checkLogin);
 
 module.exports = router; 

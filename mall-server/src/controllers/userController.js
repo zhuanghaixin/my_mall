@@ -12,6 +12,9 @@ const config = require('../config');
 const { WXBizDataCrypt } = require('../utils/wxBizDataCrypt');
 const axios = require('axios');
 
+// 获取API前缀配置，如果未定义则使用默认值 '/api'
+const API_PREFIX = process.env.API_PREFIX || '/api';
+
 /**
  * @swagger
  * components:
@@ -512,4 +515,639 @@ exports.phoneNumberLogin = catchAsync(async (req, res) => {
             message: `登录失败: ${error.message}`
         });
     }
+});
+
+/**
+ * @swagger
+ * /api/user/wxlogin:
+ *   post:
+ *     summary: 微信登录
+ *     tags: [用户]
+ *     description: 通过微信临时登录凭证进行登录
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: 微信登录临时凭证
+ *               userInfo:
+ *                 type: object
+ *                 description: 用户信息(可选)
+ *     responses:
+ *       200:
+ *         description: 登录成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 登录成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       description: JWT认证令牌
+ *                     userInfo:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         description: 参数错误
+ *       500:
+ *         description: 服务器错误
+ */
+exports.wxLogin = catchAsync(async (req, res) => {
+    const { code, userInfo } = req.body;
+
+    if (!code) {
+        throw new ValidationError('缺少必要参数code');
+    }
+
+    try {
+        // 获取微信session_key和openid
+        const wxLoginUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${config.wx.appId}&secret=${config.wx.appSecret}&js_code=${code}&grant_type=authorization_code`;
+        const wxResponse = await axios.get(wxLoginUrl);
+        const wxResult = wxResponse.data;
+
+        if (wxResult.errcode) {
+            logger.error(`获取微信session_key失败: ${JSON.stringify(wxResult)}`);
+            throw new Error(`微信授权失败: ${wxResult.errmsg}`);
+        }
+
+        const { openid } = wxResult;
+
+        // 查询或创建用户
+        let user = await User.findOne({ where: { openid } });
+
+        if (!user) {
+            // 新用户注册
+            let nickname = '微信用户';
+            let avatar = '';
+
+            if (userInfo) {
+                nickname = userInfo.nickName || nickname;
+                avatar = userInfo.avatarUrl || avatar;
+            }
+
+            user = await User.create({
+                openid,
+                nickname,
+                avatar,
+                status: 1,
+                register_time: new Date()
+            });
+            logger.info(`新用户注册成功: ${user.id}`);
+        }
+
+        // 生成JWT令牌
+        const token = jwt.sign(
+            { id: user.id, openid: user.openid },
+            config.jwt.secret,
+            { expiresIn: config.jwt.expiresIn }
+        );
+
+        logger.info(`用户 ${user.id} 微信登录成功`);
+
+        res.status(200).json({
+            code: 200,
+            message: '登录成功',
+            data: {
+                token,
+                userInfo: {
+                    id: user.id,
+                    nickname: user.nickname,
+                    avatar: user.avatar,
+                    phone: user.phone,
+                    gender: user.gender
+                }
+            }
+        });
+    } catch (error) {
+        logger.error(`微信登录失败: ${error.message}`);
+        res.status(400).json({
+            code: 400,
+            message: `登录失败: ${error.message}`
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /api/user/phonelogin:
+ *   post:
+ *     summary: 手机号+验证码登录
+ *     tags: [用户]
+ *     description: 通过手机号和验证码进行登录
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phone
+ *               - code
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 description: 手机号码
+ *               code:
+ *                 type: string
+ *                 description: 短信验证码
+ *     responses:
+ *       200:
+ *         description: 登录成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 登录成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       description: JWT认证令牌
+ *                     userInfo:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         description: 参数错误或验证码无效
+ *       500:
+ *         description: 服务器错误
+ */
+exports.phoneLogin = catchAsync(async (req, res) => {
+    const { phone, code } = req.body;
+
+    // 验证必要参数
+    if (!phone || !code) {
+        throw new ValidationError('缺少必要参数');
+    }
+
+    // 这里应该验证短信验证码是否正确
+    // 开发环境可以使用固定的测试验证码(如123456)
+    if (process.env.NODE_ENV === 'development' && code !== '123456') {
+        logger.warn(`开发环境验证码不正确: ${code}`);
+        throw new ValidationError('验证码不正确');
+    }
+
+    try {
+        // 根据手机号查找用户
+        let user = await User.findOne({ where: { phone } });
+
+        if (!user) {
+            // 新用户注册
+            user = await User.create({
+                phone,
+                nickname: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+                status: 1,
+                register_time: new Date()
+            });
+            logger.info(`手机号用户注册成功: ${user.id}`);
+        }
+
+        // 生成JWT令牌
+        const token = jwt.sign(
+            { id: user.id, phone: user.phone },
+            config.jwt.secret,
+            { expiresIn: config.jwt.expiresIn }
+        );
+
+        logger.info(`用户 ${user.id} 手机号登录成功`);
+
+        res.status(200).json({
+            code: 200,
+            message: '登录成功',
+            data: {
+                token,
+                userInfo: {
+                    id: user.id,
+                    nickname: user.nickname,
+                    avatar: user.avatar,
+                    phone: user.phone,
+                    gender: user.gender
+                }
+            }
+        });
+    } catch (error) {
+        logger.error(`手机号登录失败: ${error.message}`);
+        res.status(400).json({
+            code: 400,
+            message: `登录失败: ${error.message}`
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /api/user/sendsms:
+ *   post:
+ *     summary: 发送短信验证码
+ *     tags: [用户]
+ *     description: 向指定手机号发送短信验证码
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phone
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 description: 手机号码
+ *     responses:
+ *       200:
+ *         description: 发送成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 验证码发送成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     expireTime:
+ *                       type: integer
+ *                       description: 验证码有效期(秒)
+ *                       example: 300
+ *       400:
+ *         description: 参数错误或发送失败
+ *       500:
+ *         description: 服务器错误
+ */
+exports.sendSmsCode = catchAsync(async (req, res) => {
+    const { phone } = req.body;
+
+    // 验证必要参数
+    if (!phone) {
+        throw new ValidationError('缺少必要参数');
+    }
+
+    // 验证手机号格式
+    const phoneRegex = /^1[3-9]\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+        throw new ValidationError('手机号格式不正确');
+    }
+
+    try {
+        // 在实际项目中，这里会调用短信服务商的API发送短信
+        // 这里仅模拟发送操作
+        logger.info(`向手机号 ${phone} 发送验证码`);
+
+        // 在开发环境中，直接返回成功，使用固定验证码123456
+        res.status(200).json({
+            code: 200,
+            message: '验证码发送成功',
+            data: {
+                expireTime: 300, // 5分钟有效期
+                code: process.env.NODE_ENV === 'development' ? '123456' : undefined
+            }
+        });
+    } catch (error) {
+        logger.error(`发送验证码失败: ${error.message}`);
+        res.status(400).json({
+            code: 400,
+            message: `发送失败: ${error.message}`
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /api/user/info:
+ *   get:
+ *     summary: 获取用户信息
+ *     tags: [用户]
+ *     description: 获取当前登录用户的信息
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功获取用户信息
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 获取成功
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+exports.getUserInfo = catchAsync(async (req, res) => {
+    // auth中间件已经验证了用户身份，并将用户ID存储在req.user中
+    const userId = req.user.id;
+
+    // 根据用户ID查找用户信息
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+        throw new NotFoundError('用户不存在');
+    }
+
+    logger.info(`获取用户 ${userId} 的信息`);
+
+    // 返回用户信息
+    res.status(200).json({
+        code: 200,
+        message: '获取成功',
+        data: {
+            id: user.id,
+            nickname: user.nickname,
+            avatar: user.avatar,
+            phone: user.phone,
+            gender: user.gender,
+            status: user.status
+        }
+    });
+});
+
+/**
+ * @swagger
+ * /api/user/info:
+ *   post:
+ *     summary: 更新用户信息
+ *     tags: [用户]
+ *     description: 更新当前登录用户的信息
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nickname:
+ *                 type: string
+ *                 description: 用户昵称
+ *               avatar:
+ *                 type: string
+ *                 description: 用户头像URL
+ *               gender:
+ *                 type: integer
+ *                 description: 性别，0未知，1男，2女
+ *     responses:
+ *       200:
+ *         description: 更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 更新成功
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+exports.updateUserInfo = catchAsync(async (req, res) => {
+    // auth中间件已经验证了用户身份，并将用户ID存储在req.user中
+    const userId = req.user.id;
+    const { nickname, avatar, gender } = req.body;
+
+    // 根据用户ID查找用户
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+        throw new NotFoundError('用户不存在');
+    }
+
+    // 更新用户信息
+    if (nickname !== undefined) user.nickname = nickname;
+    if (avatar !== undefined) user.avatar = avatar;
+    if (gender !== undefined) user.gender = parseInt(gender);
+
+    await user.save();
+
+    logger.info(`用户 ${userId} 更新信息成功`);
+
+    // 返回更新后的用户信息
+    res.status(200).json({
+        code: 200,
+        message: '更新成功',
+        data: {
+            id: user.id,
+            nickname: user.nickname,
+            avatar: user.avatar,
+            phone: user.phone,
+            gender: user.gender
+        }
+    });
+});
+
+/**
+ * @swagger
+ * /api/user/bindphone:
+ *   post:
+ *     summary: 绑定手机号
+ *     tags: [用户]
+ *     description: 为当前登录用户绑定手机号
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phone
+ *               - code
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 description: 手机号码
+ *               code:
+ *                 type: string
+ *                 description: 短信验证码
+ *     responses:
+ *       200:
+ *         description: 绑定成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 绑定成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     phone:
+ *                       type: string
+ *                       description: 绑定的手机号
+ *       401:
+ *         description: 未授权
+ *       400:
+ *         description: 参数错误或验证码无效
+ *       500:
+ *         description: 服务器错误
+ */
+exports.bindPhone = catchAsync(async (req, res) => {
+    // auth中间件已经验证了用户身份，并将用户ID存储在req.user中
+    const userId = req.user.id;
+    const { phone, code } = req.body;
+
+    // 验证必要参数
+    if (!phone || !code) {
+        throw new ValidationError('缺少必要参数');
+    }
+
+    // 验证手机号格式
+    const phoneRegex = /^1[3-9]\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+        throw new ValidationError('手机号格式不正确');
+    }
+
+    // 这里应该验证短信验证码是否正确
+    // 开发环境可以使用固定的测试验证码(如123456)
+    if (process.env.NODE_ENV === 'development' && code !== '123456') {
+        logger.warn(`开发环境验证码不正确: ${code}`);
+        throw new ValidationError('验证码不正确');
+    }
+
+    try {
+        // 根据用户ID查找用户
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            throw new NotFoundError('用户不存在');
+        }
+
+        // 检查手机号是否已被其他用户使用
+        const existingUser = await User.findOne({ where: { phone } });
+        if (existingUser && existingUser.id !== userId) {
+            throw new ValidationError('该手机号已被其他用户绑定');
+        }
+
+        // 更新用户手机号
+        user.phone = phone;
+        await user.save();
+
+        logger.info(`用户 ${userId} 绑定手机号 ${phone} 成功`);
+
+        res.status(200).json({
+            code: 200,
+            message: '绑定成功',
+            data: {
+                phone
+            }
+        });
+    } catch (error) {
+        logger.error(`绑定手机号失败: ${error.message}`);
+        res.status(400).json({
+            code: 400,
+            message: `绑定失败: ${error.message}`
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /api/user/checklogin:
+ *   get:
+ *     summary: 检查登录状态
+ *     tags: [用户]
+ *     description: 检查当前用户的登录状态
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 登录有效
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 登录有效
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     isLogin:
+ *                       type: boolean
+ *                       description: 是否已登录
+ *                       example: true
+ *                     userInfo:
+ *                       $ref: '#/components/schemas/User'
+ *       401:
+ *         description: 未登录或登录已过期
+ *       500:
+ *         description: 服务器错误
+ */
+exports.checkLogin = catchAsync(async (req, res) => {
+    // auth中间件已经验证了用户身份，并将用户ID存储在req.user中
+    const userId = req.user.id;
+
+    // 根据用户ID查找用户信息
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+        throw new NotFoundError('用户不存在');
+    }
+
+    logger.info(`用户 ${userId} 检查登录状态: 有效`);
+
+    // 返回登录状态和用户信息
+    res.status(200).json({
+        code: 200,
+        message: '登录有效',
+        data: {
+            isLogin: true,
+            userInfo: {
+                id: user.id,
+                nickname: user.nickname,
+                avatar: user.avatar,
+                phone: user.phone,
+                gender: user.gender
+            }
+        }
+    });
 }); 
