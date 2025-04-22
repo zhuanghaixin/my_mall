@@ -1,0 +1,71 @@
+/* 搜索页样式 */
+.container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #fff;
+  padding-bottom: 30rpx;
+}
+
+/* 搜索框样式 */
+.search-header {
+  padding: 20rpx 0;
+  width: 100%;
+  background-color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* 搜索历史部分 */
+.search-history {
+  padding: 0 30rpx;
+  margin-bottom: 30rpx;
+}
+
+/* 热门搜索部分 */
+.hot-search {
+  padding: 0 30rpx;
+}
+
+/* 标题栏样式 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 标签外观 */
+.tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tag-item {
+  margin-right: 20rpx;
+  margin-bottom: 16rpx;
+}
+
+/* 空状态 */
+.empty-view {
+  padding: 40rpx 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 加载中状态 */
+.loading-view {
+  padding: 40rpx 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #999;
+  font-size: 26rpx;
+} 
