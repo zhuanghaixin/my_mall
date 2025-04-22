@@ -31,8 +31,10 @@ page {
   width: 100%;
   padding: 20rpx;
   box-sizing: border-box;
-  overflow: visible; /* 确保内容可见且可滚动 */
-  height: calc(100vh - 180rpx); /* 减去头部导航和搜索栏的高度 */
+  overflow: visible;
+  /* 确保内容可见且可滚动 */
+  height: calc(100vh - 180rpx);
+  /* 减去头部导航和搜索栏的高度 */
 }
 
 /* 空状态样式 */
@@ -142,4 +144,4 @@ page {
   height: 100vh;
   z-index: 1000;
   opacity: 0;
-} 
+}

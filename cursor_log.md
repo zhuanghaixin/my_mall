@@ -979,3 +979,33 @@ npm run dev
 3. 新增功能实现：
    - `mall-server/src/controllers/searchController.js` - 搜索业务逻辑
    - `mall-server/src/routes/api/search.js` - 搜索API路由定义
+
+## 2024-03-26 数据库索引修复
+
+### 会话主要目的
+修复 users 表中存在的重复索引问题
+
+### 完成的主要任务
+1. 检查并发现 users 表存在多个重复的 openid 索引（超过60个）
+2. 清理所有重复的 openid 索引
+3. 重新创建一个正确的唯一索引 idx_openid
+4. 验证最终的索引结构
+
+### 关键决策和解决方案
+- 发现问题：users 表有超过60个重复的 openid 索引
+- 解决方案：
+  1. 删除所有已存在的 openid 相关索引
+  2. 重新创建一个唯一的 idx_openid 索引
+  3. 保持其他索引（PRIMARY 和 idx_phone）不变
+
+### 使用的技术栈
+- MySQL 数据库
+- SQL DDL 语句（ALTER TABLE, DROP INDEX, ADD INDEX）
+
+### 修改的文件
+- `mall-server/src/db/fix-users-indexes.sql`：创建修复索引的SQL脚本
+
+### 最终索引结构
+1. PRIMARY KEY on id
+2. UNIQUE INDEX idx_openid on openid
+3. INDEX idx_phone on phone
