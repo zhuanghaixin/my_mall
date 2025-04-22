@@ -7,6 +7,10 @@ const { Op } = require('sequelize');
 const catchAsync = require('../utils/catchAsync');
 const { ValidationError, NotFoundError } = require('../utils/errorTypes');
 const logger = require('../utils/logger');
+const jwt = require('jsonwebtoken');
+const config = require('../config');
+const { WXBizDataCrypt } = require('../utils/wxBizDataCrypt');
+const axios = require('axios');
 
 /**
  * @swagger
@@ -369,4 +373,143 @@ exports.resetPassword = catchAsync(async (req, res) => {
         message: '密码重置成功，已通知用户',
         data: randomPassword
     });
+});
+
+/**
+ * @swagger
+ * /api/user/phonenumberlogin:
+ *   post:
+ *     summary: 微信手机号一键登录
+ *     tags: [用户]
+ *     description: 通过微信获取的手机号信息进行登录或注册
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *               - encryptedData
+ *               - iv
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: 微信临时登录凭证
+ *               encryptedData:
+ *                 type: string
+ *                 description: 包含手机号的加密数据
+ *               iv:
+ *                 type: string
+ *                 description: 加密算法的初始向量
+ *     responses:
+ *       200:
+ *         description: 登录成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 登录成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       description: JWT认证令牌
+ *                     userInfo:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         description: 参数错误或解密失败
+ *       500:
+ *         description: 服务器错误
+ */
+exports.phoneNumberLogin = catchAsync(async (req, res) => {
+    const { code, encryptedData, iv } = req.body;
+
+    // 验证必要参数
+    if (!code || !encryptedData || !iv) {
+        throw new ValidationError('缺少必要参数');
+    }
+
+    try {
+        // 1. 获取微信 session_key 和 openid
+        const wxLoginUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${config.wx.appId}&secret=${config.wx.appSecret}&js_code=${code}&grant_type=authorization_code`;
+        const wxResponse = await axios.get(wxLoginUrl);
+        const wxResult = wxResponse.data;
+
+        if (wxResult.errcode) {
+            logger.error(`获取微信session_key失败: ${JSON.stringify(wxResult)}`);
+            throw new Error(`微信授权失败: ${wxResult.errmsg}`);
+        }
+
+        const { session_key, openid } = wxResult;
+
+        // 2. 解密手机号信息
+        const pc = new WXBizDataCrypt(config.wx.appId, session_key);
+        const phoneData = pc.decryptData(encryptedData, iv);
+
+        if (!phoneData || !phoneData.phoneNumber) {
+            throw new Error('手机号数据解密失败');
+        }
+
+        const phoneNumber = phoneData.phoneNumber;
+
+        // 3. 根据 openid 查找或创建用户
+        let user = await User.findOne({ where: { openid } });
+
+        if (user) {
+            // 已存在用户，更新手机号
+            if (!user.phone) {
+                user.phone = phoneNumber;
+                await user.save();
+            }
+        } else {
+            // 新用户注册，使用手机号作为默认昵称
+            const nickname = phoneNumber.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+            user = await User.create({
+                openid,
+                phone: phoneNumber,
+                nickname,
+                status: 1,
+                register_time: new Date()
+            });
+        }
+
+        // 4. 生成 JWT 令牌
+        const token = jwt.sign(
+            { id: user.id, phone: user.phone },
+            config.jwt.secret,
+            { expiresIn: config.jwt.expiresIn }
+        );
+
+        // 5. 返回用户信息和令牌
+        logger.info(`用户 ${user.id} 通过微信手机号一键登录成功`);
+
+        res.status(200).json({
+            code: 200,
+            message: '登录成功',
+            data: {
+                token,
+                userInfo: {
+                    id: user.id,
+                    nickname: user.nickname,
+                    avatar: user.avatar,
+                    phone: user.phone,
+                    gender: user.gender
+                }
+            }
+        });
+    } catch (error) {
+        logger.error(`微信手机号登录失败: ${error.message}`);
+        res.status(400).json({
+            code: 400,
+            message: `登录失败: ${error.message}`
+        });
+    }
 }); 

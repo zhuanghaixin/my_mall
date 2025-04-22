@@ -73,45 +73,103 @@
   color: #999;
 }
 
-/* 按钮部分 */
+/* 登录按钮容器 */
 .button-wrapper {
-  padding: 0 20rpx;
-  margin-bottom: 60rpx;
+  margin-top: 60rpx;
+  padding: 0 50rpx;
 }
 
+/* 登录按钮基础样式 */
 .login-btn {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 88rpx;
-  margin-top: 30rpx;
-  font-size: 30rpx;
-  border-radius: 44rpx;
+  height: 90rpx;
+  margin-bottom: 30rpx;
+  border-radius: 45rpx;
+  font-size: 32rpx;
   color: #fff;
 }
 
-.login-btn:first-child {
-  margin-top: 0;
-}
-
+/* 微信登录按钮样式 */
 .wechat-btn {
   background-color: #07c160;
 }
 
+/* 手机号登录按钮样式 */
 .phone-number-btn {
-  background-color: #1890ff;
+  background-color: #1989fa;
+  position: relative;
 }
 
-.confirm-btn {
-  background-color: #ff6b81;
+/* 推荐登录方式样式 */
+.recommended {
+  transform: scale(1.05);
+  box-shadow: 0 6rpx 16rpx rgba(25, 137, 250, 0.3);
+  margin-bottom: 40rpx;
 }
 
+.recommended-badge {
+  position: absolute;
+  top: -15rpx;
+  right: -15rpx;
+  background-color: #ff4d4f;
+  color: #fff;
+  font-size: 22rpx;
+  padding: 5rpx 12rpx;
+  border-radius: 20rpx;
+  transform: scale(0.85);
+}
+
+/* 按钮图标 */
 .btn-icon {
   width: 40rpx;
   height: 40rpx;
-  margin-right: 16rpx;
+  margin-right: 20rpx;
+}
+
+/* 分割线 */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 60rpx 50rpx 40rpx;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background-color: #e0e0e0;
+}
+
+.divider-text {
+  padding: 0 30rpx;
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 其他登录方式 */
+.other-login {
+  display: flex;
+  justify-content: center;
+  margin-top: 20rpx;
+}
+
+.other-login-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx;
+}
+
+.other-login-icon {
+  width: 80rpx;
+  height: 80rpx;
+  margin-bottom: 15rpx;
+}
+
+.other-login-btn text {
+  font-size: 24rpx;
+  color: #666;
 }
 
 /* 输入框部分 */

@@ -17,15 +17,31 @@
     </view>
     
     <view class="button-wrapper">
-      <button class="login-btn wechat-btn" bindtap="handleWechatLogin" loading="{{loading}}">
-        <image class="btn-icon" src="/assets/icons/wechat.png" mode="aspectFit"></image>
-        <text>微信一键登录</text>
+      <!-- 推荐登录方式 -->
+      <button class="login-btn phone-number-btn recommended" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber" loading="{{loading}}">
+        <image class="btn-icon" src="/assets/icons/phone.png" mode="aspectFit"></image>
+        <text>微信手机号一键登录</text>
+        <view class="recommended-badge">推荐</view>
       </button>
       
-      <button class="login-btn phone-number-btn" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber" loading="{{loading}}">
-        <image class="btn-icon" src="/assets/icons/phone.png" mode="aspectFit"></image>
-        <text>微信手机号登录</text>
+      <!-- 普通微信登录按钮 -->
+      <button class="login-btn wechat-btn" bindtap="handleWechatLogin" loading="{{loading}}">
+        <image class="btn-icon" src="/assets/icons/wechat.png" mode="aspectFit"></image>
+        <text>微信登录</text>
       </button>
+    </view>
+    
+    <view class="divider">
+      <view class="divider-line"></view>
+      <view class="divider-text">其他登录方式</view>
+      <view class="divider-line"></view>
+    </view>
+    
+    <view class="other-login">
+      <view class="other-login-btn" bindtap="switchLoginType">
+        <image class="other-login-icon" src="/assets/icons/phone.png" mode="aspectFit"></image>
+        <text>手机号登录</text>
+      </view>
     </view>
   </view>
   

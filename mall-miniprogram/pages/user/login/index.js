@@ -358,6 +358,7 @@ Page({
      * 获取手机号授权回调
      */
     getPhoneNumber: function (e) {
+        // 用户拒绝授权
         if (e.detail.errMsg !== 'getPhoneNumber:ok') {
             util.showToast('未授权获取手机号');
             return;
