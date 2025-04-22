@@ -28,6 +28,12 @@ const Category = sequelize.define('categories', {
         allowNull: true,
         comment: '分类图标'
     },
+    level: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 1,
+        comment: '分类层级：1一级，2二级，3三级'
+    },
     sort: {
         type: DataTypes.INTEGER,
         allowNull: false,

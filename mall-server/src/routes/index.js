@@ -6,6 +6,7 @@ const express = require('express');
 const adminRoutes = require('./adminRoutes');
 const adminModuleRoutes = require('./admin');
 const uploadRoutes = require('./uploadRoutes');
+const homeRoutes = require('./api/home');
 
 const router = express.Router();
 
@@ -155,5 +156,8 @@ router.use('/admin', adminModuleRoutes);
 
 // 注册上传接口路由
 router.use('/upload', uploadRoutes);
+
+// 注册首页相关路由
+router.use('/home', homeRoutes);
 
 module.exports = router; 

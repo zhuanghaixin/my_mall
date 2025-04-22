@@ -154,4 +154,70 @@
 #### 5. 删除订单
 - 请求方式：DELETE
 - 请求路径：/api/admin/order/:id
-- 响应格式：统一使用code、message和data结构 
+- 响应格式：统一使用code、message和data结构
+
+## 2023-07-10：实现小程序首页相关API接口
+
+### 会话的主要目的
+为小程序前端实现首页相关的API接口，包括轮播图、推荐商品和分类信息，支持小程序首页数据展示。
+
+### 完成的主要任务
+1. 创建首页相关API路由文件
+2. 实现获取首页全部数据接口
+3. 实现获取推荐商品接口
+4. 实现获取首页分类及商品接口
+5. 为所有接口添加Swagger文档
+6. 补充完善商品和分类模型所需字段
+
+### 关键决策和解决方案
+1. 接口设计：
+   - 提供一个整合的接口/api/home/data，一次性返回首页所有数据，减少请求次数
+   - 同时提供独立接口/api/home/recommend和/api/home/categories，便于按需获取数据
+   - 接口支持参数化，可以自定义数量限制和过滤条件
+
+2. 数据模型调整：
+   - 在Goods模型中增加is_recommend、cover_image和sale_count字段
+   - 在Category模型中增加level字段，以支持区分一级、二级分类
+
+3. 性能优化：
+   - 分类数据限制返回数量，避免返回过多数据
+   - 商品数据按销量排序，只返回热销商品
+   - 只返回启用状态(status=1)的数据
+
+### 使用的技术栈
+- Node.js
+- Express.js
+- Sequelize ORM
+- MySQL数据库
+- Swagger UI (API文档)
+
+### 修改了哪些文件
+1. 新建文件：
+   - routes/api/home.js：首页相关API路由
+
+2. 修改文件：
+   - routes/index.js：注册首页路由
+   - models/goods.js：添加is_recommend、cover_image和sale_count字段
+   - models/category.js：添加level字段
+
+### 接口详情
+#### 1. 获取首页全部数据
+- 请求方式：GET
+- 请求路径：/api/home/data
+- 参数：无
+- 响应：包含轮播图、推荐商品和分类商品的完整首页数据
+
+#### 2. 获取推荐商品
+- 请求方式：GET
+- 请求路径：/api/home/recommend
+- 参数：
+  - limit：返回数量限制，默认10
+- 响应：推荐商品列表
+
+#### 3. 获取首页分类及商品
+- 请求方式：GET
+- 请求路径：/api/home/categories
+- 参数：
+  - limit：返回分类数量限制，默认10
+  - goodsLimit：每个分类下返回的商品数量限制，默认6
+- 响应：分类列表，每个分类包含该分类下的商品 

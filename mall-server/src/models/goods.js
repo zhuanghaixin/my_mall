@@ -49,6 +49,11 @@ const Goods = sequelize.define('goods', {
         allowNull: true,
         comment: '主图URL'
     },
+    cover_image: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        comment: '封面图URL'
+    },
     images: {
         type: DataTypes.TEXT,
         allowNull: true,
@@ -63,6 +68,18 @@ const Goods = sequelize.define('goods', {
         type: DataTypes.TEXT,
         allowNull: true,
         comment: '商品详情'
+    },
+    is_recommend: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+        comment: '是否推荐：0不推荐，1推荐'
+    },
+    sale_count: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+        comment: '销售数量'
     },
     status: {
         type: DataTypes.INTEGER,
