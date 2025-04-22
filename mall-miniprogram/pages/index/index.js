@@ -1,6 +1,7 @@
 // index.js
 const homeApi = require('../../api/home.js');
 const util = require('../../utils/util.js');
+const cartUtil = require('../../utils/cart');
 
 Page({
     data: {
@@ -303,14 +304,26 @@ Page({
             });
     },
 
-    // 点击加入购物车
-    onAddCart(e) {
-        const id = e.currentTarget.dataset.id;
-        console.log('添加到购物车', id);
-
-        util.showSuccessToast('添加成功');
-
+    /**
+     * 添加到购物车
+     */
+    onAddCart: function (e) {
         // 阻止事件冒泡
-        return false;
+        e.stopPropagation();
+
+        // 获取商品ID
+        const goodsId = e.currentTarget.dataset.id;
+
+        // 使用购物车工具模块添加商品，自动处理登录检查
+        cartUtil.addToCart({
+            goodsId: goodsId,
+            number: 1  // 默认添加1个
+        }).then(res => {
+            // 添加成功，不需要额外处理，cartUtil内已有提示
+            console.log('首页添加购物车成功', res);
+        }).catch(err => {
+            console.error('首页添加购物车失败', err);
+            // 错误已在cartUtil中处理，这里不需要额外提示
+        });
     }
 })

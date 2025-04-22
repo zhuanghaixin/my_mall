@@ -6,6 +6,7 @@
 const goodsApi = require('../../../api/goods');
 const cartApi = require('../../../api/cart');
 const util = require('../../../utils/util');
+const cartUtil = require('../../../utils/cart');  // 新增引用购物车工具模块
 const Toast = require('../../../miniprogram_npm/@vant/weapp/toast/toast');
 
 Page({
@@ -339,8 +340,6 @@ Page({
      * 添加到购物车
      */
     addToCart: function () {
-        if (!this.checkLogin()) return;
-
         this.setData({
             buyType: 'cart',
             showSku: true
@@ -399,39 +398,21 @@ Page({
             mask: true
         });
 
-        // 预留API调用
-        // 本地实现先忽略接口调用，后续联调时再完善
-        setTimeout(() => {
+        // 使用购物车工具模块添加商品，会自动处理登录检查
+        cartUtil.addToCart({
+            goodsId: goods.id,
+            number: quantity
+        }).then(res => {
             wx.hideLoading();
-            Toast.success('添加成功');
-
             // 更新购物车数量
             this.setData({
                 cartCount: this.data.cartCount + quantity
             });
-        }, 500);
-
-        // 实际API调用(联调时使用)
-        /*
-        cartApi.addToCart({
-            goods_id: goods.id,
-            quantity: quantity
-        }).then(res => {
-            wx.hideLoading();
-            if (res.code === 200) {
-                Toast.success('添加成功');
-                this.setData({
-                    cartCount: res.data.count
-                });
-            } else {
-                Toast.fail(res.message || '添加失败');
-            }
         }).catch(err => {
             wx.hideLoading();
-            Toast.fail('网络错误，请重试');
             console.error('添加购物车出错：', err);
+            // 错误已在cartUtil中处理，这里不需要额外提示
         });
-        */
     },
 
     /**
@@ -450,16 +431,14 @@ Page({
      * 检查是否已登录
      */
     checkLogin: function () {
-        // 获取用户登录状态
-        const token = wx.getStorageSync('token');
-
-        if (!token) {
-            wx.navigateTo({
-                url: '/pages/user/login/index'
-            });
+        const auth = require('../../../utils/auth');
+        if (!auth.isLoggedIn()) {
+            // 获取当前页面路径
+            const currentPage = util.getCurrentPageUrl();
+            // 跳转到登录页面并传递当前页面路径用于登录后返回
+            auth.navigateToLogin(currentPage);
             return false;
         }
-
         return true;
     },
 
