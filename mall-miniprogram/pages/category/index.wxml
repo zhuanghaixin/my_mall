@@ -3,6 +3,7 @@
   <navigation-bar title="商品分类"></navigation-bar>
   
   <view class="category-container">
+    <!-- 左侧分类列表 -->
     <van-sidebar class="sidebar" active-key="{{ activeCategory }}" bind:change="onCategoryChange">
       <van-sidebar-item 
         wx:for="{{ categories }}" 
@@ -11,18 +12,74 @@
       />
     </van-sidebar>
     
-    <scroll-view scroll-y class="content">
-      <view class="subcategory-title">{{ currentCategory.name }}</view>
-      <van-grid column-num="3" border="{{ false }}" class="subcategory-grid">
-        <van-grid-item 
-          wx:for="{{ currentSubcategories }}" 
-          wx:key="id"
-          icon="{{ item.icon }}"
-          text="{{ item.name }}"
-          bind:click="onSubcategoryTap"
-          data-id="{{ item.id }}"
-        />
-      </van-grid>
+    <!-- 右侧内容区域 -->
+    <scroll-view scroll-y class="content" bindscrolltolower="onReachBottom">
+      <!-- 加载中 -->
+      <van-loading wx:if="{{ loadingCategories }}" class="loading-center" type="spinner" color="#1989fa" />
+      
+      <!-- 分类为空 -->
+      <view wx:elif="{{ categories.length === 0 }}" class="empty-tip">
+        暂无分类数据
+      </view>
+      
+      <block wx:else>
+        <!-- 分类标题 -->
+        <view class="subcategory-title">{{ currentCategory.name }}</view>
+        
+        <!-- 子分类列表 -->
+        <view wx:if="{{ currentSubcategories.length > 0 }}" class="subcategory-section">
+          <van-grid column-num="3" border="{{ false }}" class="subcategory-grid">
+            <van-grid-item 
+              wx:for="{{ currentSubcategories }}" 
+              wx:key="id"
+              icon="{{ item.icon || '/static/images/category-default.png' }}"
+              text="{{ item.name }}"
+              bind:click="onSubcategoryTap"
+              data-id="{{ item.id }}"
+            />
+          </van-grid>
+        </view>
+        
+        <!-- 商品列表 -->
+        <view class="goods-section">
+          <view class="goods-title">{{ currentCategory.name }}商品</view>
+          
+          <!-- 商品为空 -->
+          <view wx:if="{{ goodsList.length === 0 && !loadingGoods }}" class="empty-tip">
+            暂无商品数据
+          </view>
+          
+          <!-- 商品列表 -->
+          <view wx:else class="goods-list">
+            <view 
+              wx:for="{{ goodsList }}" 
+              wx:key="id" 
+              class="goods-item"
+              bind:tap="onGoodsTap"
+              data-id="{{ item.id }}"
+            >
+              <image class="goods-image" src="{{ item.main_image }}" mode="aspectFill"></image>
+              <view class="goods-info">
+                <view class="goods-name">{{ item.name }}</view>
+                <view class="goods-price">
+                  <text class="price">¥{{ item.price }}</text>
+                  <text wx:if="{{ item.original_price }}" class="original-price">¥{{ item.original_price }}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 加载更多 -->
+          <view wx:if="{{ loadingGoods }}" class="loading-more">
+            <van-loading size="24px" type="spinner" color="#1989fa">加载中...</van-loading>
+          </view>
+          
+          <!-- 到底了 -->
+          <view wx:if="{{ reachBottom && goodsList.length > 0 }}" class="reach-bottom">
+            已经到底了~
+          </view>
+        </view>
+      </block>
     </scroll-view>
   </view>
 </view>

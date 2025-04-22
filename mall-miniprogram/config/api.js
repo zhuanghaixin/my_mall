@@ -23,8 +23,8 @@ module.exports = {
     GoodsHot: ApiBaseUrl + '/goods/hot', // 获取热门商品
 
     // 分类相关
-    CategoryList: ApiBaseUrl + '/category/list', // 获取分类列表
-    CategoryGoods: ApiBaseUrl + '/category/goods', // 获取分类商品
+    CategoryList: ApiBaseUrl + '/category/tree', // 获取分类树结构
+    CategoryGoods: ApiBaseUrl + '/category/:id/goods', // 获取分类下的商品列表
 
     // 购物车相关
     CartList: ApiBaseUrl + '/cart/list', // 获取购物车列表

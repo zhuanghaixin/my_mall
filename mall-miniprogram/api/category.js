@@ -5,21 +5,23 @@ const api = require('../config/api.js');
 const request = require('./request.js');
 
 /**
- * 获取分类列表
+ * 获取分类树结构
  */
-function getCategoryList() {
+function getCategoryTree() {
     return request.get(api.CategoryList);
 }
 
 /**
- * 获取分类商品
- * @param {Object} params - 查询参数，包含分类ID
+ * 获取分类下的商品列表
+ * @param {Number} categoryId - 分类ID
+ * @param {Object} params - 查询参数，分页参数等
  */
-function getCategoryGoods(params) {
-    return request.get(api.CategoryGoods, params);
+function getCategoryGoods(categoryId, params = {}) {
+    let url = api.CategoryGoods.replace(':id', categoryId);
+    return request.get(url, params);
 }
 
 module.exports = {
-    getCategoryList,
+    getCategoryTree,
     getCategoryGoods
 }; 

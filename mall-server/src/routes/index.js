@@ -7,6 +7,7 @@ const adminRoutes = require('./adminRoutes');
 const adminModuleRoutes = require('./admin');
 const uploadRoutes = require('./uploadRoutes');
 const homeRoutes = require('./api/home');
+const categoryRoutes = require('./api/category');
 
 const router = express.Router();
 
@@ -159,5 +160,8 @@ router.use('/upload', uploadRoutes);
 
 // 注册首页相关路由
 router.use('/home', homeRoutes);
+
+// 注册分类相关路由
+router.use('/category', categoryRoutes);
 
 module.exports = router; 
