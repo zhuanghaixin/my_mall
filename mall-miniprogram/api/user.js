@@ -34,7 +34,16 @@ function phoneLogin(data) {
  * @returns {Promise} 返回登录结果
  */
 function phoneNumberLogin(data) {
-    return request.post(api.PhoneNumberLogin, data);
+    console.log('API调用 - phoneNumberLogin:', api.PhoneNumberLogin, data);
+    // 使用测试服务器URL
+    const url = 'http://127.0.0.1:8080/api/user/phonenumberlogin';
+    // 先尝试使用配置的URL
+    return request.post(api.PhoneNumberLogin, data)
+        .catch(error => {
+            console.warn('原始API调用失败，尝试使用固定地址:', url);
+            // 如果失败，尝试使用固定的URL
+            return request.post(url, data);
+        });
 }
 
 /**

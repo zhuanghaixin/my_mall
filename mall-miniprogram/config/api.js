@@ -1,5 +1,5 @@
 // API基础URL
-const ApiBaseUrl = 'http://localhost:8080/api';
+const ApiBaseUrl = 'http://127.0.0.1:8080/api';
 
 // API接口地址
 module.exports = {

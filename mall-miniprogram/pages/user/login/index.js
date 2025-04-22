@@ -58,8 +58,6 @@ Page({
     handleWechatLogin: function () {
         if (this.data.loading) return;
 
-        this.setData({ loading: true });
-
         // 检查隐私政策接受状态
         if (wx.getPrivacySetting) {
             wx.getPrivacySetting({
@@ -67,22 +65,88 @@ Page({
                     if (res.needAuthorization) {
                         // 需要授权隐私协议
                         this.setData({
-                            showPrivacyModal: true,
-                            loading: false
+                            showPrivacyModal: true
                         });
                     } else {
-                        // 已经接受隐私协议，直接登录
-                        this.wxLogin();
+                        // 已经接受隐私协议，直接获取用户信息
+                        this.getUserProfileDirectly();
                     }
                 },
                 fail: () => {
-                    // 接口调用失败，尝试直接登录
-                    this.wxLogin();
+                    // 接口调用失败，尝试直接获取用户信息
+                    this.getUserProfileDirectly();
                 }
             });
         } else {
-            // 低版本直接登录
-            this.wxLogin();
+            // 低版本直接获取用户信息
+            this.getUserProfileDirectly();
+        }
+    },
+
+    /**
+     * 获取用户信息（直接调用，不在异步回调中）
+     */
+    getUserProfileDirectly: function () {
+        this.setData({ loading: true });
+
+        // 先获取用户信息
+        if (this.data.canIUseGetUserProfile) {
+            wx.getUserProfile({
+                desc: '用于完善会员资料',
+                success: (profileRes) => {
+                    // 获取用户信息成功后，再获取登录code
+                    wx.login({
+                        success: (loginRes) => {
+                            if (loginRes.code) {
+                                // 发送登录请求
+                                this.doLogin(loginRes.code, profileRes.userInfo);
+                            } else {
+                                console.error('登录失败，未获取到code');
+                                this.setData({ loading: false });
+                                util.showErrorToast('登录失败');
+                            }
+                        },
+                        fail: (err) => {
+                            console.error('wx.login调用失败:', err);
+                            this.setData({ loading: false });
+                            util.showErrorToast('登录失败');
+                        }
+                    });
+                },
+                fail: (err) => {
+                    console.error('获取用户信息失败:', err);
+                    this.setData({ loading: false });
+                    util.showErrorToast('获取用户信息失败');
+                }
+            });
+        } else {
+            // 兼容低版本
+            wx.getUserInfo({
+                success: (infoRes) => {
+                    // 获取用户信息成功后，再获取登录code
+                    wx.login({
+                        success: (loginRes) => {
+                            if (loginRes.code) {
+                                this.doLogin(loginRes.code, infoRes.userInfo);
+                            } else {
+                                console.error('登录失败，未获取到code');
+                                this.setData({ loading: false });
+                                util.showErrorToast('登录失败');
+                            }
+                        },
+                        fail: (err) => {
+                            console.error('wx.login调用失败:', err);
+                            this.setData({ loading: false });
+                            util.showErrorToast('登录失败');
+                        }
+                    });
+                },
+                fail: (err) => {
+                    console.error('获取用户信息失败:', err);
+                    this.setData({ loading: false });
+                    util.showErrorToast('获取用户信息失败');
+                }
+            });
         }
     },
 
@@ -98,16 +162,16 @@ Page({
         if (wx.requirePrivacyAuthorize) {
             wx.requirePrivacyAuthorize({
                 success: () => {
-                    // 隐私授权成功，执行登录
-                    this.wxLogin();
+                    // 隐私授权成功，获取用户信息
+                    this.getUserProfileDirectly();
                 },
                 fail: () => {
                     util.showToast('请先同意隐私协议');
                 }
             });
         } else {
-            // 低版本直接登录
-            this.wxLogin();
+            // 低版本直接获取用户信息
+            this.getUserProfileDirectly();
         }
     },
 
@@ -119,57 +183,6 @@ Page({
             showPrivacyModal: false
         });
         util.showToast('需同意隐私协议才能使用');
-    },
-
-    /**
-     * 执行微信登录
-     */
-    wxLogin: function () {
-        this.setData({ loading: true });
-
-        // 获取临时登录凭证code
-        wx.login({
-            success: (loginRes) => {
-                if (loginRes.code) {
-                    // 获取用户信息
-                    if (this.data.canIUseGetUserProfile) {
-                        wx.getUserProfile({
-                            desc: '用于完善会员资料',
-                            success: (profileRes) => {
-                                // 发送登录请求
-                                this.doLogin(loginRes.code, profileRes.userInfo);
-                            },
-                            fail: (err) => {
-                                console.error('获取用户信息失败:', err);
-                                this.setData({ loading: false });
-                                util.showErrorToast('获取用户信息失败');
-                            }
-                        });
-                    } else {
-                        // 兼容低版本
-                        wx.getUserInfo({
-                            success: (infoRes) => {
-                                this.doLogin(loginRes.code, infoRes.userInfo);
-                            },
-                            fail: (err) => {
-                                console.error('获取用户信息失败:', err);
-                                this.setData({ loading: false });
-                                util.showErrorToast('获取用户信息失败');
-                            }
-                        });
-                    }
-                } else {
-                    console.error('登录失败，未获取到code');
-                    this.setData({ loading: false });
-                    util.showErrorToast('登录失败');
-                }
-            },
-            fail: (err) => {
-                console.error('wx.login调用失败:', err);
-                this.setData({ loading: false });
-                util.showErrorToast('登录失败');
-            }
-        });
     },
 
     /**
@@ -358,9 +371,30 @@ Page({
      * 获取手机号授权回调
      */
     getPhoneNumber: function (e) {
-        // 用户拒绝授权
+        console.log('getPhoneNumber回调:', e);
+
+        // 开发环境模拟模式
+        const isDev = __wxConfig.envVersion === 'develop' || __wxConfig.envVersion === 'trial';
+
+        // 用户拒绝授权或开发工具中无法获取
         if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+            console.error('手机号授权失败:', e.detail.errMsg);
+
+            // 在开发环境中模拟手机号数据
+            if (isDev && e.detail.errMsg === 'getPhoneNumber:fail no permission') {
+                console.log('开发环境中，使用模拟数据进行登录');
+                this.mockPhoneNumberLogin();
+                return;
+            }
+
             util.showToast('未授权获取手机号');
+            return;
+        }
+
+        // 检查是否有加密数据和IV
+        if (!e.detail.encryptedData || !e.detail.iv) {
+            console.error('获取手机号失败: 缺少加密数据', e.detail);
+            util.showErrorToast('获取手机号信息失败');
             return;
         }
 
@@ -369,13 +403,21 @@ Page({
         // 获取临时登录凭证code
         wx.login({
             success: (loginRes) => {
+                console.log('wx.login成功:', loginRes);
+
                 if (loginRes.code) {
-                    // 发送手机号解密登录请求
-                    userApi.phoneNumberLogin({
+                    // 打印请求参数，便于调试
+                    const requestData = {
                         code: loginRes.code,
                         encryptedData: e.detail.encryptedData,
                         iv: e.detail.iv
-                    }).then(res => {
+                    };
+                    console.log('准备发送phoneNumberLogin请求:', requestData);
+
+                    // 发送手机号解密登录请求
+                    userApi.phoneNumberLogin(requestData).then(res => {
+                        console.log('phoneNumberLogin响应:', res);
+
                         if (res.code === 200) {
                             // 保存token和用户信息
                             auth.setToken(res.data.token);
@@ -402,7 +444,12 @@ Page({
                     }).catch(err => {
                         console.error('登录请求失败:', err);
                         this.setData({ loading: false });
-                        util.showErrorToast('网络错误，请重试');
+                        // 显示更详细的错误信息
+                        if (err.message) {
+                            util.showErrorToast(`请求错误: ${err.message}`);
+                        } else {
+                            util.showErrorToast('网络错误，请重试');
+                        }
                     });
                 } else {
                     console.error('登录失败，未获取到code');
@@ -413,7 +460,74 @@ Page({
             fail: (err) => {
                 console.error('wx.login调用失败:', err);
                 this.setData({ loading: false });
-                util.showErrorToast('登录失败');
+                util.showToast('登录凭证获取失败');
+            }
+        });
+    },
+
+    /**
+     * 开发环境下模拟手机号登录
+     */
+    mockPhoneNumberLogin: function () {
+        this.setData({ loading: true });
+
+        // 获取临时登录凭证code
+        wx.login({
+            success: (loginRes) => {
+                console.log('wx.login成功 (模拟模式):', loginRes);
+
+                if (loginRes.code) {
+                    // 创建模拟的手机号数据
+                    const mockData = {
+                        code: loginRes.code,
+                        // 这里不提供真实的加密数据，后端会检测到是开发环境并使用测试账号
+                        mockPhone: '13800138000', // 模拟手机号
+                        isMockData: true // 标记为模拟数据
+                    };
+                    console.log('准备发送模拟phoneNumberLogin请求:', mockData);
+
+                    // 发送模拟登录请求
+                    userApi.phoneNumberLogin(mockData).then(res => {
+                        console.log('模拟phoneNumberLogin响应:', res);
+
+                        if (res.code === 200) {
+                            // 保存token和用户信息
+                            auth.setToken(res.data.token);
+
+                            // 缓存用户信息
+                            wx.setStorageSync('userInfo', res.data.userInfo);
+
+                            // 更新全局用户信息
+                            const app = getApp();
+                            app.globalData.userInfo = res.data.userInfo;
+                            app.globalData.isLogin = true;
+
+                            // 显示登录成功提示
+                            util.showToast('模拟登录成功');
+
+                            // 跳转到重定向页面或首页
+                            setTimeout(() => {
+                                this.navigateBack();
+                            }, 1500);
+                        } else {
+                            this.setData({ loading: false });
+                            util.showErrorToast(res.msg || '模拟登录失败');
+                        }
+                    }).catch(err => {
+                        console.error('模拟登录请求失败:', err);
+                        this.setData({ loading: false });
+                        util.showErrorToast('模拟登录网络错误，请检查后端服务');
+                    });
+                } else {
+                    console.error('登录失败，未获取到code');
+                    this.setData({ loading: false });
+                    util.showErrorToast('获取登录凭证失败');
+                }
+            },
+            fail: (err) => {
+                console.error('wx.login调用失败:', err);
+                this.setData({ loading: false });
+                util.showErrorToast('登录凭证获取失败');
             }
         });
     },

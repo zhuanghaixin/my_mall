@@ -30,6 +30,8 @@ function request(url, data = {}, method = 'GET', needToken = true) {
             }
         }
 
+        console.log(`[请求][${method}]${url}`, data);
+
         // 发起请求
         wx.request({
             url: url,
@@ -39,6 +41,8 @@ function request(url, data = {}, method = 'GET', needToken = true) {
             success: function (res) {
                 // 隐藏加载提示
                 util.hideLoading();
+
+                console.log(`[响应][${method}]${url}`, res.statusCode, res.data);
 
                 // 登录过期处理
                 if (res.statusCode === 401) {
@@ -59,6 +63,8 @@ function request(url, data = {}, method = 'GET', needToken = true) {
             fail: function (err) {
                 // 隐藏加载提示
                 util.hideLoading();
+
+                console.error(`[错误][${method}]${url}`, err);
 
                 // 网络错误提示
                 util.showErrorToast('网络请求失败');
