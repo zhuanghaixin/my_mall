@@ -1,4 +1,7 @@
-<view class="container">
+<view class="container" bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd">
+  <!-- 自定义导航栏 -->
+  <navigation-bar title="{{pageTitle || '商品列表'}}" back="{{true}}" />
+  
   <!-- 搜索区域 -->
   <view class="search-section">
     <van-search

@@ -24,7 +24,10 @@ Page({
             { text: '销量优先', value: 1 },
             { text: '价格升序', value: 2 },
             { text: '价格降序', value: 3 }
-        ]
+        ],
+        pageTitle: '商品列表',      // 页面标题
+        startX: 0,                 // 触摸开始位置
+        moveX: 0                   // 移动距离
     },
 
     /**
@@ -34,23 +37,21 @@ Page({
         // 获取URL参数
         let keyword = options.keyword || '';
         let categoryId = options.category_id ? parseInt(options.category_id) : 0;
+        let pageTitle = '商品列表';
 
         // 更新页面标题
         if (keyword) {
-            wx.setNavigationBarTitle({
-                title: `搜索: ${keyword}`
-            });
+            pageTitle = `搜索: ${keyword}`;
         } else if (categoryId) {
             // 如果有分类名可以设置分类名为标题
-            wx.setNavigationBarTitle({
-                title: '分类商品'
-            });
+            pageTitle = '分类商品';
         }
 
         // 设置数据并加载商品
         this.setData({
             keyword: keyword,
-            categoryId: categoryId
+            categoryId: categoryId,
+            pageTitle: pageTitle
         }, () => {
             this.loadGoodsList(false);
         });
@@ -173,6 +174,39 @@ Page({
     onReachBottom: function () {
         if (this.data.hasMore && !this.data.loading) {
             this.loadGoodsList(true);
+        }
+    },
+
+    /**
+     * 触摸开始事件，记录开始位置
+     */
+    onTouchStart: function (e) {
+        this.setData({
+            startX: e.changedTouches[0].clientX,
+            moveX: 0
+        });
+    },
+
+    /**
+     * 触摸移动事件，计算移动距离
+     */
+    onTouchMove: function (e) {
+        const moveX = e.changedTouches[0].clientX - this.data.startX;
+        this.setData({
+            moveX: moveX
+        });
+    },
+
+    /**
+     * 触摸结束事件，判断是否满足右滑返回条件
+     */
+    onTouchEnd: function (e) {
+        const moveX = this.data.moveX;
+        // 如果右滑距离超过100px，则触发返回操作
+        if (moveX > 100) {
+            wx.navigateBack({
+                delta: 1
+            });
         }
     }
 }); 
