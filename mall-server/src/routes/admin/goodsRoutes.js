@@ -33,6 +33,9 @@ router.delete('/:id', goodsController.deleteGoods);
 // 更新商品状态（上架/下架）
 router.put('/:id/status', goodsController.updateGoodsStatus);
 
+// 更新商品推荐状态
+router.put('/:id/recommend', goodsController.updateGoodsRecommend);
+
 // 批量操作商品
 router.post('/batch', goodsController.batchOperateGoods);
 

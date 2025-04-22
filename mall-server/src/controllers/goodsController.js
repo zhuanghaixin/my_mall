@@ -390,9 +390,11 @@ exports.createGoods = catchAsync(async (req, res) => {
         original_price,
         stock,
         main_image,
+        cover_image,
         images,
         description,
         detail,
+        is_recommend = 0,
         status = 1
     } = req.body;
 
@@ -409,9 +411,11 @@ exports.createGoods = catchAsync(async (req, res) => {
         original_price,
         stock,
         main_image,
+        cover_image,
         images,
         description,
         detail,
+        is_recommend,
         status
     });
 
@@ -473,9 +477,11 @@ exports.updateGoods = catchAsync(async (req, res) => {
         original_price,
         stock,
         main_image,
+        cover_image,
         images,
         description,
         detail,
+        is_recommend,
         status
     } = req.body;
 
@@ -494,9 +500,11 @@ exports.updateGoods = catchAsync(async (req, res) => {
         original_price,
         stock,
         main_image,
+        cover_image,
         images,
         description,
         detail,
+        is_recommend,
         status
     });
 
@@ -635,6 +643,78 @@ exports.updateGoodsStatus = catchAsync(async (req, res) => {
 
 /**
  * @swagger
+ * /api/admin/goods/{id}/recommend:
+ *   put:
+ *     summary: 设置推荐商品
+ *     description: 设置商品是否为推荐商品
+ *     tags: [商品管理]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 商品ID
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - is_recommend
+ *             properties:
+ *               is_recommend:
+ *                 type: integer
+ *                 enum: [0, 1]
+ *                 description: 推荐状态，0不推荐，1推荐
+ *     responses:
+ *       200:
+ *         description: 推荐状态更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       400:
+ *         description: 请求参数错误
+ *       401:
+ *         description: 未授权
+ *       404:
+ *         description: 商品不存在
+ *       500:
+ *         description: 服务器错误
+ */
+exports.updateGoodsRecommend = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { is_recommend } = req.body;
+
+    if (is_recommend === undefined || ![0, 1].includes(parseInt(is_recommend))) {
+        throw new ValidationError('推荐状态值无效，应为0或1');
+    }
+
+    // 查找商品
+    const goods = await Goods.findByPk(id);
+
+    if (!goods) {
+        throw new NotFoundError('商品不存在');
+    }
+
+    // 更新推荐状态
+    await goods.update({ is_recommend });
+
+    logger.info(`商品推荐状态更新成功: ${id}, 推荐状态: ${is_recommend}`);
+
+    res.status(200).json({
+        code: 200,
+        message: '推荐状态更新成功',
+        data: null
+    });
+});
+
+/**
+ * @swagger
  * /api/admin/goods/batch:
  *   post:
  *     summary: 批量操作商品
@@ -669,8 +749,8 @@ exports.batchOperateGoods = catchAsync(async (req, res) => {
         throw new ValidationError('商品ID列表不能为空');
     }
 
-    if (!operation || !['delete', 'online', 'offline'].includes(operation)) {
-        throw new ValidationError('无效的操作类型，支持的操作：delete, online, offline');
+    if (!operation || !['delete', 'online', 'offline', 'recommend', 'unrecommend'].includes(operation)) {
+        throw new ValidationError('无效的操作类型，支持的操作：delete, online, offline, recommend, unrecommend');
     }
 
     let message = '';
@@ -702,6 +782,24 @@ exports.batchOperateGoods = catchAsync(async (req, res) => {
                 { where: { id: { [Op.in]: ids } } }
             );
             message = '批量下架成功';
+            break;
+
+        case 'recommend':
+            // 批量设置为推荐
+            await Goods.update(
+                { is_recommend: 1 },
+                { where: { id: { [Op.in]: ids } } }
+            );
+            message = '批量设为推荐成功';
+            break;
+
+        case 'unrecommend':
+            // 批量取消推荐
+            await Goods.update(
+                { is_recommend: 0 },
+                { where: { id: { [Op.in]: ids } } }
+            );
+            message = '批量取消推荐成功';
             break;
     }
 
