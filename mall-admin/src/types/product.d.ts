@@ -23,6 +23,7 @@ export interface ProductQueryParams {
   keyword?: string
   category_id?: number
   status?: number
+  is_recommend?: number
   page: number
   pageSize: number
 }

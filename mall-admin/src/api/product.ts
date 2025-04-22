@@ -7,6 +7,7 @@ export function getProductList(params: {
   keyword?: string
   category_id?: number
   status?: number
+  is_recommend?: number
   page?: number
   pageSize?: number
 }) {

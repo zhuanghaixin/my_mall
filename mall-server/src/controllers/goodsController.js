@@ -159,8 +159,8 @@ const logger = require('../utils/logger');
  *           description: 商品ID数组
  *         operation:
  *           type: string
- *           enum: [delete, online, offline]
- *           description: 操作类型：删除、上架、下架
+ *           enum: [delete, online, offline, recommend, unrecommend]
+ *           description: 操作类型：删除、上架、下架、设为推荐、取消推荐
  *
  *     SuccessResponse:
  *       type: object
@@ -211,6 +211,12 @@ const logger = require('../utils/logger');
  *           type: integer
  *           enum: [0, 1]
  *         description: 商品状态，0下架，1上架
+ *       - in: query
+ *         name: is_recommend
+ *         schema:
+ *           type: integer
+ *           enum: [0, 1]
+ *         description: 推荐状态，0不推荐，1推荐
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -231,7 +237,8 @@ exports.getGoodsList = catchAsync(async (req, res) => {
         pageSize = 10,
         keyword = '',
         category_id,
-        status
+        status,
+        is_recommend
     } = req.query;
 
     // 构建查询条件
@@ -250,6 +257,11 @@ exports.getGoodsList = catchAsync(async (req, res) => {
     // 状态筛选
     if (status !== undefined) {
         where.status = status;
+    }
+
+    // 推荐状态筛选
+    if (is_recommend !== undefined) {
+        where.is_recommend = is_recommend;
     }
 
     // 查询商品总数

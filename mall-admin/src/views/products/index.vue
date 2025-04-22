@@ -71,8 +71,7 @@
           <template #default="scope">
             <el-image :src="scope.row.main_image || (scope.row.images ? scope.row.images.split(',')[0] : '')"
               :preview-src-list="scope.row.images ? scope.row.images.split(',') : [scope.row.main_image]"
-              style="width: 60px; height: 60px" fit="cover" 
-              :preview-teleported="true" />
+              style="width: 60px; height: 60px" fit="cover" :preview-teleported="true" />
           </template>
         </el-table-column>
         <el-table-column label="商品名称" prop="name" show-overflow-tooltip />
