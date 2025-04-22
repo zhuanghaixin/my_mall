@@ -13,7 +13,7 @@ Page({
         categoryId: 0,             // 分类ID
         goodsList: [],             // 商品列表
         page: 1,                   // 当前页码
-        pageSize: 10,              // 每页数量
+        pageSize: 20,              // 每页数量（增加默认值）
         total: 0,                  // 商品总数
         loading: false,            // 是否在加载中
         loadingMore: false,        // 加载更多状态
@@ -34,10 +34,28 @@ Page({
      * 生命周期函数--监听页面加载
      */
     onLoad: function (options) {
-        // 获取URL参数
-        let keyword = options.keyword || '';
-        let categoryId = options.category_id ? parseInt(options.category_id) : 0;
+        console.log('商品列表页接收参数:', options);
+        // 获取URL参数并解码
+        let keyword = '';
+        let categoryId = 0;
         let pageTitle = '商品列表';
+
+        try {
+            // 安全地解码关键词
+            if (options.keyword) {
+                keyword = decodeURIComponent(options.keyword);
+                console.log('解码后的关键词:', keyword);
+            }
+
+            // 解析分类ID
+            if (options.category_id) {
+                categoryId = parseInt(options.category_id) || 0;
+            }
+        } catch (error) {
+            console.error('参数解析错误:', error);
+            // 出错时使用原始值
+            keyword = options.keyword || '';
+        }
 
         // 更新页面标题
         if (keyword) {
@@ -80,15 +98,37 @@ Page({
             sortType: this.data.sortOption
         };
 
+        console.log('请求参数:', params);
+
         // 调用商品列表API
         goodsApi.getGoodsList(params).then(res => {
+            console.log('商品列表接口返回：', res);
             if (res.code === 200) {
-                let newList = append ? [...this.data.goodsList, ...res.data.list] : res.data.list;
-                let hasMore = newList.length < res.data.total;
+                // 处理数据结构，兼容items和list字段
+                const items = res.data.items || res.data.list || [];
+                const total = res.data.total || 0;
+
+                // 处理商品数据，兼容不同字段名称和格式
+                const processedItems = items.map(item => {
+                    // 确保图片路径完整
+                    if (item.cover_image && !item.cover_image.startsWith('http')) {
+                        item.cover_image = this.getFullImageUrl(item.cover_image);
+                    }
+                    if (item.main_image && !item.main_image.startsWith('http')) {
+                        item.main_image = this.getFullImageUrl(item.main_image);
+                    }
+                    return item;
+                });
+
+                let newList = append ? [...this.data.goodsList, ...processedItems] : processedItems;
+
+                // 修复hasMore判断逻辑，根据总条数和当前加载的总数比较
+                const hasMore = newList.length < total;
+                console.log(`已加载: ${newList.length}, 总数: ${total}, 是否有更多: ${hasMore}`);
 
                 this.setData({
                     goodsList: newList,
-                    total: res.data.total,
+                    total: total,
                     page: page,
                     hasMore: hasMore,
                     loading: false,
@@ -121,6 +161,28 @@ Page({
     },
 
     /**
+     * 获取完整图片URL
+     */
+    getFullImageUrl: function (url) {
+        if (!url) return '';
+
+        // 如果已经是完整URL则直接返回
+        if (url.startsWith('http')) {
+            return url;
+        }
+
+        // 如果是相对路径，拼接基础URL
+        const baseUrl = getApp().globalData.baseUrl || 'http://localhost:8080';
+
+        // 确保路径正确
+        if (url.startsWith('/')) {
+            return baseUrl + url;
+        } else {
+            return baseUrl + '/' + url;
+        }
+    },
+
+    /**
      * 商品点击事件
      */
     onGoodsTap: function (e) {
@@ -137,9 +199,31 @@ Page({
     onSearchConfirm: function (e) {
         const keyword = e.detail;
 
+        // 避免重复加载相同关键词
+        if (keyword === this.data.keyword) {
+            return;
+        }
+
+        // 更新页面标题
+        const pageTitle = keyword ? `搜索: ${keyword}` : '商品列表';
+
         this.setData({
             keyword: keyword,
-            page: 1
+            page: 1,
+            pageTitle: pageTitle
+        }, () => {
+            this.loadGoodsList(false);
+        });
+    },
+
+    /**
+     * 搜索取消事件
+     */
+    onSearchCancel: function () {
+        this.setData({
+            keyword: '',
+            page: 1,
+            pageTitle: '商品列表'
         }, () => {
             this.loadGoodsList(false);
         });
@@ -172,8 +256,16 @@ Page({
      * 上拉加载更多
      */
     onReachBottom: function () {
+        console.log('触发上拉加载更多', this.data.hasMore, this.data.loading);
+
         if (this.data.hasMore && !this.data.loading) {
+            console.log('开始加载更多数据，当前页：', this.data.page);
             this.loadGoodsList(true);
+        } else if (!this.data.hasMore) {
+            wx.showToast({
+                title: '已加载全部商品',
+                icon: 'none'
+            });
         }
     },
 

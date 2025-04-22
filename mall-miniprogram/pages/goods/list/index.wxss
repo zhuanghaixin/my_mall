@@ -35,6 +35,14 @@
   padding: 100rpx 0;
 }
 
+/* 中央加载状态 */
+.loading-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 100rpx 0;
+}
+
 /* 商品列表 */
 .goods-list {
   display: flex;
