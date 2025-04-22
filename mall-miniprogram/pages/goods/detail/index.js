@@ -34,7 +34,25 @@ Page({
                 goodsId: parseInt(options.id)
             });
             this.loadGoodsDetail();
+            this.loadCollectionStatus();
         }
+    },
+
+    /**
+     * 生命周期函数--监听页面显示
+     */
+    onShow: function () {
+        // 获取购物车数量
+        this.getCartCount();
+    },
+
+    /**
+     * 返回上一页
+     */
+    goBack: function () {
+        wx.navigateBack({
+            delta: 1
+        });
     },
 
     /**
@@ -108,6 +126,100 @@ Page({
                 }
             });
         });
+    },
+
+    /**
+     * 获取购物车商品数量
+     */
+    getCartCount: function () {
+        // 调用购物车数量API，暂用模拟数据
+        setTimeout(() => {
+            this.setData({
+                cartCount: 5 // 模拟数据，实际项目中应调用API
+            });
+        }, 500);
+
+        // 实际API调用(联调时使用)
+        /*
+        cartApi.getCartCount().then(res => {
+            if (res.code === 200) {
+                this.setData({
+                    cartCount: res.data.count
+                });
+            }
+        }).catch(err => {
+            console.error('获取购物车数量出错：', err);
+        });
+        */
+    },
+
+    /**
+     * 加载收藏状态
+     */
+    loadCollectionStatus: function () {
+        // 这里应该调用API获取收藏状态，暂用本地存储模拟
+        const { goodsId } = this.data;
+        const collectedGoods = wx.getStorageSync('collectedGoods') || [];
+        const isCollected = collectedGoods.includes(goodsId);
+
+        this.setData({ isCollected });
+    },
+
+    /**
+     * 切换收藏状态
+     */
+    toggleCollect: function () {
+        const { goodsId, isCollected } = this.data;
+        let collectedGoods = wx.getStorageSync('collectedGoods') || [];
+
+        if (isCollected) {
+            // 取消收藏
+            collectedGoods = collectedGoods.filter(id => id !== goodsId);
+            Toast.success('已取消收藏');
+        } else {
+            // 添加收藏
+            if (!collectedGoods.includes(goodsId)) {
+                collectedGoods.push(goodsId);
+            }
+            Toast.success('收藏成功');
+        }
+
+        // 保存到本地存储
+        wx.setStorageSync('collectedGoods', collectedGoods);
+
+        // 更新收藏状态
+        this.setData({
+            isCollected: !isCollected
+        });
+
+        // 实际API调用(联调时使用)
+        /*
+        if (isCollected) {
+            goodsApi.cancelCollect(goodsId).then(res => {
+                if (res.code === 200) {
+                    Toast.success('已取消收藏');
+                    this.setData({ isCollected: false });
+                } else {
+                    Toast.fail(res.message || '操作失败');
+                }
+            }).catch(err => {
+                console.error('取消收藏出错：', err);
+                Toast.fail('网络错误，请重试');
+            });
+        } else {
+            goodsApi.collect(goodsId).then(res => {
+                if (res.code === 200) {
+                    Toast.success('收藏成功');
+                    this.setData({ isCollected: true });
+                } else {
+                    Toast.fail(res.message || '操作失败');
+                }
+            }).catch(err => {
+                console.error('收藏出错：', err);
+                Toast.fail('网络错误，请重试');
+            });
+        }
+        */
     },
 
     /**
@@ -250,24 +362,6 @@ Page({
         wx.navigateTo({
             url: `/pages/order/order-confirm/index?goods_id=${goods.id}&quantity=${quantity}&buy_now=1`
         });
-    },
-
-    /**
-     * 收藏/取消收藏商品
-     */
-    toggleCollect: function () {
-        const { isCollected } = this.data;
-
-        if (!this.checkLogin()) return;
-
-        // 切换收藏状态（实际项目中需要调用后端API）
-        this.setData({
-            isCollected: !isCollected
-        });
-
-        Toast.success(isCollected ? '已取消收藏' : '收藏成功');
-
-        // 预留API调用
     },
 
     /**

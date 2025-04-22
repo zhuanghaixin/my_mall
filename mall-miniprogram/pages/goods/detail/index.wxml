@@ -1,3 +1,11 @@
+<!-- 顶部导航栏 -->
+<view class="nav-bar">
+  <view class="nav-bar-left" bindtap="goBack">
+    <van-icon name="arrow-left" size="20px" color="#333" />
+  </view>
+  <view class="nav-bar-title">商品详情</view>
+</view>
+
 <van-toast id="van-toast" />
 
 <!-- 加载中展示骨架屏 -->
@@ -42,6 +50,20 @@
     </view>
     <view class="goods-name">{{ goods.name }}</view>
     <view class="goods-desc">{{ goods.description || '' }}</view>
+    
+    <!-- 商品数量选择 -->
+    <view class="goods-quantity">
+      <view class="quantity-title">数量</view>
+      <van-stepper 
+        value="{{ quantity }}" 
+        bind:change="onQuantityChange" 
+        min="1" 
+        max="{{ goods.stock || 999 }}" 
+        step="1"
+        input-width="40px"
+        button-size="32px"
+      />
+    </view>
   </view>
   
   <!-- 商品详情介绍 -->
