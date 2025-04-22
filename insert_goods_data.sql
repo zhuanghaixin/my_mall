@@ -1,5 +1,5 @@
 -- 插入200条商品数据
-INSERT INTO goods (category_id, name, price, original_price, stock, sales, main_image, images, description, detail, status, created_at, update_time, is_recommend, sale_count)
+INSERT INTO goods (category_id, name, price, original_price, stock, sales, main_image, cover_image, images, description, detail, status, created_at, update_time, is_recommend, sale_count)
 SELECT 
     -- 随机选择分类ID (从6到18)
     FLOOR(6 + RAND() * 13) as category_id,
@@ -42,6 +42,19 @@ SELECT
         WHEN 8 THEN 'https://picsum.photos/id/1005/800/800'
         WHEN 9 THEN 'https://picsum.photos/id/1006/800/800'
     END as main_image,
+    -- 封面图 (使用随机商品图片，与主图不同)
+    CASE FLOOR(RAND() * 10)
+        WHEN 0 THEN 'https://picsum.photos/id/20/800/800'
+        WHEN 1 THEN 'https://picsum.photos/id/21/800/800'
+        WHEN 2 THEN 'https://picsum.photos/id/22/800/800'
+        WHEN 3 THEN 'https://picsum.photos/id/23/800/800'
+        WHEN 4 THEN 'https://picsum.photos/id/24/800/800'
+        WHEN 5 THEN 'https://picsum.photos/id/25/800/800'
+        WHEN 6 THEN 'https://picsum.photos/id/26/800/800'
+        WHEN 7 THEN 'https://picsum.photos/id/27/800/800'
+        WHEN 8 THEN 'https://picsum.photos/id/28/800/800'
+        WHEN 9 THEN 'https://picsum.photos/id/29/800/800'
+    END as cover_image,
     -- 图片集 (使用多个商品图片，用逗号分隔)
     CONCAT(
         CASE FLOOR(RAND() * 10)
