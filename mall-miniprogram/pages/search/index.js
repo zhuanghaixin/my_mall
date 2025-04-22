@@ -12,13 +12,18 @@ Page({
         searchValue: '', // 搜索框的值
         historyList: [], // 搜索历史列表
         hotList: [], // 热门搜索列表
-        loading: false // 加载状态
+        loading: false, // 加载状态
+        userId: '', // 用户ID
+        openid: '' // 微信openid
     },
 
     /**
      * 生命周期函数--监听页面加载
      */
     onLoad: function (options) {
+        // 获取用户信息
+        this.getUserInfo();
+
         // 加载搜索历史
         this.loadSearchHistory();
 
@@ -27,12 +32,69 @@ Page({
     },
 
     /**
+     * 获取用户信息
+     */
+    getUserInfo: function () {
+        // 从全局数据或缓存中获取用户信息
+        const app = getApp();
+        if (app.globalData.userInfo) {
+            this.setData({
+                userId: app.globalData.userInfo.id || '',
+                openid: app.globalData.userInfo.openid || ''
+            });
+        } else {
+            // 如果全局没有，尝试从存储获取
+            const userInfo = wx.getStorageSync('userInfo');
+            if (userInfo) {
+                this.setData({
+                    userId: userInfo.id || '',
+                    openid: userInfo.openid || ''
+                });
+            }
+        }
+    },
+
+    /**
      * 加载搜索历史
      */
     loadSearchHistory: function () {
+        this.setData({ loading: true });
+
+        // 判断是否登录，使用后端API获取搜索历史
+        if (this.data.userId || this.data.openid) {
+            searchApi.getSearchHistory()
+                .then(res => {
+                    if (res.code === 200) {
+                        this.setData({
+                            historyList: res.data || [],
+                            loading: false
+                        });
+                    } else {
+                        // API调用失败，回退到本地存储
+                        this.loadLocalSearchHistory();
+                    }
+                })
+                .catch(err => {
+                    console.error('获取搜索历史出错:', err);
+                    // 出错时回退到本地存储
+                    this.loadLocalSearchHistory();
+                });
+        } else {
+            // 未登录时使用本地存储
+            this.loadLocalSearchHistory();
+        }
+    },
+
+    /**
+     * 从本地存储加载搜索历史
+     */
+    loadLocalSearchHistory: function () {
         // 从本地存储中获取搜索历史
         const historyList = wx.getStorageSync('searchHistory') || [];
-        this.setData({ historyList });
+        this.setData({
+            historyList,
+            loading: false
+        });
     },
 
     /**
@@ -41,38 +103,29 @@ Page({
     loadHotSearch: function () {
         this.setData({ loading: true });
 
-        // 这里可以调用后端API获取热门搜索词
-        // 如果后端接口还未完成，使用模拟数据
-        const mockHotList = [
-            '手机', '电脑', '女装', '男装', '家具',
-            '电视', '冰箱', '洗衣机', '空调', '食品'
-        ];
+        searchApi.getHotSearch()
+            .then(res => {
+                if (res.code === 200) {
+                    this.setData({
+                        hotList: res.data || [],
+                        loading: false
+                    });
+                } else {
+                    this.setData({ loading: false });
+                    util.showErrorToast('获取热门搜索失败');
+                }
+            })
+            .catch(err => {
+                console.error('获取热门搜索出错:', err);
+                this.setData({ loading: false });
 
-        setTimeout(() => {
-            this.setData({
-                hotList: mockHotList,
-                loading: false
+                // 发生错误时使用默认数据
+                const defaultHotList = [
+                    '手机', '电脑', '女装', '男装', '家具',
+                    '电视', '冰箱', '洗衣机', '空调', '食品'
+                ];
+                this.setData({ hotList: defaultHotList });
             });
-        }, 500);
-
-        // 实际API调用(待接口联调)
-        /*
-        searchApi.getHotSearch().then(res => {
-          if (res.code === 200) {
-            this.setData({
-              hotList: res.data || [],
-              loading: false
-            });
-          } else {
-            this.setData({ loading: false });
-            util.showErrorToast('获取热门搜索失败');
-          }
-        }).catch(err => {
-          console.error('获取热门搜索出错:', err);
-          this.setData({ loading: false });
-          util.showErrorToast('网络错误，请重试');
-        });
-        */
     },
 
     /**
@@ -121,6 +174,29 @@ Page({
      * 保存搜索历史
      */
     saveSearchHistory: function (keyword) {
+        // 判断是否登录，使用后端API保存搜索历史
+        if (this.data.userId || this.data.openid) {
+            // 通过搜索功能间接保存搜索历史
+            searchApi.searchGoods({ keyword })
+                .then(res => {
+                    // 更新本地搜索历史视图
+                    this.loadSearchHistory();
+                })
+                .catch(err => {
+                    console.error('保存搜索历史出错:', err);
+                    // 出错时使用本地存储保存
+                    this.saveLocalSearchHistory(keyword);
+                });
+        } else {
+            // 未登录时使用本地存储
+            this.saveLocalSearchHistory(keyword);
+        }
+    },
+
+    /**
+     * 保存到本地搜索历史
+     */
+    saveLocalSearchHistory: function (keyword) {
         let historyList = wx.getStorageSync('searchHistory') || [];
 
         // 如果已存在，则移除旧记录
@@ -150,11 +226,27 @@ Page({
             content: '确定要清除搜索历史吗？',
             success: res => {
                 if (res.confirm) {
-                    // 清除本地存储中的搜索历史
-                    wx.removeStorageSync('searchHistory');
-                    // 更新页面数据
-                    this.setData({ historyList: [] });
-                    util.showToast('清除成功');
+                    // 判断是否登录，使用后端API清除搜索历史
+                    if (this.data.userId || this.data.openid) {
+                        searchApi.clearSearchHistory()
+                            .then(res => {
+                                if (res.code === 200) {
+                                    this.setData({ historyList: [] });
+                                    util.showToast('清除成功');
+                                } else {
+                                    util.showErrorToast('清除失败：' + (res.msg || '未知错误'));
+                                }
+                            })
+                            .catch(err => {
+                                console.error('清除搜索历史出错:', err);
+                                util.showErrorToast('网络错误，请重试');
+                            });
+                    } else {
+                        // 未登录时清除本地存储
+                        wx.removeStorageSync('searchHistory');
+                        this.setData({ historyList: [] });
+                        util.showToast('清除成功');
+                    }
                 }
             }
         });

@@ -32,12 +32,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20rpx;
+  padding: 20rpx 30rpx;
 }
 
 .section-title {
   font-size: 28rpx;
-  font-weight: bold;
+  font-weight: 500;
   color: #333;
 }
 
@@ -45,11 +45,11 @@
 .tags-wrapper {
   display: flex;
   flex-wrap: wrap;
+  padding: 0 20rpx;
 }
 
 .tag-item {
-  margin-right: 20rpx;
-  margin-bottom: 16rpx;
+  margin: 10rpx;
 }
 
 /* 空状态 */
@@ -57,7 +57,6 @@
   padding: 40rpx 0;
   display: flex;
   justify-content: center;
-  align-items: center;
 }
 
 /* 加载中状态 */
@@ -66,6 +65,36 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #999;
-  font-size: 26rpx;
+}
+
+/* 热门搜索词中的计数样式 */
+.hot-count {
+  font-size: 20rpx;
+  margin-left: 8rpx;
+  opacity: 0.8;
+}
+
+/* 高亮标签样式 */
+.van-tag--highlight {
+  background-color: #ff6b81 !important;
+  color: #fff !important;
+}
+
+/* 自定义van-tag样式 */
+.van-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 24rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+  font-size: 24rpx;
+}
+
+/* 标签悬停效果 */
+.tag-item {
+  transition: transform 0.2s;
+}
+
+.tag-item:active {
+  transform: scale(0.95);
 } 

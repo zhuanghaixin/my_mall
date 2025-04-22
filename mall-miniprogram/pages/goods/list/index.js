@@ -2,6 +2,7 @@
  * 商品列表页
  */
 const goodsApi = require('../../../api/goods');
+const searchApi = require('../../../api/search');
 const util = require('../../../utils/util');
 
 Page({
@@ -106,8 +107,13 @@ Page({
 
         console.log('请求参数:', params);
 
-        // 调用商品列表API，并返回Promise对象
-        return goodsApi.getGoodsList(params).then(res => {
+        // 根据是否有关键词决定使用哪个API
+        const apiRequest = this.data.keyword ?
+            searchApi.searchGoods(params) :
+            goodsApi.getGoodsList(params);
+
+        // 调用API，并返回Promise对象
+        return apiRequest.then(res => {
             console.log('商品列表接口返回：', res);
             if (res.code === 200) {
                 // 处理数据结构，兼容items和list字段
