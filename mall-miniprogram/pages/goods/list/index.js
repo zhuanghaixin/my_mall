@@ -71,7 +71,13 @@ Page({
             categoryId: categoryId,
             pageTitle: pageTitle
         }, () => {
-            this.loadGoodsList(false);
+            try {
+                this.loadGoodsList(false).catch(err => {
+                    console.error('页面加载商品列表出错:', err);
+                });
+            } catch (error) {
+                console.error('执行loadGoodsList出错:', error);
+            }
         });
     },
 
@@ -80,7 +86,7 @@ Page({
      * @param {Boolean} append - 是否追加数据
      */
     loadGoodsList: function (append = false) {
-        if (this.data.loading) return;
+        if (this.data.loading) return Promise.reject('正在加载中');
 
         let page = append ? this.data.page + 1 : 1;
 
@@ -100,8 +106,8 @@ Page({
 
         console.log('请求参数:', params);
 
-        // 调用商品列表API
-        goodsApi.getGoodsList(params).then(res => {
+        // 调用商品列表API，并返回Promise对象
+        return goodsApi.getGoodsList(params).then(res => {
             console.log('商品列表接口返回：', res);
             if (res.code === 200) {
                 // 处理数据结构，兼容items和list字段
@@ -134,6 +140,8 @@ Page({
                     loading: false,
                     loadingMore: false
                 });
+
+                return res; // 返回结果，使链式调用可以继续
             } else {
                 this.setData({
                     loading: false,
@@ -144,6 +152,8 @@ Page({
                     title: res.message || '获取商品列表失败',
                     icon: 'none'
                 });
+
+                return Promise.reject(res.message || '获取商品列表失败');
             }
         }).catch(err => {
             console.error('获取商品列表出错：', err);
@@ -157,6 +167,8 @@ Page({
                 title: '网络错误，请重试',
                 icon: 'none'
             });
+
+            return Promise.reject(err);
         });
     },
 
@@ -212,7 +224,13 @@ Page({
             page: 1,
             pageTitle: pageTitle
         }, () => {
-            this.loadGoodsList(false);
+            try {
+                this.loadGoodsList(false).catch(err => {
+                    console.error('搜索商品列表出错:', err);
+                });
+            } catch (error) {
+                console.error('执行搜索loadGoodsList出错:', error);
+            }
         });
     },
 
@@ -225,7 +243,13 @@ Page({
             page: 1,
             pageTitle: '商品列表'
         }, () => {
-            this.loadGoodsList(false);
+            try {
+                this.loadGoodsList(false).catch(err => {
+                    console.error('重置搜索商品列表出错:', err);
+                });
+            } catch (error) {
+                console.error('执行重置搜索loadGoodsList出错:', error);
+            }
         });
     },
 
@@ -239,7 +263,13 @@ Page({
             sortOption: sortOption,
             page: 1
         }, () => {
-            this.loadGoodsList(false);
+            try {
+                this.loadGoodsList(false).catch(err => {
+                    console.error('排序商品列表出错:', err);
+                });
+            } catch (error) {
+                console.error('执行排序loadGoodsList出错:', error);
+            }
         });
     },
 
@@ -247,9 +277,23 @@ Page({
      * 下拉刷新事件
      */
     onPullDownRefresh: function () {
-        this.loadGoodsList(false).then(() => {
+        try {
+            const result = this.loadGoodsList(false);
+            if (result && typeof result.then === 'function') {
+                result.then(() => {
+                    wx.stopPullDownRefresh();
+                }).catch(err => {
+                    console.error('下拉刷新出错:', err);
+                    wx.stopPullDownRefresh();
+                });
+            } else {
+                console.warn('loadGoodsList未返回Promise对象');
+                wx.stopPullDownRefresh();
+            }
+        } catch (error) {
+            console.error('下拉刷新执行出错:', error);
             wx.stopPullDownRefresh();
-        });
+        }
     },
 
     /**
@@ -260,7 +304,13 @@ Page({
 
         if (this.data.hasMore && !this.data.loading) {
             console.log('开始加载更多数据，当前页：', this.data.page);
-            this.loadGoodsList(true);
+            try {
+                this.loadGoodsList(true).catch(err => {
+                    console.error('加载更多数据出错:', err);
+                });
+            } catch (error) {
+                console.error('加载更多执行出错:', error);
+            }
         } else if (!this.data.hasMore) {
             wx.showToast({
                 title: '已加载全部商品',
