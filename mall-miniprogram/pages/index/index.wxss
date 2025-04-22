@@ -100,7 +100,7 @@ page {
 /* 轮播图区域 */
 .banner-section {
   width: 100%;
-  margin-top: 20rpx; /* 添加顶部边距，避免被搜索框遮挡 */
+  margin-top: 100rpx; /* 添加顶部边距，避免被搜索框遮挡 */
   background-color: #fff;
 }
 
