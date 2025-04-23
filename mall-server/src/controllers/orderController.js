@@ -103,20 +103,20 @@ exports.getOrders = async (req, res) => {
 
 /**
  * 获取订单详情
- * @param {Object} req - 请求对象
- * @param {Object} res - 响应对象
+ * @route GET /api/order/:id
+ * @access Private
  */
-exports.getOrderDetail = async (req, res) => {
+exports.getOrderDetail = catchAsync(async (req, res) => {
     try {
+        const userId = req.user.id;
         const { id } = req.params;
 
-        const order = await Order.findByPk(id, {
+        const order = await Order.findOne({
+            where: {
+                id,
+                user_id: userId
+            },
             include: [
-                {
-                    model: User,
-                    as: 'user',
-                    attributes: ['id', 'nickname', 'phone', 'avatar']
-                },
                 {
                     model: OrderGoods,
                     as: 'orderGoods',
@@ -127,16 +127,20 @@ exports.getOrderDetail = async (req, res) => {
                             attributes: ['id', 'name', 'main_image', 'price']
                         }
                     ]
+                },
+                {
+                    model: Address,
+                    as: 'address',
+                    attributes: ['id', 'name', 'phone', 'province', 'city', 'district', 'detail']
                 }
             ]
         });
 
         if (!order) {
-            return res.status(404).json({
-                code: 404,
-                message: '订单不存在'
-            });
+            throw new NotFoundError('订单不存在');
         }
+
+        logger.info(`用户(ID: ${userId})获取订单详情成功，订单ID: ${id}`);
 
         res.status(200).json({
             code: 200,
@@ -144,14 +148,10 @@ exports.getOrderDetail = async (req, res) => {
             data: order
         });
     } catch (error) {
-        logger.error('获取订单详情失败:', error);
-        res.status(500).json({
-            code: 500,
-            message: '获取订单详情失败',
-            error: error.message
-        });
+        logger.error(`获取订单详情失败: ${error.message}`);
+        throw error;
     }
-};
+});
 
 /**
  * 更新订单状态
@@ -593,7 +593,7 @@ exports.getOrderList = catchAsync(async (req, res) => {
             where: whereCondition,
             include: [{
                 model: OrderGoods,
-                as: 'order_goods'
+                as: 'orderGoods'
             }],
             order: [['create_time', 'DESC']],
             offset: (page - 1) * pageSize,

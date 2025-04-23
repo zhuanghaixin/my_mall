@@ -1865,3 +1865,31 @@ npm run dev
 
 ### 修改了哪些文件
 - mall-server/src/controllers/orderController.js
+
+## 2023年7月20日会话总结
+
+### 会话的主要目的
+修复订单列表和详情查询时的关联关系错误：`SequelizeEagerLoadingError: order_goods is associated to orders using an alias`
+
+### 完成的主要任务
+- 修复了订单与订单商品关联查询中的别名不一致问题
+- 改进了订单详情查询接口，添加了用户验证和地址关联
+- 添加了订单与地址之间的模型关联关系
+
+### 关键决策和解决方案
+- 修正关联别名：在订单查询中将`order_goods`改为`orderGoods`以匹配模型定义
+- 增强用户订单详情接口：
+  - 使用`catchAsync`包装函数统一错误处理
+  - 添加用户ID验证，确保只能查看自己的订单
+  - 移除不必要的用户关联，添加地址关联
+- 在模型索引文件中添加了订单与地址的一对一关联关系
+
+### 使用的技术栈
+- Node.js
+- Express.js
+- Sequelize ORM
+- JavaScript
+
+### 修改了哪些文件
+- mall-server/src/controllers/orderController.js
+- mall-server/src/models/index.js

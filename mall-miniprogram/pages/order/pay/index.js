@@ -43,9 +43,11 @@ Page({
      * 生命周期函数--监听页面加载
      */
     onLoad: function (options) {
-        if (options.orderId) {
+        console.log('支付页面接收到的参数:', options);
+        if (options.order_id) {
             this.setData({
-                orderId: parseInt(options.orderId)
+                orderId: parseInt(options.order_id),
+                orderNo: options.order_no || ''
             });
             this.getOrderDetail();
             this.startCountdown();
@@ -68,14 +70,15 @@ Page({
      */
     getOrderDetail: function () {
         wx.showLoading({ title: '加载中...' });
-        util.request(api.OrderDetail, { orderId: this.data.orderId }, 'GET')
+        util.request(api.OrderDetail, { order_id: this.data.orderId }, 'GET')
             .then(res => {
-                if (res.errno === 0 && res.data) {
+                if (res.code === 200 && res.data) {
                     this.setData({
                         orderInfo: res.data,
-                        totalAmount: res.data.actualPrice,
+                        totalAmount: res.data.pay_amount,
                         goodsAmount: res.data.total_amount,
                         deliveryFee: res.data.freight_amount,
+                        orderNo: res.data.order_no,
                         orderTime: util.formatTime(new Date(res.data.create_time))
                     });
                 } else {
@@ -175,6 +178,14 @@ Page({
     confirmPay: function () {
         const { orderId, orderNo, selectedMethodId } = this.data;
 
+        if (!orderNo) {
+            wx.showToast({
+                title: '订单号不存在',
+                icon: 'none'
+            });
+            return;
+        }
+
         wx.showLoading({
             title: '支付处理中',
         });
@@ -217,7 +228,7 @@ Page({
                         success: () => {
                             setTimeout(() => {
                                 wx.redirectTo({
-                                    url: '/pages/order/result/index?orderId=' + orderId + '&status=success'
+                                    url: '/pages/order/result/index?order_id=' + orderId + '&status=success'
                                 });
                             }, 1500);
                         }
@@ -252,7 +263,7 @@ Page({
             success: (res) => {
                 console.log('支付成功', res);
                 wx.redirectTo({
-                    url: '/pages/order/result/index?orderId=' + this.data.orderId + '&status=success'
+                    url: '/pages/order/result/index?order_id=' + this.data.orderId + '&status=success'
                 });
             },
             fail: (err) => {

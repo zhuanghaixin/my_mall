@@ -48,6 +48,9 @@ Cart.belongsTo(Goods, { foreignKey: 'goods_id', as: 'goods' });
 User.hasMany(Address, { foreignKey: 'user_id', as: 'addresses' });
 Address.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
+// 订单与收货地址的一对一关系
+Order.belongsTo(Address, { foreignKey: 'address_id', as: 'address' });
+
 module.exports = {
     Admin,
     Goods,
