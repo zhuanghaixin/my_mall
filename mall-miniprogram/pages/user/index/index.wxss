@@ -226,6 +226,7 @@
 .logout-wrapper {
   padding: 40rpx 30rpx 30rpx;
   margin-top: 20rpx;
+  /* display: flex; */
 }
 
 .logout-btn {
@@ -237,4 +238,8 @@
   font-size: 32rpx;
   border-radius: 45rpx;
   border: 1rpx solid #ff4444;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
