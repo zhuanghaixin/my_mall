@@ -180,16 +180,39 @@ Page({
             const id = e.currentTarget.dataset.id;
             const selectedAddress = this.data.addressList.find(item => item.id === id);
 
-            if (selectedAddress) {
-                // 将选中的地址传回结算页
-                const pages = getCurrentPages();
-                const prevPage = pages[pages.length - 2]; // 上一个页面
+            // 更新选中状态
+            const addressList = this.data.addressList.map(item => {
+                return {
+                    ...item,
+                    selected: item.id === id
+                };
+            });
 
-                prevPage.setData({
-                    selectedAddress: selectedAddress
+            this.setData({
+                addressList,
+                selectedId: id
+            });
+
+            if (selectedAddress) {
+                // 显示已选择提示
+                wx.showToast({
+                    title: '地址已选择',
+                    icon: 'success',
+                    duration: 1000
                 });
 
-                wx.navigateBack();
+                // 延迟返回，让用户看到选中效果
+                setTimeout(() => {
+                    // 将选中的地址传回结算页
+                    const pages = getCurrentPages();
+                    const prevPage = pages[pages.length - 2]; // 上一个页面
+
+                    prevPage.setData({
+                        selectedAddress: selectedAddress
+                    });
+
+                    wx.navigateBack();
+                }, 1000);
             }
         }
     }

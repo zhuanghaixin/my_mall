@@ -7,7 +7,17 @@
     "pages/goods/detail/index",
     "pages/goods/list/index",
     "pages/search/index",
-    "pages/user/login/index"
+    "pages/user/login/index",
+    "pages/address/list/index",
+    "pages/address/edit/index",
+    "pages/order/list/index",
+    "pages/order/detail/index",
+    "pages/order/checkout/index",
+    "pages/user/favorite/index",
+    "pages/user/history/index",
+    "pages/user/setting/index",
+    "pages/user/service/index",
+    "pages/about/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

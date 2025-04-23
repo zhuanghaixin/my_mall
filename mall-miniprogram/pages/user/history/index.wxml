@@ -1,0 +1,47 @@
+<!--pages/user/history/index.wxml-->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="header">
+    <view class="title">浏览历史</view>
+    <view class="clear-btn" bindtap="handleClearAll">清空</view>
+  </view>
+
+  <!-- 浏览历史列表 -->
+  <scroll-view 
+    scroll-y 
+    class="history-list" 
+    bindscrolltolower="onReachBottom"
+    wx:if="{{historyList.length > 0}}">
+    <view class="history-item" wx:for="{{historyList}}" wx:key="id">
+      <view class="item-content" bindtap="handleItemTap" data-id="{{item.productId}}">
+        <image class="product-image" src="{{item.productImage}}" mode="aspectFill"></image>
+        <view class="product-info">
+          <view class="product-name">{{item.productName}}</view>
+          <view class="browse-time">{{item.formattedTime}}</view>
+          <view class="product-price">¥{{item.productPrice}}</view>
+        </view>
+      </view>
+      <view class="item-actions">
+        <view class="action-btn add-cart" catchtap="handleAddToCart" data-id="{{item.productId}}">加入购物车</view>
+        <view class="action-btn delete" catchtap="handleDelete" data-id="{{item.id}}">删除</view>
+      </view>
+    </view>
+    
+    <!-- 加载更多状态 -->
+    <view class="loading-more" wx:if="{{loadingMore}}">正在加载更多...</view>
+    <view class="no-more" wx:if="{{!hasMore && historyList.length > 0}}">没有更多了</view>
+  </scroll-view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && historyList.length === 0}}">
+    <image class="empty-image" src="/static/images/empty-history.png" mode="aspectFit"></image>
+    <view class="empty-text">暂无浏览记录</view>
+    <view class="go-shopping" bindtap="goToShop">去逛逛</view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading && historyList.length === 0}}">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">加载中...</view>
+  </view>
+</view>

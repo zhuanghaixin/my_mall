@@ -189,8 +189,9 @@ Page({
       return;
     }
 
-    wx.navigateTo({
-      url: '/pages/user/favorites/index',
+    wx.showToast({
+      title: '暂未开放，敬请期待',
+      icon: 'none'
     });
   },
 
@@ -198,8 +199,9 @@ Page({
    * 去设置页面
    */
   goSettings() {
-    wx.navigateTo({
-      url: '/pages/user/settings/index',
+    wx.showToast({
+      title: '暂未开放，敬请期待',
+      icon: 'none'
     });
   },
 

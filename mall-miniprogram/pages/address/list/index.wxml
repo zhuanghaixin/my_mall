@@ -1,11 +1,12 @@
 <view class="container">
   <view class="header">
     <view class="title">收货地址管理</view>
+    <view class="subtitle" wx:if="{{from === 'checkout'}}">点击选择收货地址</view>
   </view>
 
   <!-- 地址列表 -->
   <view class="address-list" wx:if="{{addressList.length > 0}}">
-    <view class="address-item" wx:for="{{addressList}}" wx:key="id">
+    <view class="address-item {{item.id === selectedId || item.selected ? 'selected' : ''}}" wx:for="{{addressList}}" wx:key="id" bindtap="handleSelect" data-id="{{item.id}}">
       <view class="address-info">
         <view class="name-phone">
           <text class="name">{{item.name}}</text>
@@ -18,13 +19,13 @@
       </view>
       
       <view class="address-actions">
-        <view class="action" bindtap="handleSetDefault" data-id="{{item.id}}" wx:if="{{item.is_default !== 1}}">
+        <view class="action" wx:if="{{item.is_default !== 1}}" catchtap="handleSetDefault" data-id="{{item.id}}">
           <text class="action-text">设为默认</text>
         </view>
-        <view class="action" bindtap="handleEdit" data-id="{{item.id}}">
+        <view class="action" catchtap="handleEdit" data-id="{{item.id}}">
           <text class="action-text">编辑</text>
         </view>
-        <view class="action" bindtap="handleDelete" data-id="{{item.id}}">
+        <view class="action" catchtap="handleDelete" data-id="{{item.id}}">
           <text class="action-text">删除</text>
         </view>
       </view>
