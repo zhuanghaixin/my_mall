@@ -1,14 +1,7 @@
 <!-- pages/order/pay/index.wxml -->
-<view class="pay-container">
-  <!-- 支付头部 -->
-  <view class="pay-header">
-    <view class="pay-title">订单支付</view>
-    <view class="pay-countdown">
-      <text>支付剩余时间：</text>
-      <text class="countdown-time">{{countdownMinutes}}分{{countdownSeconds}}秒</text>
-    </view>
-  </view>
+<navigation-bar title="订单支付" back="{{true}}" />
 
+<view class="pay-container">
   <!-- 支付金额 -->
   <view class="pay-amount">
     <view class="amount-label">需支付金额</view>
@@ -60,6 +53,12 @@
       <text class="info-label">优惠金额</text>
       <text class="info-value">-¥{{discount}}</text>
     </view>
+  </view>
+
+  <!-- 支付倒计时 -->
+  <view class="pay-countdown">
+    <text>支付剩余时间：</text>
+    <text class="countdown-time">{{countdownMinutes}}分{{countdownSeconds}}秒</text>
   </view>
 
   <!-- 支付按钮 -->

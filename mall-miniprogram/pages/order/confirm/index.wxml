@@ -1,9 +1,6 @@
-<view class="container">
-  <!-- 页面头部 -->
-  <view class="header">
-    <view class="title">确认订单</view>
-  </view>
+<navigation-bar title="确认订单" back="{{true}}" />
 
+<view class="container">
   <!-- 收货地址 -->
   <view class="address-container" bindtap="goToAddressSelect">
     <view class="address-wrapper" wx:if="{{address}}">

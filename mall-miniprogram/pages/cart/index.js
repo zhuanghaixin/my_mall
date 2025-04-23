@@ -616,7 +616,7 @@ Page({
 
     // 跳转到订单确认页面
     wx.navigateTo({
-      url: '/pages/order/checkout/index',
+      url: '/pages/order/confirm/index',
       complete: () => {
         // 无论成功失败，都重置状态
         setTimeout(() => {

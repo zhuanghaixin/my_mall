@@ -12,6 +12,13 @@ function getCartList() {
 }
 
 /**
+ * 获取购物车中选中的商品
+ */
+function getCheckedCartGoods() {
+    return request.get(api.CartChecked);
+}
+
+/**
  * 添加商品到购物车
  * @param {Object} data - 添加的商品信息
  */
@@ -73,5 +80,6 @@ module.exports = {
     clearCart,
     checkCart,
     checkGoodsInCart,
-    getCartCount
+    getCartCount,
+    getCheckedCartGoods
 }; 

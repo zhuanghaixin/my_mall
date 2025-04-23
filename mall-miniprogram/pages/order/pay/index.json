@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "订单支付",
-  "usingComponents": {}
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "navigation-bar": "/components/navigation-bar/index"
+  }
 } 

@@ -55,12 +55,12 @@ Page({
      * 获取购物车中选中的商品
      */
     getCheckedCartList: function () {
-        cartService.getCartList().then(res => {
+        cartService.getCheckedCartGoods().then(res => {
             if (res.code === 200) {
-                // 筛选出选中的商品
-                const checkedGoods = res.data.filter(item => item.selected === 1);
+                // 接口直接返回选中的商品，无需filter
+                const checkedGoods = res.data || [];
 
-                //.计算总价
+                // 计算总价
                 let totalPrice = 0;
                 checkedGoods.forEach(item => {
                     totalPrice += item.goods.price * item.quantity;
@@ -73,6 +73,55 @@ Page({
                     cartList: checkedGoods,
                     totalPrice: totalPrice.toFixed(2),
                     actualPrice: actualPrice.toFixed(2)
+                });
+            } else {
+                // 如果接口不可用，回退到原方案
+                this.getCartListFallback();
+            }
+        }).catch(err => {
+            console.error('获取购物车选中商品失败', err);
+            // 如果新API不可用，回退到原方案
+            this.getCartListFallback();
+        });
+    },
+
+    /**
+     * 获取购物车商品备用方案
+     */
+    getCartListFallback: function () {
+        cartService.getCartList().then(res => {
+            if (res.code === 200) {
+                let checkedGoods = [];
+
+                // 安全处理：确保res.data是数组
+                if (Array.isArray(res.data)) {
+                    checkedGoods = res.data.filter(item => item.selected === 1);
+                } else if (res.data && typeof res.data === 'object') {
+                    // 如果是对象，尝试获取内部的items或list数组
+                    const items = res.data.items || res.data.list || [];
+                    if (Array.isArray(items)) {
+                        checkedGoods = items.filter(item => item.selected === 1);
+                    }
+                }
+
+                // 计算总价
+                let totalPrice = 0;
+                checkedGoods.forEach(item => {
+                    totalPrice += item.goods.price * item.quantity;
+                });
+
+                // 计算实际支付金额
+                const actualPrice = totalPrice + this.data.freightPrice;
+
+                this.setData({
+                    cartList: checkedGoods,
+                    totalPrice: totalPrice.toFixed(2),
+                    actualPrice: actualPrice.toFixed(2)
+                });
+            } else {
+                wx.showToast({
+                    title: '获取商品失败',
+                    icon: 'none'
                 });
             }
         }).catch(err => {

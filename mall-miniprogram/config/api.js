@@ -36,6 +36,7 @@ module.exports = {
 
     // 购物车相关
     CartList: ApiBaseUrl + '/cart/list', // 获取购物车列表
+    CartChecked: ApiBaseUrl + '/cart/checked', // 获取购物车已选中商品
     CartAdd: ApiBaseUrl + '/cart/add', // 添加购物车
     CartUpdate: ApiBaseUrl + '/cart/update', // 更新购物车
     CartDelete: ApiBaseUrl + '/cart/delete', // 删除购物车商品
