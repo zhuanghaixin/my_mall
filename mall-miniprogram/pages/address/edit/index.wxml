@@ -68,5 +68,5 @@
   </view>
 
   <!-- 遮罩层 -->
-  <view class="mask" wx:if="{{showRegion}}" bindtap="cancelRegion"></view>
+  <view class="mask" wx:if="{{showRegion}}" bindtap="tapMask"></view>
 </view> 

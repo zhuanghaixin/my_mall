@@ -1,12 +1,13 @@
 // favorite.js
-const request = require('./request.js');
+const api = require('../config/api.js');
+const request = require('../utils/request.js');
 
 /**
  * 获取收藏列表
  * @param {Object} params 查询参数 {page, limit}
  */
 function getFavoriteList(params) {
-    return request.get('/api/favorites/list', params);
+    return request.get(api.FavoriteList, params);
 }
 
 /**
@@ -14,7 +15,7 @@ function getFavoriteList(params) {
  * @param {Number} goodsId 商品ID
  */
 function addFavorite(goodsId) {
-    return request.post('/api/favorites/add', {
+    return request.post(api.FavoriteAdd, {
         goods_id: goodsId
     });
 }
@@ -24,7 +25,7 @@ function addFavorite(goodsId) {
  * @param {Number} id 收藏ID
  */
 function removeFavorite(id) {
-    return request.delete(`/api/favorites/delete/${id}`);
+    return request.del(api.FavoriteDelete.replace(':id', id));
 }
 
 /**
@@ -32,7 +33,7 @@ function removeFavorite(id) {
  * @param {Number} goodsId 商品ID
  */
 function checkIsFavorite(goodsId) {
-    return request.get('/api/favorites/check', {
+    return request.get(api.FavoriteCheck, {
         goods_id: goodsId
     });
 }

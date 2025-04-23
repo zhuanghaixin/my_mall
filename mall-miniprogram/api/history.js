@@ -1,16 +1,13 @@
-import request from '../utils/request.js';
+const api = require('../config/api.js');
+const request = require('../utils/request.js');
 
 /**
  * 获取浏览历史列表
  * @param {Object} params - 查询参数：pageNum 页码，pageSize 每页数量
  * @returns {Promise}
  */
-export function getBrowseHistoryList(params) {
-    return request({
-        url: '/api/browse/history/list',
-        method: 'GET',
-        data: params
-    });
+function getBrowseHistoryList(params) {
+    return request.get(api.HistoryList, params);
 }
 
 /**
@@ -18,22 +15,16 @@ export function getBrowseHistoryList(params) {
  * @param {Number} id - 浏览记录ID
  * @returns {Promise}
  */
-export function deleteBrowseHistory(id) {
-    return request({
-        url: `/api/browse/history/delete/${id}`,
-        method: 'DELETE'
-    });
+function deleteHistory(id) {
+    return request.del(api.HistoryDelete.replace(':id', id));
 }
 
 /**
  * 清空浏览历史
  * @returns {Promise}
  */
-export function clearBrowseHistory() {
-    return request({
-        url: '/api/browse/history/clear',
-        method: 'DELETE'
-    });
+function clearBrowseHistory() {
+    return request.del(api.HistoryClear);
 }
 
 /**
@@ -42,20 +33,16 @@ export function clearBrowseHistory() {
  * @param {Number} quantity - 数量
  * @returns {Promise}
  */
-export function addToCart(productId, quantity) {
-    return request({
-        url: '/api/cart/add',
-        method: 'POST',
-        data: {
-            productId,
-            quantity
-        }
+function addToCart(productId, quantity) {
+    return request.post(api.CartAdd, {
+        goodsId: productId,
+        number: quantity
     });
 }
 
-export default {
+module.exports = {
     getBrowseHistoryList,
-    deleteBrowseHistory,
+    deleteHistory,
     clearBrowseHistory,
     addToCart
 }; 

@@ -50,8 +50,17 @@ Page({
             .then(res => {
                 console.log('获取地址列表', res);
                 if (res.code === 200) {
+                    // 处理地址列表数据
+                    const addressList = res.data.map(item => {
+                        return {
+                            ...item,
+                            // 生成完整的地址字符串，方便显示
+                            fullAddress: `${item.province}${item.city}${item.district}${item.detail}`
+                        };
+                    });
+
                     this.setData({
-                        addressList: res.data
+                        addressList
                     });
                 } else {
                     wx.showToast({

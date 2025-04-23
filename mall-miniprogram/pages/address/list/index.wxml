@@ -17,7 +17,7 @@
           <text class="default-tag" wx:if="{{item.is_default === 1}}">默认</text>
         </view>
         <view class="address-detail">
-          {{item.province}}{{item.city}}{{item.district}}{{item.detail}}
+          {{item.fullAddress}}
         </view>
       </view>
       

@@ -9,7 +9,7 @@ const request = require('../utils/request.js');
  * @returns {Promise} 返回获取结果
  */
 function getAddressList() {
-    return request.get('/api/address/list');
+    return request.get(api.AddressList);
 }
 
 /**
@@ -18,7 +18,7 @@ function getAddressList() {
  * @returns {Promise} 返回获取结果
  */
 function getAddressDetail(id) {
-    return request.get(`/api/address/detail/${id}`);
+    return request.get(`${api.AddressDetail}/${id}`);
 }
 
 /**
@@ -28,10 +28,10 @@ function getAddressDetail(id) {
 function saveAddress(data) {
     if (data.id) {
         // 更新地址
-        return request.put('/api/address/update', data);
+        return request.put(api.AddressUpdate, data);
     } else {
         // 创建新地址
-        return request.post('/api/address/create', data);
+        return request.post(api.AddressAdd, data);
     }
 }
 
@@ -41,7 +41,7 @@ function saveAddress(data) {
  * @returns {Promise} 返回删除结果
  */
 function deleteAddress(id) {
-    return request.delete(`/api/address/delete/${id}`);
+    return request.del(api.AddressDelete.replace(':id', id));
 }
 
 /**
@@ -50,7 +50,7 @@ function deleteAddress(id) {
  * @returns {Promise} 返回设置结果
  */
 function setDefaultAddress(id) {
-    return request.put(`/api/address/set-default/${id}`);
+    return request.put(api.AddressDefault, { id });
 }
 
 module.exports = {

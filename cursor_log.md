@@ -1677,3 +1677,39 @@ npm run dev
 ### 修改的文件
 - 新建：`mall-server/src/models/address.js` - 创建地址数据模型
 - 修改：`mall-server/src/models/index.js` - 添加Address模型导入和导出，增加关联关系
+
+## 收货地址编辑功能优化
+
+### 会话日期和时间
+2023年6月22日 14:30
+
+### 会话的主要目的
+优化商城小程序的收货地址编辑和管理功能
+
+### 完成的主要任务
+1. 全面审查了现有的地址编辑和列表页面代码
+2. 优化了地区选择器的交互逻辑与用户体验 
+3. 增强了表单验证功能，特别是手机号码的实时验证
+4. 改进了保存地址的错误处理和用户反馈机制
+5. 优化了UI样式，提高了页面的美观度和可用性
+6. 在地址列表页面添加了地址信息的格式化处理
+
+### 关键决策和解决方案
+1. 采用async/await模式改进异步代码结构，使代码更易维护
+2. 增加了表单验证的严格性，包括空值检查和格式验证
+3. 添加了tapMask功能，使用户可以通过点击遮罩层关闭选择器
+4. 实现了手机号的实时验证，提供更及时的用户反馈
+5. 优化了地区选择器的交互逻辑，修复了选择省市区时的数据更新问题
+
+### 使用的技术栈
+- 微信小程序原生开发框架
+- JavaScript ES6+特性（如async/await, 解构赋值等）
+- 小程序WXML和WXSS页面构建
+- RESTful API数据交互
+
+### 修改了哪些文件
+1. mall-miniprogram/pages/address/edit/index.js
+2. mall-miniprogram/pages/address/edit/index.wxml
+3. mall-miniprogram/pages/address/edit/index.wxss
+4. mall-miniprogram/pages/address/list/index.js
+5. mall-miniprogram/pages/address/list/index.wxml
