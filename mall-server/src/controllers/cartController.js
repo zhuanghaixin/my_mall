@@ -225,7 +225,8 @@ const addToCart = catchAsync(async (req, res) => {
     }
 
     // 检查商品是否已下架
-    if (goodsInfo.is_on_sale !== 1) {
+    console.log('goods', goodsInfo.status);
+    if (goodsInfo.status !== 1) {
         return res.status(400).json({
             success: false,
             code: 400,
@@ -234,7 +235,7 @@ const addToCart = catchAsync(async (req, res) => {
     }
 
     // 检查商品库存
-    if (goodsInfo.number < count) {
+    if (goodsInfo.stock < count) {
         return res.status(400).json({
             success: false,
             code: 400,
@@ -256,7 +257,7 @@ const addToCart = catchAsync(async (req, res) => {
         const newCount = cartItem.count + count;
 
         // 检查更新后的数量是否超过库存
-        if (newCount > goodsInfo.number) {
+        if (newCount > goodsInfo.stock) {
             return res.status(400).json({
                 success: false,
                 code: 400,
@@ -408,7 +409,7 @@ const updateCart = catchAsync(async (req, res) => {
 
     if (count !== undefined) {
         // 检查库存
-        if (count > cartItem.goods.number) {
+        if (count > cartItem.goods.stock) {
             return res.status(400).json({
                 success: false,
                 code: 400,
