@@ -1474,3 +1474,46 @@ npm run dev
 
 ### 修改的文件
 - mall-server/src/controllers/cartController.js
+
+## 实现小程序购物车页面及修复接口问题
+
+### 日期和时间
+2023年5月22日
+
+### 主要目的
+实现微信小程序的购物车页面，并修复购物车接口出现的登录状态判断和服务器端报错问题。
+
+### 完成的主要任务
+1. 根据UI示意图实现了购物车页面结构和样式
+2. 对接了后端购物车API实现商品展示、选择、数量修改、删除等功能
+3. 实现了购物车各种状态的显示（空购物车、未登录、加载中等）
+4. 添加了下拉刷新功能以更新购物车数据
+5. 优化了API模块，将其简化为只负责定义接口调用
+6. 将数据处理逻辑移至页面组件中，提高代码可维护性
+7. 修复了后端购物车列表接口的未授权访问问题
+8. 增强了前端对登录状态和授权错误的处理
+
+### 关键决策和解决方案
+- 使用van-checkbox组件实现商品选择和全选功能
+- 添加管理模式切换功能处理批量删除
+- 将API模块简化为只负责定义接口调用，符合关注点分离原则
+- 在页面组件中实现数据处理和错误处理逻辑
+- 分析了后端500错误原因（未登录用户访问需要授权的接口导致空指针）
+- 为购物车列表接口添加protect中间件，保证接口安全
+- 增强前端错误处理逻辑，优化401未授权错误的处理流程
+
+### 使用的技术栈
+- 微信小程序（WXML, WXSS, JS）
+- Vant Weapp UI组件库
+- Promise异步编程
+- 微信小程序API（wx.request等）
+- Express.js（后端路由和中间件）
+- JWT用户认证
+
+### 修改了哪些文件
+- mall-miniprogram/pages/cart/index.js
+- mall-miniprogram/pages/cart/index.wxml
+- mall-miniprogram/pages/cart/index.wxss
+- mall-miniprogram/pages/cart/index.json
+- mall-miniprogram/api/cart.js
+- mall-server/src/routes/api/cart.js

@@ -30,7 +30,7 @@ console.log('qqcart.js');
  *       401:
  *         description: 未授权，用户未登录
  */
-router.get('/list', cartController.getCartList);
+router.get('/list', protect, cartController.getCartList);
 
 /**
  * 添加商品到购物车

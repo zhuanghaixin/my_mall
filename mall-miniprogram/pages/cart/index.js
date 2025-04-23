@@ -38,22 +38,7 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-    // 每次显示页面时检查登录状态并更新购物车数据
-    const token = wx.getStorageSync('token');
-    const hasLogin = !!token;
-
-    this.setData({
-      isLogin: hasLogin
-    });
-
-    if (hasLogin) {
-      // 确保全局变量中的登录状态正确
-      if (!app.globalData.hasLogin) {
-        app.globalData.token = token;
-        app.globalData.hasLogin = true;
-      }
-      this.getCartList();
-    }
+    this.checkLoginStatus();
   },
 
   /**
@@ -105,6 +90,54 @@ Page({
   },
 
   /**
+   * 检查登录状态并更新数据
+   */
+  checkLoginStatus() {
+    // 每次显示页面时检查登录状态并更新购物车数据
+    const token = wx.getStorageSync('token');
+    const hasLogin = !!token;
+
+    this.setData({
+      isLogin: hasLogin
+    });
+
+    if (hasLogin) {
+      // 确保全局变量中的登录状态正确
+      if (!app.globalData.hasLogin) {
+        app.globalData.token = token;
+        app.globalData.hasLogin = true;
+      }
+      this.getCartList();
+    }
+  },
+
+  /**
+   * 处理授权错误
+   */
+  handleAuthError() {
+    // 清除本地登录状态
+    wx.removeStorageSync('token');
+    app.globalData.hasLogin = false;
+    app.globalData.token = '';
+
+    this.setData({
+      isLogin: false,
+      loadingStatus: false
+    });
+
+    wx.showModal({
+      title: '提示',
+      content: '登录已过期，请重新登录',
+      confirmText: '去登录',
+      success: (res) => {
+        if (res.confirm) {
+          this.goToLogin();
+        }
+      }
+    });
+  },
+
+  /**
    * 获取购物车列表
    */
   getCartList: function () {
@@ -122,22 +155,22 @@ Page({
             checkedAll: res.data.cartList && res.data.cartList.length > 0 && !res.data.cartList.some(item => !item.selected)
           });
         } else {
-          // 如果是未登录错误，更新登录状态
+          // 如果是未登录错误，更新登录状态并引导用户登录
           if (res.code === 401) {
-            this.setData({ isLogin: false });
-            app.globalData.hasLogin = false;
-            wx.removeStorageSync('token');
+            this.handleAuthError();
           } else {
             util.showToast(res.message || '获取购物车列表失败');
+            this.setData({ loadingStatus: false });
           }
         }
       })
       .catch(err => {
         console.error('获取购物车列表失败:', err);
-        util.showToast('网络异常，请稍后再试');
+        // 如果是网络错误，可能是服务器问题，给用户友好提示
+        util.showToast('获取购物车数据失败，请稍后再试');
+        this.setData({ loadingStatus: false });
       })
       .finally(() => {
-        this.setData({ loadingStatus: false });
         wx.stopPullDownRefresh();
       });
   },
@@ -146,6 +179,11 @@ Page({
    * 切换商品选中状态
    */
   onToggleItem: function (e) {
+    if (!this.data.isLogin) {
+      this.handleAuthError();
+      return;
+    }
+
     const { id, selected } = e.currentTarget.dataset;
 
     cartApi.updateCart({
@@ -161,6 +199,8 @@ Page({
           checkedTotalCount: res.data.checkedTotalCount || 0,
           checkedAll: res.data.cartList && res.data.cartList.length > 0 && !res.data.cartList.some(item => !item.selected)
         });
+      } else if (res.code === 401) {
+        this.handleAuthError();
       } else {
         util.showToast(res.message || '操作失败');
       }

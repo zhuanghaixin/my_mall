@@ -49,6 +49,13 @@ const Goods = sequelize.define('goods', {
         allowNull: true,
         comment: '主图URL'
     },
+    image_url: {
+        type: DataTypes.VIRTUAL,
+        get() {
+            return this.getDataValue('main_image');
+        },
+        comment: 'main_image的别名，用于兼容'
+    },
     cover_image: {
         type: DataTypes.STRING(255),
         allowNull: true,
@@ -86,16 +93,22 @@ const Goods = sequelize.define('goods', {
         allowNull: false,
         defaultValue: 1,
         comment: '状态：0下架，1上架'
+    },
+    is_on_sale: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+        comment: '是否促销：0否，1是'
     }
 }, {
-    // 使用蛇形命名（下划线）
+    // 使用snake_case命名
     underscored: true,
-    // 添加created_at和updated_at字段
+    // 使用时间戳
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'update_time',
-    // 表名不复数
-    freezeTableName: true,
+    // 表名
+    tableName: 'goods',
     // 表注释
     comment: '商品表'
 });

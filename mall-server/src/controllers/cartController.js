@@ -38,16 +38,14 @@ const AppError = require('../utils/appError');
  *               type: integer
  *             name:
  *               type: string
- *             brief:
+ *             description:
  *               type: string
- *             retail_price:
+ *             price:
  *               type: number
- *             list_pic_url:
+ *             main_image:
  *               type: string
- *             number:
+ *             stock:
  *               type: integer
- *             goods_unit:
- *               type: string
  */
 
 /**
@@ -109,7 +107,7 @@ const getCartList = catchAsync(async (req, res) => {
         include: [{
             model: Goods,
             as: 'goods',
-            attributes: ['id', 'name', 'brief', 'retail_price', 'list_pic_url', 'number', 'goods_unit']
+            attributes: ['id', 'name', 'description', 'price', 'main_image', 'stock']
         }],
         order: [['add_time', 'DESC']]
     });
@@ -130,11 +128,11 @@ const getCartList = catchAsync(async (req, res) => {
         };
 
         totalCount += item.count;
-        totalPrice += item.count * (item.goods?.retail_price || 0);
+        totalPrice += item.count * (item.goods?.price || 0);
 
         if (item.selected) {
             checkedTotalCount += item.count;
-            checkedTotalPrice += item.count * (item.goods?.retail_price || 0);
+            checkedTotalPrice += item.count * (item.goods?.price || 0);
         }
 
         return cartItem;
@@ -733,7 +731,7 @@ const getCartStatistics = async (userId) => {
         include: [{
             model: Goods,
             as: 'goods',
-            attributes: ['id', 'name', 'brief', 'retail_price', 'list_pic_url', 'number', 'goods_unit']
+            attributes: ['id', 'name', 'description', 'price', 'main_image', 'stock']
         }],
         order: [['add_time', 'DESC']]
     });
@@ -754,11 +752,11 @@ const getCartStatistics = async (userId) => {
         };
 
         totalCount += item.count;
-        totalPrice += item.count * (item.goods?.retail_price || 0);
+        totalPrice += item.count * (item.goods?.price || 0);
 
         if (item.selected) {
             checkedTotalCount += item.count;
-            checkedTotalPrice += item.count * (item.goods?.retail_price || 0);
+            checkedTotalPrice += item.count * (item.goods?.price || 0);
         }
 
         return cartItem;
