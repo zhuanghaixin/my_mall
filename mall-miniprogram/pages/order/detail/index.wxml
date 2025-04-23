@@ -1,4 +1,7 @@
 <!--pages/order/detail/index.wxml-->
+<!-- 导航栏 -->
+<navigation-bar title="订单详情" back="{{true}}"></navigation-bar>
+
 <view class="container">
   <view class="header">
     <view class="title">订单详情</view>

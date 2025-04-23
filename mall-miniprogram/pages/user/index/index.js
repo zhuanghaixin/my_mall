@@ -189,9 +189,8 @@ Page({
       return;
     }
 
-    wx.showToast({
-      title: '暂未开放，敬请期待',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/user/favorite/index',
     });
   },
 
@@ -199,9 +198,8 @@ Page({
    * 去设置页面
    */
   goSettings() {
-    wx.showToast({
-      title: '暂未开放，敬请期待',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/user/setting/index',
     });
   },
 
@@ -209,9 +207,8 @@ Page({
    * 联系客服
    */
   contactService() {
-    wx.showToast({
-      title: '暂未开放，敬请期待',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/user/service/index',
     });
   },
 

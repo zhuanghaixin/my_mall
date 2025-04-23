@@ -1,2 +1,34 @@
 <!--pages/user/setting/index.wxml-->
-<text>pages/user/setting/index.wxml</text>
+<!-- 导航栏 -->
+<navigation-bar title="设置" back="{{true}}"></navigation-bar>
+
+<view class="container">
+  <view class="settings-list">
+    <view class="setting-item" bindtap="handleNavigate" data-path="/pages/user/profile/index">
+      <view class="setting-label">个人资料</view>
+      <view class="setting-arrow"></view>
+    </view>
+    <view class="setting-item" bindtap="handleNavigate" data-path="/pages/address/list/index">
+      <view class="setting-label">地址管理</view>
+      <view class="setting-arrow"></view>
+    </view>
+    <view class="setting-item" bindtap="handleNavigate" data-path="/pages/user/security/index">
+      <view class="setting-label">账号安全</view>
+      <view class="setting-arrow"></view>
+    </view>
+    <view class="setting-item">
+      <view class="setting-label">消息通知</view>
+      <switch checked="{{notificationEnabled}}" bindchange="handleNotificationChange" color="#ff4444"></switch>
+    </view>
+    <view class="setting-item" bindtap="handleClearCache">
+      <view class="setting-label">清除缓存</view>
+      <view class="setting-value">{{cacheSize}}</view>
+    </view>
+    <view class="setting-item" bindtap="handleNavigate" data-path="/pages/about/index">
+      <view class="setting-label">关于我们</view>
+      <view class="setting-arrow"></view>
+    </view>
+  </view>
+  
+  <button class="exit-btn" bindtap="handleLogout">退出登录</button>
+</view>

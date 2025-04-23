@@ -3,6 +3,12 @@
   min-height: 100vh;
   background-color: #f7f7f7;
   padding-bottom: 40rpx;
+  box-sizing: border-box;
+}
+
+/* 隐藏原有标题栏，使用导航栏代替 */
+.header {
+  display: none;
 }
 
 /* 页面标题栏 */

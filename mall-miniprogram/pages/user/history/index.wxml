@@ -1,4 +1,7 @@
 <!--pages/user/history/index.wxml-->
+<!-- 导航栏 -->
+<navigation-bar title="浏览历史" back="{{true}}"></navigation-bar>
+
 <view class="container">
   <!-- 页面标题 -->
   <view class="header">

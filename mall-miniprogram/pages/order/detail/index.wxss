@@ -1,14 +1,13 @@
 /* pages/order/detail/index.wxss */
 .container {
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding-bottom: 120rpx;
+  background-color: #f7f7f7;
+  padding-bottom: 40rpx;
+  box-sizing: border-box;
 }
 
 .header {
-  padding: 30rpx;
-  background-color: #fff;
-  margin-bottom: 20rpx;
+  display: none;
 }
 
 .title {

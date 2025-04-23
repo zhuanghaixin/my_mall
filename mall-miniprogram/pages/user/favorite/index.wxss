@@ -1,1 +1,12 @@
 /* pages/user/favorite/index.wxss */
+/* 隐藏原有标题栏，使用导航栏代替 */
+.header {
+  display: none;
+}
+
+.container {
+  min-height: 100vh;
+  background-color: #f7f7f7;
+  padding-bottom: 40rpx;
+  box-sizing: border-box;
+}

@@ -1,13 +1,13 @@
-.container {
-  min-height: 100vh;
-  background-color: #f5f5f5;
-  padding-bottom: 120rpx;
+/* 隐藏原有标题栏，使用导航栏代替 */
+.header {
+  display: none;
 }
 
-.header {
-  padding: 30rpx;
-  background-color: #fff;
-  margin-bottom: 20rpx;
+.container {
+  min-height: 100vh;
+  background-color: #f7f7f7;
+  padding-bottom: 40rpx;
+  box-sizing: border-box;
 }
 
 .title {
