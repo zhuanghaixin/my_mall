@@ -173,7 +173,7 @@ router.get('/data', async (req, res) => {
                     },
                     attributes: [
                         'id', 'name', 'price', 'original_price',
-                        'main_image', 'cover_image', 'sale_count',
+                        'main_image', 'cover_image', 'sale_count', 'stock',
                         ['main_image', 'image_url'] // 添加image_url作为main_image的别名
                     ],
                     order: [
@@ -285,6 +285,11 @@ router.get('/recommend', async (req, res) => {
                 status: 1,
                 is_recommend: 1
             },
+            attributes: [
+                'id', 'name', 'price', 'original_price', 'stock',
+                'main_image', 'cover_image', 'sale_count', 'status',
+                ['main_image', 'image_url'] // 添加image_url作为main_image的别名
+            ],
             order: [
                 ['sale_count', 'DESC'],
                 ['id', 'DESC']
@@ -416,6 +421,11 @@ router.get('/categories', async (req, res) => {
                         status: 1,
                         category_id: category.id
                     },
+                    attributes: [
+                        'id', 'name', 'price', 'original_price',
+                        'main_image', 'cover_image', 'sale_count', 'stock',
+                        ['main_image', 'image_url'] // 添加image_url作为main_image的别名
+                    ],
                     order: [
                         ['sale_count', 'DESC']
                     ],

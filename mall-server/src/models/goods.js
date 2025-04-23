@@ -93,12 +93,6 @@ const Goods = sequelize.define('goods', {
         allowNull: false,
         defaultValue: 1,
         comment: '状态：0下架，1上架'
-    },
-    is_on_sale: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-        comment: '是否促销：0否，1是'
     }
 }, {
     // 使用snake_case命名
