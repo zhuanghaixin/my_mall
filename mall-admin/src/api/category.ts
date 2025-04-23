@@ -15,6 +15,16 @@ export function getCategoryList(params?: {
 }
 
 /**
+ * 获取指定父分类下的子分类列表
+ */
+export function getSubCategories(parentId: number) {
+  return request({
+    url: `/admin/category/sub/${parentId}`,
+    method: 'get'
+  })
+}
+
+/**
  * 获取分类详情
  */
 export function getCategoryDetail(id: number) {

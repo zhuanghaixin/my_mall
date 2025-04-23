@@ -6,8 +6,11 @@
           <el-input v-model="queryParams.keyword" placeholder="请输入商品名称" clearable />
         </el-form-item>
         <el-form-item label="商品分类">
-          <el-select v-model="queryParams.category_id" placeholder="请选择" clearable style="width: 140px;">
-            <el-option v-for="item in categoryOptions" :key="item.id" :label="item.name" :value="item.id" />
+          <el-select v-model="queryParams.parent_category_id" placeholder="请选择大类" clearable style="width: 140px;" @change="handleParentCategoryChange">
+            <el-option v-for="item in parentCategoryOptions" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+          <el-select v-model="queryParams.category_id" placeholder="请选择小类" clearable style="width: 140px;" :disabled="!queryParams.parent_category_id">
+            <el-option v-for="item in subCategoryOptions" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="商品状态">
@@ -201,7 +204,7 @@ import {
   batchOperateProducts,
   getProductDetail
 } from '@/api/product'
-import { getCategoryList } from '@/api/category'
+import { getCategoryList, getSubCategories } from '@/api/category'
 import type { Product, Category, PaginationData, ProductQueryParams } from '@/types/product'
 import type { ApiResponse } from '@/api/request'
 
@@ -211,11 +214,14 @@ const productList = ref<Product[]>([])
 const total = ref(0)
 const selectedIds = ref<number[]>([])
 const categoryOptions = ref<Category[]>([])
+const parentCategoryOptions = ref<Category[]>([])
+const subCategoryOptions = ref<Category[]>([])
 
 // 查询参数
-const queryParams = reactive<ProductQueryParams & { is_recommend?: number }>({
+const queryParams = reactive<ProductQueryParams & { is_recommend?: number, parent_category_id?: number }>({
   keyword: '',
   category_id: undefined,
+  parent_category_id: undefined,
   status: undefined,
   is_recommend: undefined,
   page: 1,
@@ -241,7 +247,7 @@ const productImages = computed(() => {
 onMounted(() => {
   console.log('商品列表组件已加载')
   fetchProductList()
-  fetchCategoryList()
+  fetchParentCategoryList()
 })
 
 // 获取商品列表
@@ -266,16 +272,34 @@ const fetchProductList = async () => {
   }
 }
 
-// 获取分类列表
-const fetchCategoryList = async () => {
+// 获取父分类（大类）列表
+const fetchParentCategoryList = async () => {
   try {
-    const res = await getCategoryList() as unknown as ApiResponse<Category[]>
-
-    if (res.code === 200) {
-      categoryOptions.value = res.data
-    }
+    const res = await getCategoryList({ status: 1 })
+    // 过滤出父分类（parent_id === 0 的分类为顶级分类）
+    parentCategoryOptions.value = res.data.filter((item: Category) => item.parent_id === 0)
+    // 保留原有categoryOptions，用于其他地方可能的使用
+    categoryOptions.value = res.data
   } catch (error) {
     console.error('获取分类列表失败', error)
+  }
+}
+
+// 当父分类改变时，获取对应的子分类
+const handleParentCategoryChange = async (parentId: number | undefined) => {
+  // 重置子分类选择和列表
+  queryParams.category_id = undefined
+  subCategoryOptions.value = []
+  
+  if (!parentId) return
+  
+  try {
+    const res = await getSubCategories(parentId)
+    if (res.success && res.data) {
+      subCategoryOptions.value = res.data
+    }
+  } catch (error) {
+    console.error('获取子分类失败', error)
   }
 }
 
@@ -285,13 +309,20 @@ const handleSearch = () => {
   fetchProductList()
 }
 
-// 重置搜索条件
+// 重置查询
 const resetQuery = () => {
+  // 重置查询参数
   queryParams.keyword = ''
   queryParams.category_id = undefined
+  queryParams.parent_category_id = undefined
   queryParams.status = undefined
   queryParams.is_recommend = undefined
   queryParams.page = 1
+  
+  // 清空子分类列表
+  subCategoryOptions.value = []
+  
+  // 重新获取数据
   fetchProductList()
 }
 

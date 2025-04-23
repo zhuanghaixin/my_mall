@@ -206,6 +206,11 @@ const logger = require('../utils/logger');
  *           type: integer
  *         description: 分类ID
  *       - in: query
+ *         name: parent_category_id
+ *         schema:
+ *           type: integer
+ *         description: 父分类ID
+ *       - in: query
  *         name: status
  *         schema:
  *           type: integer
@@ -237,6 +242,7 @@ exports.getGoodsList = catchAsync(async (req, res) => {
         pageSize = 10,
         keyword = '',
         category_id,
+        parent_category_id,
         status,
         is_recommend
     } = req.query;
@@ -252,16 +258,35 @@ exports.getGoodsList = catchAsync(async (req, res) => {
     // 分类筛选
     if (category_id) {
         where.category_id = category_id;
+    } else if (parent_category_id) {
+        try {
+            const subCategories = await Category.findAll({
+                where: {
+                    parent_id: parent_category_id,
+                    status: 1
+                },
+                attributes: ['id']
+            });
+
+            if (subCategories.length > 0) {
+                const subCategoryIds = subCategories.map(cat => cat.id);
+                where.category_id = { [Op.in]: subCategoryIds };
+            } else {
+                where.category_id = parent_category_id;
+            }
+        } catch (error) {
+            logger.error(`获取子分类失败: ${error.message}`);
+        }
     }
 
     // 状态筛选
-    if (status !== undefined) {
-        where.status = status;
+    if (status !== undefined && status !== '') {
+        where.status = parseInt(status);
     }
 
     // 推荐状态筛选
-    if (is_recommend !== undefined) {
-        where.is_recommend = is_recommend;
+    if (is_recommend !== undefined && is_recommend !== '') {
+        where.is_recommend = parseInt(is_recommend);
     }
 
     // 查询商品总数

@@ -18,6 +18,9 @@ router.use(protect);
 // 获取分类列表
 router.get('/list', categoryController.getCategoryList);
 
+// 获取指定父分类下的子分类
+router.get('/sub/:parentId', categoryController.getSubCategories);
+
 // 获取分类详情
 router.get('/:id', categoryController.getCategoryDetail);
 

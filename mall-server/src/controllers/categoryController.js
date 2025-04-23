@@ -598,4 +598,80 @@ const buildCategoryTree = (categories, parentId = 0, level = 0) => {
     }
 
     return result;
-}; 
+};
+
+/**
+ * @swagger
+ * /api/admin/category/sub/{parentId}:
+ *   get:
+ *     summary: 获取子分类列表
+ *     description: 获取指定父分类下的所有子分类
+ *     tags: [分类管理]
+ *     parameters:
+ *       - in: path
+ *         name: parentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 父分类ID
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功获取子分类列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 获取成功
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Category'
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+exports.getSubCategories = catchAsync(async (req, res) => {
+    const { parentId } = req.params;
+
+    // 验证父分类ID是否有效
+    if (!parentId || isNaN(parseInt(parentId))) {
+        return res.status(400).json({
+            success: false,
+            code: 400,
+            message: '无效的父分类ID'
+        });
+    }
+
+    // 查询指定父分类ID下的所有子分类
+    const subCategories = await Category.findAll({
+        where: {
+            parent_id: parseInt(parentId),
+            status: 1 // 只获取状态为启用的分类
+        },
+        order: [
+            ['sort', 'ASC'], // 优先按排序字段升序
+            ['id', 'ASC']    // 其次按ID升序
+        ]
+    });
+
+    logger.info(`获取父分类 ${parentId} 下的子分类列表，共 ${subCategories.length} 项`);
+
+    res.status(200).json({
+        success: true,
+        code: 200,
+        message: '获取成功',
+        data: subCategories
+    });
+}); 
