@@ -1450,3 +1450,27 @@ npm run dev
 
 ### 修改的文件
 - mall-server/src/controllers/cartController.js
+
+## 2023年6月12日
+
+### 会话主要目的
+解决接口响应格式不一致问题，修复加入购物车API错误
+
+### 完成的主要任务
+- 修复了加入购物车API返回"商品已下架"错误的问题
+- 统一所有API的响应格式为 `{ success: true/false, code: 状态码, message: 消息, data: 数据 }`
+- 替换了异常抛出改为直接返回统一格式的响应
+
+### 关键决策和解决方案
+- 检查了全局错误处理中间件(errorHandler.js)
+- 发现实际接口返回格式与前端期望的格式不一致
+- 修改所有控制器方法，不再抛出错误，而是直接返回一致的响应格式
+- 确保成功响应添加了`success: true`，错误响应添加了`success: false`
+
+### 使用的技术栈
+- Node.js
+- Express.js
+- Sequelize ORM
+
+### 修改的文件
+- mall-server/src/controllers/cartController.js

@@ -10,6 +10,7 @@ const logger = require('../utils/logger');
 const jwt = require('jsonwebtoken');
 const { verifyToken } = require('../utils/jwtToken');
 const config = require('../config');
+const AppError = require('../utils/appError');
 
 /**
  * @swagger
@@ -66,6 +67,9 @@ const config = require('../config');
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 code:
  *                   type: integer
  *                   example: 200
@@ -139,6 +143,7 @@ const getCartList = catchAsync(async (req, res) => {
     logger.info(`用户 ${userInfo.id} 获取购物车列表，共 ${cartList.length} 项`);
 
     res.status(200).json({
+        success: true,
         code: 200,
         message: '获取成功',
         data: {
@@ -221,12 +226,20 @@ const addToCart = catchAsync(async (req, res) => {
 
     // 检查商品是否已下架
     if (goodsInfo.is_on_sale !== 1) {
-        throw new BusinessError('商品已下架');
+        return res.status(400).json({
+            success: false,
+            code: 400,
+            message: '商品已下架'
+        });
     }
 
     // 检查商品库存
     if (goodsInfo.number < count) {
-        throw new BusinessError('商品库存不足');
+        return res.status(400).json({
+            success: false,
+            code: 400,
+            message: '商品库存不足'
+        });
     }
 
     // 检查购物车中是否已存在该商品
@@ -244,7 +257,11 @@ const addToCart = catchAsync(async (req, res) => {
 
         // 检查更新后的数量是否超过库存
         if (newCount > goodsInfo.number) {
-            throw new BusinessError('商品库存不足');
+            return res.status(400).json({
+                success: false,
+                code: 400,
+                message: '商品库存不足'
+            });
         }
 
         await cartItem.update({
@@ -276,6 +293,7 @@ const addToCart = catchAsync(async (req, res) => {
     }) || 0;
 
     res.status(200).json({
+        success: true,
         code: 200,
         message: '加入购物车成功',
         data: { cartCount }
@@ -317,6 +335,9 @@ const addToCart = catchAsync(async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 code:
  *                   type: integer
  *                   example: 200
@@ -352,7 +373,11 @@ const updateCart = catchAsync(async (req, res) => {
     const { id, count, selected } = req.body;
 
     if (!id) {
-        throw new ValidationError('缺少购物车项ID');
+        return res.status(400).json({
+            success: false,
+            code: 400,
+            message: '缺少购物车项ID'
+        });
     }
 
     // 查找购物车项
@@ -369,7 +394,11 @@ const updateCart = catchAsync(async (req, res) => {
     });
 
     if (!cartItem) {
-        throw new NotFoundError('购物车项不存在');
+        return res.status(404).json({
+            success: false,
+            code: 404,
+            message: '购物车项不存在'
+        });
     }
 
     // 更新数据
@@ -380,7 +409,11 @@ const updateCart = catchAsync(async (req, res) => {
     if (count !== undefined) {
         // 检查库存
         if (count > cartItem.goods.number) {
-            throw new BusinessError('商品库存不足');
+            return res.status(400).json({
+                success: false,
+                code: 400,
+                message: '商品库存不足'
+            });
         }
         updateData.count = count;
     }
@@ -397,6 +430,7 @@ const updateCart = catchAsync(async (req, res) => {
     const cartData = await getCartStatistics(userInfo.id);
 
     res.status(200).json({
+        success: true,
         code: 200,
         message: '更新购物车成功',
         data: cartData
@@ -434,6 +468,9 @@ const updateCart = catchAsync(async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 code:
  *                   type: integer
  *                   example: 200
@@ -467,7 +504,11 @@ const deleteCart = catchAsync(async (req, res) => {
     const { ids } = req.body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-        throw new ValidationError('请选择要删除的购物车项');
+        return res.status(400).json({
+            success: false,
+            code: 400,
+            message: '请选择要删除的购物车项'
+        });
     }
 
     // 软删除购物车项
@@ -490,6 +531,7 @@ const deleteCart = catchAsync(async (req, res) => {
     const cartData = await getCartStatistics(userInfo.id);
 
     res.status(200).json({
+        success: true,
         code: 200,
         message: '删除购物车成功',
         data: cartData
@@ -513,6 +555,9 @@ const deleteCart = catchAsync(async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 code:
  *                   type: integer
  *                   example: 200
@@ -561,6 +606,7 @@ const clearCart = catchAsync(async (req, res) => {
     logger.info(`用户 ${userInfo.id} 清空购物车`);
 
     res.status(200).json({
+        success: true,
         code: 200,
         message: '清空购物车成功',
         data: {
@@ -605,6 +651,9 @@ const clearCart = catchAsync(async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 code:
  *                   type: integer
  *                   example: 200
@@ -661,6 +710,7 @@ const checkCart = catchAsync(async (req, res) => {
     const cartData = await getCartStatistics(userInfo.id);
 
     res.status(200).json({
+        success: true,
         code: 200,
         message: '更新选中状态成功',
         data: cartData
@@ -744,6 +794,9 @@ const getCartStatistics = async (userId) => {
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 code:
  *                   type: integer
  *                   example: 200
@@ -782,6 +835,7 @@ const checkGoodsInCart = catchAsync(async (req, res) => {
     // 如果未登录或token无效，返回商品不在购物车中
     if (!userInfo) {
         return res.status(200).json({
+            success: true,
             code: 200,
             message: '未登录用户',
             data: {
@@ -794,7 +848,11 @@ const checkGoodsInCart = catchAsync(async (req, res) => {
     const { goodsId } = req.params;
 
     if (!goodsId) {
-        throw new ValidationError('缺少商品ID');
+        return res.status(400).json({
+            success: false,
+            code: 400,
+            message: '缺少商品ID'
+        });
     }
 
     // 查询购物车中是否存在该商品
@@ -809,6 +867,7 @@ const checkGoodsInCart = catchAsync(async (req, res) => {
     logger.info(`用户 ${userInfo.id} 检查商品 ${goodsId} 是否在购物车: ${cartItem ? '是' : '否'}`);
 
     res.status(200).json({
+        success: true,
         code: 200,
         message: '检查成功',
         data: {
@@ -833,6 +892,9 @@ const checkGoodsInCart = catchAsync(async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *                 code:
  *                   type: integer
  *                   example: 200
@@ -866,6 +928,7 @@ const getCartCount = catchAsync(async (req, res) => {
     // 如果未登录或token无效，返回购物车数量为0
     if (!userInfo) {
         return res.status(200).json({
+            success: true,
             code: 200,
             message: '未登录用户',
             data: {
@@ -885,6 +948,7 @@ const getCartCount = catchAsync(async (req, res) => {
     logger.info(`用户 ${userInfo.id} 获取购物车数量: ${cartCount}`);
 
     res.status(200).json({
+        success: true,
         code: 200,
         message: '获取成功',
         data: {
