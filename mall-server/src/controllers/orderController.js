@@ -3,7 +3,8 @@
  * 包含订单的增删改查等功能
  */
 
-const { Order, OrderGoods, User, Goods, Cart, Address, sequelize } = require('../models');
+const { Order, OrderGoods, User, Goods, Cart, Address } = require('../models');
+const sequelize = require('../db');
 const logger = require('../utils/logger');
 const { Op, fn, col } = require('sequelize');
 const catchAsync = require('../utils/catchAsync');
