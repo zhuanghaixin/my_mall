@@ -57,20 +57,34 @@ Page({
     getCheckedCartList: function () {
         cartService.getCheckedCartGoods().then(res => {
             if (res.code === 200) {
-                // 接口直接返回选中的商品，无需filter
+                // 接口直接返回选中的商品
                 const checkedGoods = res.data || [];
+                console.log('获取的已选中商品数据:', checkedGoods);
+
+                // 确保数据格式正确
+                const formattedGoods = checkedGoods.map(item => {
+                    // 检查并修正图片路径
+                    if (item.goods && !item.goods.image && item.goods.main_image) {
+                        item.goods.image = item.goods.main_image;
+                    }
+                    return item;
+                });
 
                 // 计算总价
                 let totalPrice = 0;
-                checkedGoods.forEach(item => {
-                    totalPrice += item.goods.price * item.quantity;
+                formattedGoods.forEach(item => {
+                    if (item.goods && item.goods.price) {
+                        // 使用正确的数量字段名：对接后端返回的数据格式
+                        const count = item.quantity || item.count || 0;
+                        totalPrice += item.goods.price * count;
+                    }
                 });
 
                 // 计算实际支付金额
                 const actualPrice = totalPrice + this.data.freightPrice;
 
                 this.setData({
-                    cartList: checkedGoods,
+                    cartList: formattedGoods,
                     totalPrice: totalPrice.toFixed(2),
                     actualPrice: actualPrice.toFixed(2)
                 });
@@ -92,29 +106,48 @@ Page({
         cartService.getCartList().then(res => {
             if (res.code === 200) {
                 let checkedGoods = [];
+                console.log('获取的购物车数据:', res.data);
 
                 // 安全处理：确保res.data是数组
                 if (Array.isArray(res.data)) {
-                    checkedGoods = res.data.filter(item => item.selected === 1);
+                    checkedGoods = res.data.filter(item => item.selected === 1 || item.selected === true);
                 } else if (res.data && typeof res.data === 'object') {
-                    // 如果是对象，尝试获取内部的items或list数组
-                    const items = res.data.items || res.data.list || [];
+                    // 如果是对象，尝试获取内部的items或list或cartList数组
+                    const items = res.data.cartList || res.data.items || res.data.list || [];
                     if (Array.isArray(items)) {
-                        checkedGoods = items.filter(item => item.selected === 1);
+                        checkedGoods = items.filter(item => item.selected === 1 || item.selected === true);
                     }
                 }
 
+                // 格式化商品数据
+                const formattedGoods = checkedGoods.map(item => {
+                    // 标准化商品数据格式
+                    const goodsInfo = item.goodsInfo || item.goods || {};
+                    // 修正图片路径
+                    if (goodsInfo && !goodsInfo.image && goodsInfo.main_image) {
+                        goodsInfo.image = goodsInfo.main_image;
+                    }
+                    return {
+                        id: item.id,
+                        goodsId: item.goodsId || item.goods_id,
+                        quantity: item.count || item.quantity || 0,
+                        goods: goodsInfo
+                    };
+                });
+
                 // 计算总价
                 let totalPrice = 0;
-                checkedGoods.forEach(item => {
-                    totalPrice += item.goods.price * item.quantity;
+                formattedGoods.forEach(item => {
+                    if (item.goods && item.goods.price) {
+                        totalPrice += item.goods.price * item.quantity;
+                    }
                 });
 
                 // 计算实际支付金额
                 const actualPrice = totalPrice + this.data.freightPrice;
 
                 this.setData({
-                    cartList: checkedGoods,
+                    cartList: formattedGoods,
                     totalPrice: totalPrice.toFixed(2),
                     actualPrice: actualPrice.toFixed(2)
                 });
@@ -138,7 +171,8 @@ Page({
      */
     goToAddressSelect: function () {
         wx.navigateTo({
-            url: '/pages/address/select/select',
+            // 跳转到地址列表页面，传递参数表明是从确认订单页面来的，需要返回选中的地址
+            url: '/pages/address/list/index?from=checkout' + (this.data.address ? '&selectedId=' + this.data.address.id : ''),
         });
     },
 

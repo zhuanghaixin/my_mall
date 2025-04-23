@@ -956,6 +956,87 @@ const getCartCount = catchAsync(async (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /api/cart/checked:
+ *   get:
+ *     summary: 获取购物车中已选中的商品
+ *     tags: [购物车]
+ *     description: 获取当前用户购物车中已选中的商品列表
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功获取已选中商品列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 获取成功
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       goodsId:
+ *                         type: integer
+ *                       quantity:
+ *                         type: integer
+ *                       goods:
+ *                         type: object
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+const getCheckedCartGoods = catchAsync(async (req, res) => {
+    // 由于使用了protect中间件，用户信息已在req.user中
+    const userInfo = req.user;
+
+    // 查询已选中的购物车商品
+    const checkedCartItems = await Cart.findAll({
+        where: {
+            user_id: userInfo.id,
+            selected: true,
+            is_delete: false
+        },
+        include: [{
+            model: Goods,
+            as: 'goods',
+            attributes: ['id', 'name', 'description', 'price', 'main_image', 'stock']
+        }],
+        order: [['add_time', 'DESC']]
+    });
+
+    // 格式化返回数据
+    const formattedItems = checkedCartItems.map(item => ({
+        id: item.id,
+        goodsId: item.goods_id,
+        quantity: item.count,
+        goods: item.goods
+    }));
+
+    logger.info(`用户 ${userInfo.id} 获取已选中的购物车商品，共 ${formattedItems.length} 项`);
+
+    res.status(200).json({
+        success: true,
+        code: 200,
+        message: '获取成功',
+        data: formattedItems
+    });
+});
+
 module.exports = {
     getCartList,
     addToCart,
@@ -964,5 +1045,6 @@ module.exports = {
     clearCart,
     checkCart,
     checkGoodsInCart,
-    getCartCount
+    getCartCount,
+    getCheckedCartGoods
 }; 

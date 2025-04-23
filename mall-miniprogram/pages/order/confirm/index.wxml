@@ -21,12 +21,12 @@
     <view class="section-title">商品信息</view>
     <view class="goods-list">
       <view class="goods-item" wx:for="{{cartList}}" wx:key="id">
-        <image class="goods-image" src="{{item.goods.image}}" mode="aspectFill"></image>
+        <image class="goods-image" src="{{item.goods.image || item.goods.main_image}}" mode="aspectFill"></image>
         <view class="goods-info">
           <view class="goods-name">{{item.goods.name}}</view>
           <view class="goods-price-wrapper">
             <view class="goods-price">¥{{item.goods.price}}</view>
-            <view class="goods-num">x{{item.quantity}}</view>
+            <view class="goods-num">x{{item.quantity || item.count}}</view>
           </view>
         </view>
       </view>

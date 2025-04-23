@@ -33,6 +33,24 @@ console.log('qqcart.js');
 router.get('/list', protect, cartController.getCartList);
 
 /**
+ * 获取购物车中已选中的商品
+ * GET /api/cart/checked
+ * @swagger
+ * /api/cart/checked:
+ *   get:
+ *     summary: 获取购物车中已选中的商品
+ *     tags: [购物车]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功获取已选中的商品
+ *       401:
+ *         description: 未授权，用户未登录
+ */
+router.get('/checked', protect, cartController.getCheckedCartGoods);
+
+/**
  * 添加商品到购物车
  * POST /api/cart/add
  * @swagger

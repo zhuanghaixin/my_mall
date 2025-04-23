@@ -87,4 +87,34 @@
 3. 修改：`mall-miniprogram/pages/order/confirm/index.json`（添加组件引用）
 4. 修改：`mall-miniprogram/pages/order/pay/index.wxml`（添加导航栏，调整布局）
 5. 修改：`mall-miniprogram/pages/order/pay/index.wxss`（移除头部样式，修改倒计时样式）
-6. 修改：`mall-miniprogram/pages/order/pay/index.json`（添加组件引用） 
+6. 修改：`mall-miniprogram/pages/order/pay/index.json`（添加组件引用）
+
+## 2024年5月10日
+
+### 会话的主要目的
+解决确认订单页面的数据渲染问题，完善购物车商品展示和地址选择功能。
+
+### 完成的主要任务
+1. 在后端实现`getCheckedCartGoods`接口，用于获取购物车中已选中的商品
+2. 修复确认订单页面的商品展示逻辑，正确显示商品图片、名称和价格
+3. 完善订单确认页面金额计算，使其与购物车结算页面金额一致
+4. 增强地址选择功能，允许用户从地址列表中选择收货地址
+
+### 关键决策和解决方案
+1. 在后端购物车控制器中添加新接口`getCheckedCartGoods`，专门返回已选中的购物车商品
+2. 优化前端数据处理逻辑，增加对多种数据结构的兼容性处理
+3. 修正商品图片路径问题，同时支持`image`和`main_image`字段
+4. 通过传递参数到地址列表页，实现选择地址并返回功能
+
+### 使用的技术栈
+- 微信小程序
+- JavaScript
+- Node.js
+- Express
+- Sequelize ORM
+
+### 修改了哪些文件
+1. `mall-server/src/controllers/cartController.js`：添加获取已选中商品的接口实现
+2. `mall-server/src/routes/api/cart.js`：添加新接口的路由
+3. `mall-miniprogram/pages/order/confirm/index.js`：优化数据处理和地址选择逻辑
+4. `mall-miniprogram/pages/order/confirm/index.wxml`：修复商品图片和数量显示问题 
