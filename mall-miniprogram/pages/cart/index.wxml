@@ -14,18 +14,18 @@
     
     <block wx:elif="{{cartList.length > 0}}">
       <view class="cart-list">
-        <view class="cart-item" wx:for="{{cartList}}" wx:key="id">
+        <view class="cart-item" wx:for="{{cartList}}" wx:key="id" wx:for-index="index">
           <view class="checkbox-wrapper" bindtap="onToggleItem" data-id="{{item.id}}" data-selected="{{item.selected}}">
             <van-checkbox value="{{item.selected}}" catch:tap="onToggleItem" data-id="{{item.id}}" data-selected="{{item.selected}}" class="checkbox" />
           </view>
           <view class="goods-info">
-            <image class="goods-image" src="{{item.goodsInfo.list_pic_url}}" mode="aspectFill"></image>
+            <image class="goods-image" src="{{item.goodsInfo.main_image || '/assets/images/placeholder.png'}}" mode="aspectFill" binderror="onImageError" data-index="{{index}}"></image>
             <view class="goods-detail">
               <view class="goods-name">{{item.goodsInfo.name}}</view>
               <view class="goods-spec" wx:if="{{item.goodsSpec}}">规格: {{item.goodsSpec}}</view>
-              <view class="goods-price">¥{{item.goodsInfo.retail_price}}</view>
+              <view class="goods-price">¥{{item.goodsInfo.price}}</view>
               <view class="goods-quantity">
-                <van-stepper value="{{item.count}}" min="1" max="{{item.goodsInfo.stock}}" bind:change="onChangeQuantity" data-id="{{item.id}}" />
+                <van-stepper value="{{item.count}}" min="1" max="{{item.goodsInfo.stock || 99}}" bind:change="onChangeQuantity" data-id="{{item.id}}" />
               </view>
             </view>
           </view>
@@ -65,5 +65,17 @@
   <view wx:else class="not-login">
     <van-empty description="请先登录" />
     <view class="login-btn" bindtap="goToLogin">去登录</view>
+  </view>
+  
+  <!-- 调试信息 -->
+  <view class="debug-info" wx:if="{{cartList.length > 0 && __debug__}}">
+    <view>购物车项数: {{cartList.length}}</view>
+    <view wx:if="{{cartList[0]}}">
+      <view>第一项ID: {{cartList[0].id}}</view>
+      <view>商品ID: {{cartList[0].goodsId}}</view>
+      <view>商品名称: {{cartList[0].goodsInfo.name}}</view>
+      <view>图片URL: {{cartList[0].goodsInfo.main_image}}</view>
+      <view>价格: {{cartList[0].goodsInfo.price}}</view>
+    </view>
   </view>
 </view>

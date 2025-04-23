@@ -146,6 +146,14 @@ Page({
     cartApi.getCartList()
       .then(res => {
         if (res.code === 200 && res.data) {
+          // 添加调试代码
+          console.log('购物车数据:', JSON.stringify(res.data));
+          if (res.data.cartList && res.data.cartList.length > 0) {
+            console.log('第一个商品信息:', JSON.stringify(res.data.cartList[0]));
+            console.log('商品图片URL:', res.data.cartList[0].goodsInfo?.main_image);
+            console.log('商品价格:', res.data.cartList[0].goodsInfo?.price);
+          }
+
           this.setData({
             cartList: res.data.cartList || [],
             totalPrice: res.data.totalPrice || 0,
@@ -154,6 +162,9 @@ Page({
             checkedTotalCount: res.data.checkedTotalCount || 0,
             checkedAll: res.data.cartList && res.data.cartList.length > 0 && !res.data.cartList.some(item => !item.selected)
           });
+
+          // 打印加载后的状态
+          console.log('购物车数据已加载, 数量:', this.data.cartList.length);
         } else {
           // 如果是未登录错误，更新登录状态并引导用户登录
           if (res.code === 401) {
@@ -171,6 +182,7 @@ Page({
         this.setData({ loadingStatus: false });
       })
       .finally(() => {
+        this.setData({ loadingStatus: false });
         wx.stopPullDownRefresh();
       });
   },
@@ -373,5 +385,22 @@ Page({
     wx.switchTab({
       url: '/pages/index/index'
     });
+  },
+
+  /**
+   * 图片加载错误
+   */
+  onImageError: function (e) {
+    console.log('图片加载失败:', e);
+    // 获取当前加载失败的商品索引
+    const index = e.currentTarget.dataset.index;
+    // 设置默认图片
+    let cartList = this.data.cartList;
+    if (cartList[index] && cartList[index].goodsInfo) {
+      cartList[index].goodsInfo.main_image = '/assets/images/placeholder.png';
+      this.setData({
+        cartList: cartList
+      });
+    }
   }
 })

@@ -186,3 +186,14 @@
   padding: 20rpx 60rpx;
   border-radius: 40rpx;
 }
+
+/* 调试信息样式 */
+.debug-info {
+  margin-top: 30rpx;
+  padding: 20rpx;
+  background-color: #f0f0f0;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: #333;
+  word-break: break-all;
+}
