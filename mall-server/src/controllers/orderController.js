@@ -403,7 +403,7 @@ const generateOrderNo = () => {
 
 /**
  * 创建订单
- * @route POST /api/order
+ * @route POST /api/order/create
  * @access Private
  */
 exports.createOrder = catchAsync(async (req, res) => {

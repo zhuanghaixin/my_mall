@@ -1744,3 +1744,27 @@ npm run dev
 
 ### 修改了哪些文件
 1. mall-server/src/routes/api/address.js
+
+## 2023年7月15日会话总结
+
+### 会话的主要目的
+为用户端订单相关的路由文件生成Swagger API文档
+
+### 完成的主要任务
+- 为`mall-server/src/routes/api/order.js`中的所有路由接口添加了Swagger文档
+- 定义了订单相关的数据模型（Order和OrderDetail）
+- 为每个接口详细描述了请求参数、响应数据和可能的错误状态
+
+### 关键决策和解决方案
+- 参照管理员端的订单路由Swagger文档格式，确保文档风格统一
+- 为每个接口添加了详细的请求参数说明和响应示例
+- 添加了完整的错误响应状态说明
+
+### 使用的技术栈
+- Node.js
+- Express.js
+- Swagger/OpenAPI
+- JavaScript
+
+### 修改了哪些文件
+- mall-server/src/routes/api/order.js

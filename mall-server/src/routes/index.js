@@ -13,6 +13,8 @@ const searchRoutes = require('./api/search');
 const userRoutes = require('./api/user');
 const cartRoutes = require('./api/cart');
 const addressRoutes = require('./api/address');
+const orderRoutes = require('./api/order');
+const payRoutes = require('./api/pay');
 
 const router = express.Router();
 
@@ -183,5 +185,11 @@ router.use('/cart', cartRoutes);
 
 // 注册地址管理相关路由
 router.use('/address', addressRoutes);
+
+// 注册订单相关路由
+router.use('/order', orderRoutes);
+
+// 注册支付相关路由
+router.use('/pay', payRoutes);
 
 module.exports = router; 
