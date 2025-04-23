@@ -1791,3 +1791,51 @@ npm run dev
 
 ### 修改了哪些文件
 - mall-server/src/controllers/orderController.js
+
+## 2023年7月17日会话总结
+
+### 会话的主要目的
+修复订单创建功能中出现的数值计算错误："Incorrect decimal value: 'NaN' for column 'total_amount' at row 1"
+
+### 完成的主要任务
+- 诊断并解决了订单金额计算出现NaN的问题
+- 修正了购物车数量和商品图片字段的不一致问题
+- 添加了详细的日志信息便于后续调试
+
+### 关键决策和解决方案
+- 发现问题1：金额计算过程中未对可能产生的NaN值进行处理
+  - 添加了数值解析和验证，确保所有金额都是有效数字
+- 发现问题2：购物车商品数量的字段名不一致，修正了字段名从`quantity`到`count`
+- 发现问题3：商品图片路径字段名不一致，修正了从`image`到`main_image`
+
+### 使用的技术栈
+- Node.js
+- Express.js
+- Sequelize ORM
+- JavaScript
+
+### 修改了哪些文件
+- mall-server/src/controllers/orderController.js
+
+## 2023年7月18日会话总结
+
+### 会话的主要目的
+修复订单商品创建时的字段错误：`Field 'price' doesn't have a default value`
+
+### 完成的主要任务
+- 修正了订单商品字段不一致的问题
+- 添加了对价格字段的有效性验证
+
+### 关键决策和解决方案
+- 发现问题：在创建订单商品记录时使用了错误的字段名`goods_price`，而数据库模型中使用的是`price`
+- 修改了字段名，保持与数据库模型一致
+- 添加了价格字段的数值处理，确保传入的永远是有效数值
+
+### 使用的技术栈
+- Node.js
+- Express.js
+- Sequelize ORM
+- JavaScript
+
+### 修改了哪些文件
+- mall-server/src/controllers/orderController.js

@@ -449,16 +449,36 @@ exports.createOrder = catchAsync(async (req, res) => {
             throw new ValidationError('购物车中没有选中的商品');
         }
 
+        // 记录购物车商品数据，便于调试
+        logger.debug(`用户(ID: ${userId})的购物车商品数据: ${JSON.stringify(cartItems.map(item => ({
+            id: item.id,
+            goods_id: item.goods_id,
+            count: item.count,
+            goods_name: item.goods?.name,
+            goods_price: item.goods?.price
+        })))}`);
+
         // 3. 计算订单总金额和运费
         let totalAmount = 0;
         const freightAmount = 10.00; // 运费，可以根据商品重量或其他规则计算
 
         for (const item of cartItems) {
-            totalAmount += item.goods.price * item.quantity;
+            // 确保price和quantity都是有效数字
+            const price = parseFloat(item.goods.price) || 0;
+            const quantity = parseInt(item.count) || 0;
+            totalAmount += price * quantity;
+            // 记录每个商品的金额计算
+            logger.debug(`商品(ID: ${item.goods_id})金额计算: 价格=${price}, 数量=${quantity}, 小计=${price * quantity}`);
         }
+
+        // 确保totalAmount是有效数字
+        totalAmount = isNaN(totalAmount) ? 0 : totalAmount;
 
         // 应付金额 = 商品总金额 + 运费
         const payAmount = totalAmount + freightAmount;
+
+        // 记录订单总金额
+        logger.debug(`订单总金额计算: 商品总额=${totalAmount}, 运费=${freightAmount}, 应付金额=${payAmount}`);
 
         // 4. 生成订单
         const orderNo = generateOrderNo();
@@ -479,13 +499,15 @@ exports.createOrder = catchAsync(async (req, res) => {
         // 5. 创建订单商品记录
         const orderGoods = [];
         for (const item of cartItems) {
+            // 确保price是有效数字
+            const price = parseFloat(item.goods.price) || 0;
             orderGoods.push({
                 order_id: order.id,
                 goods_id: item.goods_id,
                 goods_name: item.goods.name,
-                goods_image: item.goods.image,
-                goods_price: item.goods.price,
-                quantity: item.quantity
+                goods_image: item.goods.main_image,
+                price: price.toFixed(2),
+                quantity: item.count
             });
         }
 
