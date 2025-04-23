@@ -1713,3 +1713,34 @@ npm run dev
 3. mall-miniprogram/pages/address/edit/index.wxss
 4. mall-miniprogram/pages/address/list/index.js
 5. mall-miniprogram/pages/address/list/index.wxml
+
+## 完善地址API的Swagger文档
+
+### 会话日期和时间
+2023年6月23日 10:15
+
+### 会话的主要目的
+完善收货地址相关API的Swagger文档，提高API文档的可读性和完整性
+
+### 完成的主要任务
+1. 创建了完整的Address数据模型Schema定义
+2. 为所有收货地址相关接口添加了详细的请求体描述
+3. 完善了所有接口的响应结构说明
+4. 补充了错误响应的详细信息
+5. 添加了参数类型定义和数据格式验证规则
+
+### 关键决策和解决方案
+1. 使用Swagger组件复用Address模型定义，减少重复代码
+2. 为所有API添加了一致的响应格式规范
+3. 明确定义了所有接口的请求参数和类型
+4. 添加了详细的错误响应代码和描述
+5. 为手机号等特殊字段添加了格式验证模式
+
+### 使用的技术栈
+- Node.js
+- Express
+- Swagger/OpenAPI
+- JSDoc注释
+
+### 修改了哪些文件
+1. mall-server/src/routes/api/address.js

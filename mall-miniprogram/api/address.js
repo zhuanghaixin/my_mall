@@ -50,7 +50,8 @@ function deleteAddress(id) {
  * @returns {Promise} 返回设置结果
  */
 function setDefaultAddress(id) {
-    return request.put(api.AddressDefault, { id });
+    // return request.put(api.AddressDefault, { id });
+    return request.put(`${api.AddressDefault}/${id}`);
 }
 
 module.exports = {

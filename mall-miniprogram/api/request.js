@@ -68,54 +68,54 @@
 //     });
 // }
 
-// /**
-//  * GET请求
-//  * @param {string} url - 请求地址
-//  * @param {Object} data - 请求参数
-//  * @param {boolean} needToken - 是否需要携带token
-//  * @returns {Promise} 返回Promise对象
-//  */
-// function get(url, data = {}, needToken = true) {
-//     return request(url, data, 'GET', needToken);
-// }
+/**
+ * GET请求
+ * @param {string} url - 请求地址
+ * @param {Object} data - 请求参数
+ * @param {boolean} needToken - 是否需要携带token
+ * @returns {Promise} 返回Promise对象
+ */
+function get(url, data = {}, needToken = true) {
+    return request(url, data, 'GET', needToken);
+}
 
-// /**
-//  * POST请求
-//  * @param {string} url - 请求地址
-//  * @param {Object} data - 请求参数
-//  * @param {boolean} needToken - 是否需要携带token
-//  * @returns {Promise} 返回Promise对象
-//  */
-// function post(url, data = {}, needToken = true) {
-//     return request(url, data, 'POST', needToken);
-// }
+/**
+ * POST请求
+ * @param {string} url - 请求地址
+ * @param {Object} data - 请求参数
+ * @param {boolean} needToken - 是否需要携带token
+ * @returns {Promise} 返回Promise对象
+ */
+function post(url, data = {}, needToken = true) {
+    return request(url, data, 'POST', needToken);
+}
 
-// /**
-//  * PUT请求
-//  * @param {string} url - 请求地址
-//  * @param {Object} data - 请求参数
-//  * @param {boolean} needToken - 是否需要携带token
-//  * @returns {Promise} 返回Promise对象
-//  */
-// function put(url, data = {}, needToken = true) {
-//     return request(url, data, 'PUT', needToken);
-// }
+/**
+ * PUT请求
+ * @param {string} url - 请求地址
+ * @param {Object} data - 请求参数
+ * @param {boolean} needToken - 是否需要携带token
+ * @returns {Promise} 返回Promise对象
+ */
+function put(url, data = {}, needToken = true) {
+    return request(url, data, 'PUT', needToken);
+}
 
-// /**
-//  * DELETE请求
-//  * @param {string} url - 请求地址
-//  * @param {Object} data - 请求参数
-//  * @param {boolean} needToken - 是否需要携带token
-//  * @returns {Promise} 返回Promise对象
-//  */
-// function del(url, data = {}, needToken = true) {
-//     return request(url, data, 'DELETE', needToken);
-// }
+/**
+ * DELETE请求
+ * @param {string} url - 请求地址
+ * @param {Object} data - 请求参数
+ * @param {boolean} needToken - 是否需要携带token
+ * @returns {Promise} 返回Promise对象
+ */
+function del(url, data = {}, needToken = true) {
+    return request(url, data, 'DELETE', needToken);
+}
 
-// module.exports = {
-//     request,
-//     get,
-//     post,
-//     put,
-//     del
-// };
+module.exports = {
+    request,
+    get,
+    post,
+    put,
+    del
+};
