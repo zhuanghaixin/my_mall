@@ -1647,3 +1647,33 @@ npm run dev
 
 ### 修改的文件
 - mall-miniprogram/pages/user/index.js
+
+## 修复地址列表API接口
+
+### 主要目的
+修复小程序地址列表接口500错误问题
+
+### 完成的主要任务
+1. 诊断并定位了地址列表API返回500错误的原因
+2. 分析了错误信息："Cannot read properties of undefined (reading 'findAll')"
+3. 发现后端缺少地址(Address)模型文件的问题
+4. 创建了缺失的Address数据模型文件
+5. 在models/index.js中添加了Address模型的导入和导出
+6. 添加了Address与User之间的关联关系
+
+### 关键决策和解决方案
+- 基于错误日志分析，确认是缺少Address模型文件导致的问题
+- 创建了完整的Address模型定义，包含合理的字段和数据类型
+- 设置了适当的表名和时间戳配置
+- 为模型添加了必要的注释和字段说明
+- 在模型索引文件中添加了User和Address的一对多关联关系
+
+### 使用的技术栈
+- Node.js
+- Express
+- Sequelize ORM
+- MySQL
+
+### 修改的文件
+- 新建：`mall-server/src/models/address.js` - 创建地址数据模型
+- 修改：`mall-server/src/models/index.js` - 添加Address模型导入和导出，增加关联关系

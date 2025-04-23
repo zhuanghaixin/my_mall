@@ -13,6 +13,7 @@ const OrderGoods = require('./orderGoods');
 const SearchHot = require('./searchHot');
 const SearchHistory = require('./searchHistory');
 const Cart = require('./cart');
+const Address = require('./address');
 
 // 设置模型之间的关联关系
 // 分类与商品的一对多关系
@@ -43,6 +44,10 @@ Cart.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 Goods.hasMany(Cart, { foreignKey: 'goods_id', as: 'carts' });
 Cart.belongsTo(Goods, { foreignKey: 'goods_id', as: 'goods' });
 
+// 用户与收货地址的一对多关系
+User.hasMany(Address, { foreignKey: 'user_id', as: 'addresses' });
+Address.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 module.exports = {
     Admin,
     Goods,
@@ -53,5 +58,6 @@ module.exports = {
     OrderGoods,
     SearchHot,
     SearchHistory,
-    Cart
+    Cart,
+    Address
 }; 

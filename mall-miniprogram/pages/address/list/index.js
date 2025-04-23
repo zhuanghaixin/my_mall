@@ -48,6 +48,7 @@ Page({
 
         addressApi.getAddressList()
             .then(res => {
+                console.log('获取地址列表', res);
                 if (res.code === 200) {
                     this.setData({
                         addressList: res.data
