@@ -13,6 +13,14 @@ function getAddressList() {
 }
 
 /**
+ * 获取默认收货地址
+ * @returns {Promise} 返回默认地址
+ */
+function getDefaultAddress() {
+    return request.get(api.AddressDefault);
+}
+
+/**
  * 获取收货地址详情
  * @param {string} id 地址ID
  * @returns {Promise} 返回获取结果
@@ -59,5 +67,6 @@ module.exports = {
     getAddressDetail,
     saveAddress,
     deleteAddress,
-    setDefaultAddress
+    setDefaultAddress,
+    getDefaultAddress
 }; 

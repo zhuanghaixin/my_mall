@@ -1,0 +1,57 @@
+<navigation-bar title="支付结果" back="{{true}}" />
+
+<view class="result-container">
+  <!-- 成功状态 -->
+  <block wx:if="{{status === 'success'}}">
+    <view class="result-header success" animation="{{animationData}}">
+      <view class="icon-wrapper">
+        <van-icon name="checked" size="60rpx" color="#fff" />
+      </view>
+      <view class="result-title">支付成功</view>
+      <view class="result-desc">您的订单已支付成功，感谢您的购买！</view>
+    </view>
+    
+    <view class="order-info" wx:if="{{orderInfo.id}}">
+      <view class="info-item">
+        <text class="label">订单编号</text>
+        <text class="value">{{orderInfo.order_no || orderInfo.id}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">订单金额</text>
+        <text class="value">¥{{orderInfo.actual_price}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">支付方式</text>
+        <text class="value">{{orderInfo.pay_method || '微信支付'}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">支付时间</text>
+        <text class="value">{{orderInfo.pay_time || '刚刚'}}</text>
+      </view>
+    </view>
+  </block>
+  
+  <!-- 失败状态 -->
+  <block wx:else>
+    <view class="result-header fail">
+      <view class="icon-wrapper">
+        <van-icon name="close" size="60rpx" color="#fff" />
+      </view>
+      <view class="result-title">支付失败</view>
+      <view class="result-desc">订单支付遇到问题，请重新尝试支付</view>
+    </view>
+  </block>
+  
+  <!-- 操作按钮 -->
+  <view class="action-buttons">
+    <block wx:if="{{status === 'success'}}">
+      <button class="action-btn primary" bindtap="viewOrderDetail">查看订单详情</button>
+      <button class="action-btn" bindtap="continueShopping">继续购物</button>
+      <button class="action-btn" bindtap="backToHome">返回首页</button>
+    </block>
+    <block wx:else>
+      <button class="action-btn primary" bindtap="repay">重新支付</button>
+      <button class="action-btn" bindtap="backToHome">返回首页</button>
+    </block>
+  </view>
+</view> 
