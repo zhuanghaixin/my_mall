@@ -8,6 +8,10 @@ module.exports = {
 
     // 用户相关
     UserLogin: ApiBaseUrl + '/user/wxlogin', // 微信登录
+    // UserLogin: ApiBaseUrl + '/user/login', // 登录
+    // UserRegister: ApiBaseUrl + '/user/register', // 注册
+    // UserInfo: ApiBaseUrl + '/user/info', // 获取用户信息
+    // UserUpdate: ApiBaseUrl + '/user/update', // 更新用户信息
     PhoneLogin: ApiBaseUrl + '/user/phonelogin', // 手机号登录
     PhoneNumberLogin: ApiBaseUrl + '/user/phonenumberlogin', // 微信手机号登录
     SendSmsCode: ApiBaseUrl + '/user/sendsms', // 发送短信验证码
@@ -48,7 +52,8 @@ module.exports = {
     OrderCounts: ApiBaseUrl + '/order/counts', // 获取订单数量统计
 
     // 地址相关
-    AddressList: ApiBaseUrl + '/address/list', // 获取地址列表
+    AddressList: ApiBaseUrl + '/address/list', // 地址列表
+    AddressDetail: ApiBaseUrl + '/address', // 地址详情
     AddressAdd: ApiBaseUrl + '/address/add', // 添加地址
     AddressUpdate: ApiBaseUrl + '/address/update', // 更新地址
     AddressDelete: ApiBaseUrl + '/address/delete/:id', // 删除地址
@@ -71,5 +76,10 @@ module.exports = {
     // 浏览历史相关
     HistoryList: ApiBaseUrl + '/browse/history/list', // 获取浏览历史
     HistoryDelete: ApiBaseUrl + '/browse/history/delete/:id', // 删除单条浏览历史
-    HistoryClear: ApiBaseUrl + '/browse/history/clear' // 清空浏览历史
+    HistoryClear: ApiBaseUrl + '/browse/history/clear', // 清空浏览历史
+
+    // 支付相关
+    PayWxpay: ApiBaseUrl + '/pay/wxpay', // 获取微信支付参数
+    PayMock: ApiBaseUrl + '/pay/mockpay', // 模拟支付
+    PayStatus: ApiBaseUrl + '/pay/status', // 查询支付状态
 }; 

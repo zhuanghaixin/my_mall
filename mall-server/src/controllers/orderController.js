@@ -3,10 +3,11 @@
  * 包含订单的增删改查等功能
  */
 
-const { Order, OrderGoods, User, Goods } = require('../models');
+const { Order, OrderGoods, User, Goods, Cart, Address, sequelize } = require('../models');
 const logger = require('../utils/logger');
 const { Op, fn, col } = require('sequelize');
-const sequelize = require('../db'); // 直接导入sequelize实例
+const catchAsync = require('../utils/catchAsync');
+const { ValidationError, NotFoundError } = require('../utils/errorTypes');
 
 /**
  * 获取订单列表
@@ -381,4 +382,324 @@ exports.deleteOrder = async (req, res) => {
             error: error.message
         });
     }
-}; 
+};
+
+/**
+ * 生成订单号
+ * @returns {string} 生成的订单号
+ */
+const generateOrderNo = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+
+    return `${year}${month}${day}${hours}${minutes}${seconds}${random}`;
+};
+
+/**
+ * 创建订单
+ * @route POST /api/order
+ * @access Private
+ */
+exports.createOrder = catchAsync(async (req, res) => {
+    const userId = req.user.id;
+    const { address_id, remark } = req.body;
+
+    // 验证参数
+    if (!address_id) {
+        throw new ValidationError('收货地址不能为空');
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+        // 1. 获取收货地址
+        const address = await Address.findOne({
+            where: {
+                id: address_id,
+                user_id: userId
+            }
+        });
+
+        if (!address) {
+            await transaction.rollback();
+            throw new NotFoundError('收货地址不存在');
+        }
+
+        // 2. 获取用户购物车中已选中的商品
+        const cartItems = await Cart.findAll({
+            where: {
+                user_id: userId,
+                selected: 1
+            },
+            include: [{
+                model: Goods,
+                as: 'goods'
+            }]
+        });
+
+        if (cartItems.length === 0) {
+            await transaction.rollback();
+            throw new ValidationError('购物车中没有选中的商品');
+        }
+
+        // 3. 计算订单总金额和运费
+        let totalAmount = 0;
+        const freightAmount = 10.00; // 运费，可以根据商品重量或其他规则计算
+
+        for (const item of cartItems) {
+            totalAmount += item.goods.price * item.quantity;
+        }
+
+        // 应付金额 = 商品总金额 + 运费
+        const payAmount = totalAmount + freightAmount;
+
+        // 4. 生成订单
+        const orderNo = generateOrderNo();
+        const order = await Order.create({
+            order_no: orderNo,
+            user_id: userId,
+            total_amount: totalAmount.toFixed(2),
+            freight_amount: freightAmount.toFixed(2),
+            pay_amount: payAmount.toFixed(2),
+            pay_type: 1, // 微信支付
+            status: 0, // 待付款
+            address_id,
+            remark: remark || null,
+            create_time: new Date(),
+            update_time: new Date()
+        }, { transaction });
+
+        // 5. 创建订单商品记录
+        const orderGoods = [];
+        for (const item of cartItems) {
+            orderGoods.push({
+                order_id: order.id,
+                goods_id: item.goods_id,
+                goods_name: item.goods.name,
+                goods_image: item.goods.image,
+                goods_price: item.goods.price,
+                quantity: item.quantity
+            });
+        }
+
+        await OrderGoods.bulkCreate(orderGoods, { transaction });
+
+        // 6. 清空购物车中已选中的商品
+        await Cart.destroy({
+            where: {
+                user_id: userId,
+                selected: 1
+            },
+            transaction
+        });
+
+        await transaction.commit();
+
+        logger.info(`用户(ID: ${userId})创建订单成功，订单号: ${orderNo}`);
+
+        res.status(201).json({
+            code: 200,
+            message: '创建成功',
+            data: {
+                order_id: order.id,
+                order_no: orderNo
+            }
+        });
+    } catch (error) {
+        await transaction.rollback();
+        logger.error(`创建订单失败: ${error.message}`);
+        throw error;
+    }
+});
+
+/**
+ * 获取用户订单列表
+ * @route GET /api/order/list
+ * @access Private
+ */
+exports.getOrderList = catchAsync(async (req, res) => {
+    const userId = req.user.id;
+    const { status, page = 1, pageSize = 10 } = req.query;
+
+    // 构建查询条件
+    const whereCondition = { user_id: userId };
+    if (status !== undefined && status !== '') {
+        whereCondition.status = parseInt(status);
+    }
+
+    try {
+        // 查询订单总数
+        const total = await Order.count({ where: whereCondition });
+
+        // 查询订单列表
+        const orders = await Order.findAll({
+            where: whereCondition,
+            include: [{
+                model: OrderGoods,
+                as: 'order_goods'
+            }],
+            order: [['create_time', 'DESC']],
+            offset: (page - 1) * pageSize,
+            limit: parseInt(pageSize)
+        });
+
+        logger.info(`用户(ID: ${userId})获取订单列表成功，共${orders.length}条记录`);
+
+        res.status(200).json({
+            code: 200,
+            message: '获取成功',
+            data: {
+                total,
+                list: orders,
+                page: parseInt(page),
+                pageSize: parseInt(pageSize),
+                totalPages: Math.ceil(total / pageSize)
+            }
+        });
+    } catch (error) {
+        logger.error(`获取订单列表失败: ${error.message}`);
+        throw error;
+    }
+});
+
+/**
+ * 取消订单
+ * @route PUT /api/order/:id/cancel
+ * @access Private
+ */
+exports.cancelOrder = catchAsync(async (req, res) => {
+    const userId = req.user.id;
+    const orderId = req.params.id;
+
+    try {
+        // 查询订单
+        const order = await Order.findOne({
+            where: {
+                id: orderId,
+                user_id: userId
+            }
+        });
+
+        if (!order) {
+            throw new NotFoundError('订单不存在');
+        }
+
+        // 只有待付款状态的订单才能取消
+        if (order.status !== 0) {
+            throw new ValidationError('只有待付款状态的订单才能取消');
+        }
+
+        // 更新订单状态为已取消
+        await order.update({
+            status: 4, // 已取消
+            update_time: new Date()
+        });
+
+        logger.info(`用户(ID: ${userId})取消订单成功，订单ID: ${orderId}`);
+
+        res.status(200).json({
+            code: 200,
+            message: '取消成功',
+            data: null
+        });
+    } catch (error) {
+        logger.error(`取消订单失败: ${error.message}`);
+        throw error;
+    }
+});
+
+/**
+ * 确认收货
+ * @route PUT /api/order/:id/confirm
+ * @access Private
+ */
+exports.confirmOrder = catchAsync(async (req, res) => {
+    const userId = req.user.id;
+    const orderId = req.params.id;
+
+    try {
+        // 查询订单
+        const order = await Order.findOne({
+            where: {
+                id: orderId,
+                user_id: userId
+            }
+        });
+
+        if (!order) {
+            throw new NotFoundError('订单不存在');
+        }
+
+        // 只有待收货状态的订单才能确认收货
+        if (order.status !== 2) {
+            throw new ValidationError('只有待收货状态的订单才能确认收货');
+        }
+
+        // 更新订单状态为已完成
+        await order.update({
+            status: 3, // 已完成
+            receive_time: new Date(),
+            update_time: new Date()
+        });
+
+        logger.info(`用户(ID: ${userId})确认收货成功，订单ID: ${orderId}`);
+
+        res.status(200).json({
+            code: 200,
+            message: '确认收货成功',
+            data: null
+        });
+    } catch (error) {
+        logger.error(`确认收货失败: ${error.message}`);
+        throw error;
+    }
+});
+
+/**
+ * 删除订单
+ * @route DELETE /api/order/:id
+ * @access Private
+ */
+exports.deleteOrder = catchAsync(async (req, res) => {
+    const userId = req.user.id;
+    const orderId = req.params.id;
+
+    try {
+        // 查询订单
+        const order = await Order.findOne({
+            where: {
+                id: orderId,
+                user_id: userId
+            }
+        });
+
+        if (!order) {
+            throw new NotFoundError('订单不存在');
+        }
+
+        // 只有已完成或已取消状态的订单才能删除
+        if (order.status !== 3 && order.status !== 4) {
+            throw new ValidationError('只有已完成或已取消状态的订单才能删除');
+        }
+
+        // 删除订单及关联的订单商品（通过外键约束实现级联删除）
+        await order.destroy();
+
+        logger.info(`用户(ID: ${userId})删除订单成功，订单ID: ${orderId}`);
+
+        res.status(200).json({
+            code: 200,
+            message: '删除成功',
+            data: null
+        });
+    } catch (error) {
+        logger.error(`删除订单失败: ${error.message}`);
+        throw error;
+    }
+}); 
