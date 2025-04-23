@@ -1,5 +1,7 @@
 // pages/cart/index.js
 const app = getApp();
+const cartApi = require('../../api/cart');
+const util = require('../../utils/util');
 
 Page({
 
@@ -49,7 +51,6 @@ Page({
       if (!app.globalData.hasLogin) {
         app.globalData.token = token;
         app.globalData.hasLogin = true;
-        // 可以在这里添加验证token的逻辑
       }
       this.getCartList();
     }
@@ -109,50 +110,36 @@ Page({
   getCartList: function () {
     this.setData({ loadingStatus: true });
 
-    // 获取最新的token
-    const token = wx.getStorageSync('token') || app.globalData.token;
-
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/cart/list`,
-      method: 'GET',
-      header: {
-        Authorization: `Bearer ${token}`
-      },
-      success: (res) => {
-        if (res.data.success) {
+    cartApi.getCartList()
+      .then(res => {
+        if (res.code === 200 && res.data) {
           this.setData({
-            cartList: res.data.data.cartList || [],
-            totalPrice: res.data.data.totalPrice || 0,
-            totalCount: res.data.data.totalCount || 0,
-            checkedTotalPrice: res.data.data.checkedTotalPrice || 0,
-            checkedTotalCount: res.data.data.checkedTotalCount || 0,
-            checkedAll: res.data.data.cartList && res.data.data.cartList.length > 0 && !res.data.data.cartList.some(item => !item.selected)
+            cartList: res.data.cartList || [],
+            totalPrice: res.data.totalPrice || 0,
+            totalCount: res.data.totalCount || 0,
+            checkedTotalPrice: res.data.checkedTotalPrice || 0,
+            checkedTotalCount: res.data.checkedTotalCount || 0,
+            checkedAll: res.data.cartList && res.data.cartList.length > 0 && !res.data.cartList.some(item => !item.selected)
           });
         } else {
           // 如果是未登录错误，更新登录状态
-          if (res.data.code === 401) {
+          if (res.code === 401) {
             this.setData({ isLogin: false });
             app.globalData.hasLogin = false;
             wx.removeStorageSync('token');
           } else {
-            wx.showToast({
-              title: res.data.message || '获取购物车列表失败',
-              icon: 'none'
-            });
+            util.showToast(res.message || '获取购物车列表失败');
           }
         }
-      },
-      fail: (err) => {
-        wx.showToast({
-          title: '网络异常，请稍后再试',
-          icon: 'none'
-        });
-      },
-      complete: () => {
+      })
+      .catch(err => {
+        console.error('获取购物车列表失败:', err);
+        util.showToast('网络异常，请稍后再试');
+      })
+      .finally(() => {
         this.setData({ loadingStatus: false });
         wx.stopPullDownRefresh();
-      }
-    });
+      });
   },
 
   /**
@@ -160,33 +147,26 @@ Page({
    */
   onToggleItem: function (e) {
     const { id, selected } = e.currentTarget.dataset;
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/cart/update`,
-      method: 'POST',
-      header: {
-        Authorization: `Bearer ${app.globalData.token}`
-      },
-      data: {
-        id: id,
-        selected: !selected
-      },
-      success: (res) => {
-        if (res.data.success) {
-          this.setData({
-            cartList: res.data.data.cartList,
-            totalPrice: res.data.data.totalPrice,
-            totalCount: res.data.data.totalCount,
-            checkedTotalPrice: res.data.data.checkedTotalPrice,
-            checkedTotalCount: res.data.data.checkedTotalCount,
-            checkedAll: this.data.cartList.length > 0 && !this.data.cartList.some(item => !item.selected)
-          });
-        } else {
-          wx.showToast({
-            title: res.data.message || '操作失败',
-            icon: 'none'
-          });
-        }
+
+    cartApi.updateCart({
+      id: id,
+      selected: !selected
+    }).then(res => {
+      if (res.code === 200 && res.data) {
+        this.setData({
+          cartList: res.data.cartList || [],
+          totalPrice: res.data.totalPrice || 0,
+          totalCount: res.data.totalCount || 0,
+          checkedTotalPrice: res.data.checkedTotalPrice || 0,
+          checkedTotalCount: res.data.checkedTotalCount || 0,
+          checkedAll: res.data.cartList && res.data.cartList.length > 0 && !res.data.cartList.some(item => !item.selected)
+        });
+      } else {
+        util.showToast(res.message || '操作失败');
       }
+    }).catch(err => {
+      console.error('切换选中状态失败:', err);
+      util.showToast('网络异常，请稍后再试');
     });
   },
 
@@ -195,32 +175,25 @@ Page({
    */
   onToggleAll: function (e) {
     const isSelectAll = !this.data.checkedAll;
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/cart/check`,
-      method: 'POST',
-      header: {
-        Authorization: `Bearer ${app.globalData.token}`
-      },
-      data: {
-        isSelectAll: isSelectAll
-      },
-      success: (res) => {
-        if (res.data.success) {
-          this.setData({
-            cartList: res.data.data.cartList,
-            totalPrice: res.data.data.totalPrice,
-            totalCount: res.data.data.totalCount,
-            checkedTotalPrice: res.data.data.checkedTotalPrice,
-            checkedTotalCount: res.data.data.checkedTotalCount,
-            checkedAll: isSelectAll
-          });
-        } else {
-          wx.showToast({
-            title: res.data.message || '操作失败',
-            icon: 'none'
-          });
-        }
+
+    cartApi.checkCart({
+      isSelectAll: isSelectAll
+    }).then(res => {
+      if (res.code === 200 && res.data) {
+        this.setData({
+          cartList: res.data.cartList || [],
+          totalPrice: res.data.totalPrice || 0,
+          totalCount: res.data.totalCount || 0,
+          checkedTotalPrice: res.data.checkedTotalPrice || 0,
+          checkedTotalCount: res.data.checkedTotalCount || 0,
+          checkedAll: isSelectAll
+        });
+      } else {
+        util.showToast(res.message || '操作失败');
       }
+    }).catch(err => {
+      console.error('切换全选状态失败:', err);
+      util.showToast('网络异常，请稍后再试');
     });
   },
 
@@ -231,32 +204,24 @@ Page({
     const { id } = e.currentTarget.dataset;
     const quantity = e.detail;
 
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/cart/update`,
-      method: 'POST',
-      header: {
-        Authorization: `Bearer ${app.globalData.token}`
-      },
-      data: {
-        id: id,
-        count: quantity
-      },
-      success: (res) => {
-        if (res.data.success) {
-          this.setData({
-            cartList: res.data.data.cartList,
-            totalPrice: res.data.data.totalPrice,
-            totalCount: res.data.data.totalCount,
-            checkedTotalPrice: res.data.data.checkedTotalPrice,
-            checkedTotalCount: res.data.data.checkedTotalCount
-          });
-        } else {
-          wx.showToast({
-            title: res.data.message || '修改数量失败',
-            icon: 'none'
-          });
-        }
+    cartApi.updateCart({
+      id: id,
+      count: quantity
+    }).then(res => {
+      if (res.code === 200 && res.data) {
+        this.setData({
+          cartList: res.data.cartList || [],
+          totalPrice: res.data.totalPrice || 0,
+          totalCount: res.data.totalCount || 0,
+          checkedTotalPrice: res.data.checkedTotalPrice || 0,
+          checkedTotalCount: res.data.checkedTotalCount || 0
+        });
+      } else {
+        util.showToast(res.message || '修改数量失败');
       }
+    }).catch(err => {
+      console.error('修改商品数量失败:', err);
+      util.showToast('网络异常，请稍后再试');
     });
   },
 
@@ -271,36 +236,25 @@ Page({
       content: '确定要删除此商品吗？',
       success: (res) => {
         if (res.confirm) {
-          wx.request({
-            url: `${app.globalData.baseUrl}/api/cart/delete`,
-            method: 'POST',
-            header: {
-              Authorization: `Bearer ${app.globalData.token}`
-            },
-            data: {
-              ids: [id]
-            },
-            success: (res) => {
-              if (res.data.success) {
-                wx.showToast({
-                  title: '删除成功',
-                  icon: 'success'
-                });
-                this.setData({
-                  cartList: res.data.data.cartList,
-                  totalPrice: res.data.data.totalPrice,
-                  totalCount: res.data.data.totalCount,
-                  checkedTotalPrice: res.data.data.checkedTotalPrice,
-                  checkedTotalCount: res.data.data.checkedTotalCount,
-                  checkedAll: this.data.cartList.length > 0 && !this.data.cartList.some(item => !item.selected)
-                });
-              } else {
-                wx.showToast({
-                  title: res.data.message || '删除失败',
-                  icon: 'none'
-                });
-              }
+          cartApi.deleteCart({
+            ids: [id]
+          }).then(res => {
+            if (res.code === 200 && res.data) {
+              util.showToast('删除成功', 'success');
+              this.setData({
+                cartList: res.data.cartList || [],
+                totalPrice: res.data.totalPrice || 0,
+                totalCount: res.data.totalCount || 0,
+                checkedTotalPrice: res.data.checkedTotalPrice || 0,
+                checkedTotalCount: res.data.checkedTotalCount || 0,
+                checkedAll: res.data.cartList && res.data.cartList.length > 0 && !res.data.cartList.some(item => !item.selected)
+              });
+            } else {
+              util.showToast(res.message || '删除失败');
             }
+          }).catch(err => {
+            console.error('删除商品失败:', err);
+            util.showToast('网络异常，请稍后再试');
           });
         }
       }
@@ -323,10 +277,7 @@ Page({
     const selectedItems = this.data.cartList.filter(item => item.selected).map(item => item.id);
 
     if (selectedItems.length === 0) {
-      wx.showToast({
-        title: '请选择要删除的商品',
-        icon: 'none'
-      });
+      util.showToast('请选择要删除的商品');
       return;
     }
 
@@ -335,36 +286,25 @@ Page({
       content: '确定要删除选中商品吗？',
       success: (res) => {
         if (res.confirm) {
-          wx.request({
-            url: `${app.globalData.baseUrl}/api/cart/delete`,
-            method: 'POST',
-            header: {
-              Authorization: `Bearer ${app.globalData.token}`
-            },
-            data: {
-              ids: selectedItems
-            },
-            success: (res) => {
-              if (res.data.success) {
-                wx.showToast({
-                  title: '删除成功',
-                  icon: 'success'
-                });
-                this.setData({
-                  cartList: res.data.data.cartList,
-                  totalPrice: res.data.data.totalPrice,
-                  totalCount: res.data.data.totalCount,
-                  checkedTotalPrice: res.data.data.checkedTotalPrice,
-                  checkedTotalCount: res.data.data.checkedTotalCount,
-                  checkedAll: this.data.cartList.length > 0 && !this.data.cartList.some(item => !item.selected)
-                });
-              } else {
-                wx.showToast({
-                  title: res.data.message || '删除失败',
-                  icon: 'none'
-                });
-              }
+          cartApi.deleteCart({
+            ids: selectedItems
+          }).then(res => {
+            if (res.code === 200 && res.data) {
+              util.showToast('删除成功', 'success');
+              this.setData({
+                cartList: res.data.cartList || [],
+                totalPrice: res.data.totalPrice || 0,
+                totalCount: res.data.totalCount || 0,
+                checkedTotalPrice: res.data.checkedTotalPrice || 0,
+                checkedTotalCount: res.data.checkedTotalCount || 0,
+                checkedAll: res.data.cartList && res.data.cartList.length > 0 && !res.data.cartList.some(item => !item.selected)
+              });
+            } else {
+              util.showToast(res.message || '删除失败');
             }
+          }).catch(err => {
+            console.error('删除选中商品失败:', err);
+            util.showToast('网络异常，请稍后再试');
           });
         }
       }
@@ -376,10 +316,7 @@ Page({
    */
   onSubmit: function () {
     if (this.data.checkedTotalCount === 0) {
-      wx.showToast({
-        title: '请选择商品',
-        icon: 'none'
-      });
+      util.showToast('请选择商品');
       return;
     }
 

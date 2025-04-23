@@ -3,8 +3,6 @@
  */
 const api = require('../config/api.js');
 const request = require('../utils/request.js');
-const auth = require('../utils/auth.js');
-const util = require('../utils/util.js');
 
 /**
  * 获取购物车列表
@@ -17,12 +15,12 @@ function getCartList() {
  * 添加商品到购物车
  * @param {Object} data - 添加的商品信息
  */
-function addToCartAPI(data) {
+function addToCart(data) {
     return request.post(api.CartAdd, data);
 }
 
 /**
- * 更新购物车商品数量
+ * 更新购物车商品
  * @param {Object} data - 更新的商品信息
  */
 function updateCart(data) {
@@ -53,180 +51,27 @@ function checkCart(data) {
 }
 
 /**
- * 添加商品到购物车，自动处理登录状态
- * @param {Object} data - 添加的商品信息
- * @param {string} data.goodsId - 商品ID
- * @param {number} data.number - 商品数量
- * @param {Array} [data.productIds] - 商品规格ID列表（可选）
- * @returns {Promise} Promise对象
+ * 检查商品是否在购物车中
+ * @param {number} goodsId - 商品ID
  */
-function addToCart(data) {
-    return new Promise((resolve, reject) => {
-        // 严格检查是否已登录
-        if (!auth.isLoggedIn()) {
-            console.log('用户未登录，准备跳转登录页');
-
-            // 获取当前页面路径作为登录后的重定向目标
-            const currentPage = util.getCurrentPageUrl();
-            const currentPageWithArgs = util.getCurrentPageUrlWithArgs();
-            console.log('当前页面：', currentPage, '带参数：', currentPageWithArgs);
-
-            // 提示用户
-            wx.showModal({
-                title: '提示',
-                content: '请先登录后再添加商品到购物车',
-                confirmText: '去登录',
-                cancelText: '取消',
-                success: function (res) {
-                    if (res.confirm) {
-                        // 用户点击确定，强制跳转到登录页
-                        console.log('用户确认，跳转到登录页');
-                        wx.navigateTo({
-                            url: '/pages/user/login/index?redirect=' + encodeURIComponent(currentPageWithArgs),
-                            fail: (err) => {
-                                console.error('跳转登录页失败：', err);
-                                // 尝试使用auth工具跳转
-                                auth.navigateToLogin(currentPageWithArgs);
-                            }
-                        });
-                    } else {
-                        console.log('用户取消登录操作');
-                    }
-                }
-            });
-
-            // 返回未登录错误
-            reject(new Error('用户未登录'));
-            return;
-        }
-
-        console.log('用户已登录，准备添加商品到购物车', data);
-
-        // 已登录，调用添加购物车API
-        addToCartAPI(data)
-            .then(res => {
-                // 添加成功
-                if (res.code === 200) {
-                    // 显示成功提示
-                    util.showSuccessToast('添加成功');
-                    resolve(res);
-                } else {
-                    // 添加失败
-                    util.showErrorToast(res.msg || '添加失败');
-                    reject(new Error(res.msg || '添加失败'));
-                }
-            })
-            .catch(err => {
-                // 请求失败
-                util.showErrorToast('网络错误，请重试');
-                reject(err);
-            });
-    });
+function checkGoodsInCart(goodsId) {
+    return request.get(`${api.CartCheck}/${goodsId}`);
 }
 
 /**
- * 从购物车删除商品，自动处理登录状态
- * @param {Object} data - 删除的商品信息
- * @returns {Promise} Promise对象
+ * 获取购物车数量
  */
-function deleteFromCart(data) {
-    return new Promise((resolve, reject) => {
-        // 检查是否已登录
-        if (!auth.isLoggedIn()) {
-            // 获取当前页面作为重定向地址
-            const currentPage = util.getCurrentPageUrlWithArgs();
-
-            // 跳转到登录页
-            wx.showModal({
-                title: '提示',
-                content: '请先登录后再操作',
-                confirmText: '去登录',
-                cancelText: '取消',
-                success: function (res) {
-                    if (res.confirm) {
-                        auth.navigateToLogin(currentPage);
-                    }
-                }
-            });
-
-            // 返回未登录错误
-            reject(new Error('用户未登录'));
-            return;
-        }
-
-        // 已登录，调用删除购物车API
-        deleteCart(data)
-            .then(res => {
-                if (res.code === 200) {
-                    util.showToast('删除成功');
-                    resolve(res);
-                } else {
-                    util.showErrorToast(res.msg || '删除失败');
-                    reject(new Error(res.msg || '删除失败'));
-                }
-            })
-            .catch(err => {
-                util.showErrorToast('网络错误，请重试');
-                reject(err);
-            });
-    });
-}
-
-/**
- * 更新购物车商品数量，自动处理登录状态
- * @param {Object} data - 更新的商品信息
- * @returns {Promise} Promise对象
- */
-function updateCartItem(data) {
-    return new Promise((resolve, reject) => {
-        // 检查是否已登录
-        if (!auth.isLoggedIn()) {
-            // 获取当前页面作为重定向地址
-            const currentPage = util.getCurrentPageUrlWithArgs();
-
-            // 跳转到登录页
-            wx.showModal({
-                title: '提示',
-                content: '请先登录后再操作',
-                confirmText: '去登录',
-                cancelText: '取消',
-                success: function (res) {
-                    if (res.confirm) {
-                        auth.navigateToLogin(currentPage);
-                    }
-                }
-            });
-
-            // 返回未登录错误
-            reject(new Error('用户未登录'));
-            return;
-        }
-
-        // 已登录，调用更新购物车API
-        updateCart(data)
-            .then(res => {
-                if (res.code === 200) {
-                    resolve(res);
-                } else {
-                    util.showErrorToast(res.msg || '更新失败');
-                    reject(new Error(res.msg || '更新失败'));
-                }
-            })
-            .catch(err => {
-                util.showErrorToast('网络错误，请重试');
-                reject(err);
-            });
-    });
+function getCartCount() {
+    return request.get(api.CartCount);
 }
 
 module.exports = {
     getCartList,
     addToCart,
-    addToCartAPI,
     updateCart,
     deleteCart,
     clearCart,
     checkCart,
-    deleteFromCart,
-    updateCartItem
+    checkGoodsInCart,
+    getCartCount
 }; 
