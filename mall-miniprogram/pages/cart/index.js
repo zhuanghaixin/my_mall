@@ -190,7 +190,7 @@ Page({
             cartList: cartList,
             totalPrice: res.data.totalPrice || 0,
             totalCount: res.data.totalCount || 0,
-            checkedTotalPrice: res.data.checkedTotalPrice || 0,
+            checkedTotalPrice: parseFloat(res.data.checkedTotalPrice).toFixed(2) || 0,
             checkedTotalCount: res.data.checkedTotalCount || 0,
             checkedAll: cartList.length > 0 && !cartList.some(item => !item.selected),
             cartItemStates: cartItemStates,
@@ -268,7 +268,7 @@ Page({
           cartList: cartList,
           totalPrice: res.data.totalPrice || 0,
           totalCount: res.data.totalCount || 0,
-          checkedTotalPrice: res.data.checkedTotalPrice || 0,
+          checkedTotalPrice: parseFloat(res.data.checkedTotalPrice).toFixed(2) || 0,
           checkedTotalCount: res.data.checkedTotalCount || 0,
           checkedAll: cartList.length > 0 && !cartList.some(item => !item.selected),
           cartItemStates: cartItemStates
@@ -319,7 +319,7 @@ Page({
           cartList: cartList,
           totalPrice: res.data.totalPrice || 0,
           totalCount: res.data.totalCount || 0,
-          checkedTotalPrice: res.data.checkedTotalPrice || 0,
+          checkedTotalPrice: parseFloat(res.data.checkedTotalPrice).toFixed(2) || 0,
           checkedTotalCount: res.data.checkedTotalCount || 0,
           checkedAll: isSelectAll,
           cartItemStates: cartItemStates
@@ -395,7 +395,7 @@ Page({
           cartList: res.data.cartList || [],
           totalPrice: res.data.totalPrice || 0,
           totalCount: res.data.totalCount || 0,
-          checkedTotalPrice: res.data.checkedTotalPrice || 0,
+          checkedTotalPrice: parseFloat(res.data.checkedTotalPrice).toFixed(2) || 0,
           checkedTotalCount: res.data.checkedTotalCount || 0,
           cartItemStates: cartItemStates
         });
@@ -453,7 +453,7 @@ Page({
                 cartList: cartList,
                 totalPrice: res.data.totalPrice || 0,
                 totalCount: res.data.totalCount || 0,
-                checkedTotalPrice: res.data.checkedTotalPrice || 0,
+                checkedTotalPrice: parseFloat(res.data.checkedTotalPrice).toFixed(2) || 0,
                 checkedTotalCount: res.data.checkedTotalCount || 0,
                 checkedAll: cartList.length > 0 && !cartList.some(item => !item.selected),
                 invalidGoods: invalidGoods
@@ -517,7 +517,7 @@ Page({
                 cartList: cartList,
                 totalPrice: res.data.totalPrice || 0,
                 totalCount: res.data.totalCount || 0,
-                checkedTotalPrice: res.data.checkedTotalPrice || 0,
+                checkedTotalPrice: parseFloat(res.data.checkedTotalPrice).toFixed(2) || 0,
                 checkedTotalCount: res.data.checkedTotalCount || 0,
                 checkedAll: cartList.length > 0 && !cartList.some(item => !item.selected),
                 invalidGoods: invalidGoods
@@ -575,7 +575,7 @@ Page({
                 cartList: res.data.cartList || [],
                 totalPrice: res.data.totalPrice || 0,
                 totalCount: res.data.totalCount || 0,
-                checkedTotalPrice: res.data.checkedTotalPrice || 0,
+                checkedTotalPrice: pparseFloat(res.data.checkedTotalPrice).toFixed(2) || 0,
                 checkedTotalCount: res.data.checkedTotalCount || 0,
                 checkedAll: res.data.cartList && res.data.cartList.length > 0 && !res.data.cartList.some(item => !item.selected),
                 invalidGoods: []

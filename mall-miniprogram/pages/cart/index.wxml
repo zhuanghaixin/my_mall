@@ -113,7 +113,7 @@
     <block wx:if="{{!isEdit}}">
       <view class="total-info">
         <text>合计: </text>
-        <text class="price">¥{{checkedTotalPrice}}</text>
+        <text class="price">¥{{checkedTotalPrice ?  checkedTotalPrice : '0.00'}}</text>
       </view>
       <view class="checkout-btn {{isSubmitting ? 'disabled' : ''}}" bindtap="onSubmit">
         <view wx:if="{{isSubmitting}}">
