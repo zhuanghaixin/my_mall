@@ -552,11 +552,39 @@ exports.getOrderList = catchAsync(async (req, res) => {
 
     // 构建查询条件
     const whereCondition = { user_id: userId };
+
     if (status !== undefined && status !== '') {
-        whereCondition.status = parseInt(status);
+        // 处理特殊状态值
+        if (status === 'unreceived') {
+            // 未收货 = 待收货状态(2)
+            whereCondition.status = 2;
+        } else if (status === 'unpaid') {
+            // 未付款 = 待付款状态(0)
+            whereCondition.status = 0;
+        } else if (status === 'unshipped') {
+            // 未发货 = 待发货状态(1)
+            whereCondition.status = 1;
+        } else if (status === 'completed') {
+            // 已完成状态(3)
+            whereCondition.status = 3;
+        } else if (status === 'cancelled') {
+            // 已取消状态(4)
+            whereCondition.status = 4;
+        } else {
+            // 尝试将status转换为整数
+            const statusInt = parseInt(status);
+            if (!isNaN(statusInt)) {
+                whereCondition.status = statusInt;
+            } else {
+                logger.warn(`无效的订单状态参数: ${status}`);
+            }
+        }
     }
 
     try {
+        // 记录查询条件以便调试
+        logger.debug(`订单列表查询条件: ${JSON.stringify(whereCondition)}`);
+
         // 查询订单总数
         const total = await Order.count({ where: whereCondition });
 
