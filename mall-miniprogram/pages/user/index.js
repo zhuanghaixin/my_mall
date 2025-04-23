@@ -44,7 +44,20 @@ Page({
    */
   onShow() {
     this.checkLoginStatus();
-    if (app.globalData.token) {
+    // 添加一个来源页面判断，如果是从地址管理页面返回，则不再请求订单数量
+    const pages = getCurrentPages();
+    const currentPage = pages[pages.length - 1];
+    const prevPage = pages[pages.length - 2];
+
+    let needFetchOrderCounts = true;
+
+    if (prevPage && prevPage.route &&
+      (prevPage.route.includes('pages/address/list/index') ||
+        prevPage.route.includes('pages/address/edit/index'))) {
+      needFetchOrderCounts = false;
+    }
+
+    if (app.globalData.token && needFetchOrderCounts) {
       this.fetchOrderCounts();
     }
   },
