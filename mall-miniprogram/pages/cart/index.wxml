@@ -1,8 +1,10 @@
 <!--pages/cart/index.wxml-->
+<navigation-bar title="购物车" />
+
 <view class="container">
-  <view class="cart-header">
-    <view class="cart-title">购物车</view>
-    <view class="manage-btn" bindtap="toggleEditMode" wx:if="{{cartList.length > 0}}">
+  <!-- 管理按钮 -->
+  <view class="management-area" wx:if="{{cartList.length > 0}}">
+    <view class="manage-btn" bindtap="toggleEditMode">
       {{isEdit ? '完成' : '管理'}}
     </view>
   </view>
@@ -13,45 +15,64 @@
     </view>
     
     <block wx:elif="{{cartList.length > 0}}">
+      <!-- 失效商品提示 -->
+      <view class="invalid-tip" wx:if="{{invalidGoods.length > 0}}">
+        <text>部分商品已失效</text>
+        <text class="clear-invalid" bindtap="deleteInvalidGoods">清除失效商品</text>
+      </view>
+      
+      <!-- 下拉刷新提示 -->
+      <view class="refresh-tip" wx:if="{{refreshing}}">
+        <van-loading size="16px" type="spinner" />
+        <text>刷新中...</text>
+      </view>
+      
       <view class="cart-list">
-        <view class="cart-item" wx:for="{{cartList}}" wx:key="id" wx:for-index="index">
+        <view class="cart-item {{invalidGoods.includes(item.id) ? 'invalid-item' : ''}}" 
+              wx:for="{{cartList}}" 
+              wx:key="id" 
+              wx:for-index="index">
           <view class="checkbox-wrapper" bindtap="onToggleItem" data-id="{{item.id}}" data-selected="{{item.selected}}">
-            <van-checkbox value="{{item.selected}}" catch:tap="onToggleItem" data-id="{{item.id}}" data-selected="{{item.selected}}" class="checkbox" />
+            <van-checkbox value="{{item.selected}}" 
+                          catch:tap="onToggleItem" 
+                          data-id="{{item.id}}" 
+                          data-selected="{{item.selected}}" 
+                          class="checkbox"
+                          disabled="{{invalidGoods.includes(item.id)}}" />
           </view>
           <view class="goods-info">
-            <image class="goods-image" src="{{item.goodsInfo.main_image || '/assets/images/placeholder.png'}}" mode="aspectFill" binderror="onImageError" data-index="{{index}}"></image>
+            <view class="goods-image-container">
+              <image class="goods-image" 
+                     src="{{item.goodsInfo.main_image || '/assets/images/placeholder.png'}}" 
+                     mode="aspectFill" 
+                     binderror="onImageError" 
+                     data-index="{{index}}"></image>
+              <!-- 加载状态指示器 -->
+              <view class="item-loading" wx:if="{{cartItemStates[item.id] === 'loading'}}">
+                <van-loading size="20px" type="spinner" />
+              </view>
+              <!-- 失效标记 -->
+              <view class="invalid-mark" wx:if="{{invalidGoods.includes(item.id)}}">已失效</view>
+            </view>
             <view class="goods-detail">
               <view class="goods-name">{{item.goodsInfo.name}}</view>
               <view class="goods-spec" wx:if="{{item.goodsSpec}}">规格: {{item.goodsSpec}}</view>
               <view class="goods-price">¥{{item.goodsInfo.price}}</view>
+              <view class="goods-stock" wx:if="{{invalidGoods.includes(item.id) && item.goodsInfo.stock <= 0}}">库存不足</view>
               <view class="goods-quantity">
-                <van-stepper value="{{item.count}}" min="1" max="{{item.goodsInfo.stock || 99}}" bind:change="onChangeQuantity" data-id="{{item.id}}" />
+                <van-stepper value="{{item.count}}" 
+                            min="1" 
+                            max="{{item.goodsInfo.stock || 99}}" 
+                            bind:change="onChangeQuantity" 
+                            data-id="{{item.id}}"
+                            disabled="{{invalidGoods.includes(item.id) || cartItemStates[item.id] === 'loading'}}" />
+              </view>
+              <!-- 删除按钮，在编辑模式下显示 -->
+              <view class="delete-icon" wx:if="{{isEdit}}" bindtap="onDeleteItem" data-id="{{item.id}}">
+                <van-icon name="delete" />
               </view>
             </view>
           </view>
-        </view>
-      </view>
-      
-      <!-- 底部操作区 -->
-      <view class="cart-footer">
-        <view class="footer-left">
-          <van-checkbox value="{{checkedAll}}" bind:change="onToggleAll" class="checkbox">全选</van-checkbox>
-        </view>
-        <view class="footer-right">
-          <block wx:if="{{!isEdit}}">
-            <view class="total-info">
-              <text>合计: </text>
-              <text class="price">¥{{checkedTotalPrice}}</text>
-            </view>
-            <view class="checkout-btn" bindtap="onSubmit">
-              结算({{checkedTotalCount}})
-            </view>
-          </block>
-          <block wx:else>
-            <view class="delete-btn" bindtap="deleteSelected">
-              删除
-            </view>
-          </block>
         </view>
       </view>
     </block>
@@ -70,12 +91,41 @@
   <!-- 调试信息 -->
   <view class="debug-info" wx:if="{{cartList.length > 0 && __debug__}}">
     <view>购物车项数: {{cartList.length}}</view>
+    <view>失效商品数: {{invalidGoods.length}}</view>
     <view wx:if="{{cartList[0]}}">
       <view>第一项ID: {{cartList[0].id}}</view>
       <view>商品ID: {{cartList[0].goodsId}}</view>
       <view>商品名称: {{cartList[0].goodsInfo.name}}</view>
       <view>图片URL: {{cartList[0].goodsInfo.main_image}}</view>
       <view>价格: {{cartList[0].goodsInfo.price}}</view>
+      <view>库存: {{cartList[0].goodsInfo.stock}}</view>
+      <view>状态: {{cartItemStates[cartList[0].id]}}</view>
     </view>
+  </view>
+</view>
+
+<!-- 底部操作区 - 移到container外部 -->
+<view class="cart-footer" wx:if="{{isLogin && cartList.length > 0}}">
+  <view class="footer-left">
+    <van-checkbox value="{{checkedAll}}" bind:change="onToggleAll" class="checkbox">全选</van-checkbox>
+  </view>
+  <view class="footer-right">
+    <block wx:if="{{!isEdit}}">
+      <view class="total-info">
+        <text>合计: </text>
+        <text class="price">¥{{checkedTotalPrice}}</text>
+      </view>
+      <view class="checkout-btn {{isSubmitting ? 'disabled' : ''}}" bindtap="onSubmit">
+        <view wx:if="{{isSubmitting}}">
+          <van-loading size="16px" color="#fff" />
+        </view>
+        <text wx:else>结算({{checkedTotalCount}})</text>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="delete-btn" bindtap="deleteSelected">
+        删除
+      </view>
+    </block>
   </view>
 </view>

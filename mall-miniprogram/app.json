@@ -12,7 +12,7 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "商城小程序",
+    "navigationBarTitleText": "商城",
     "navigationBarTextStyle": "black",
     "navigationStyle": "custom"
   },
@@ -59,8 +59,18 @@
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
+  "useExtendedLib": {
+    "weui": true
+  },
+  "customNavigationBar": true,
+  "enablePullDownRefresh": true,
   "usingComponents": {
-    "navigation-bar": "/components/navigation-bar/index"
+    "navigation-bar": "/components/navigation-bar/index",
+    "van-loading": "@vant/weapp/loading/index",
+    "van-checkbox": "@vant/weapp/checkbox/index",
+    "van-stepper": "@vant/weapp/stepper/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-empty": "@vant/weapp/empty/index"
   },
   "permission": {
     "scope.userInfo": {

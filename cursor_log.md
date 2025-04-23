@@ -1517,3 +1517,38 @@ npm run dev
 - mall-miniprogram/pages/cart/index.json
 - mall-miniprogram/api/cart.js
 - mall-server/src/routes/api/cart.js
+
+## 修复购物车页面布局问题
+
+### 会话日期和时间
+2024年10月12日
+
+### 会话的主要目的
+解决商城小程序购物车页面的顶部和底部被挡住的问题，特别是底部结算栏被tabBar遮挡的问题。
+
+### 完成的主要任务
+1. 修复了购物车页面顶部导航栏布局
+2. 重新定位底部结算栏，使其固定在tabBar上方不被遮挡
+3. 调整了页面内容区域的内边距，避免内容被遮挡
+4. 解决了由于Skyline渲染器配置导致的页面布局问题
+
+### 关键决策和解决方案
+- 将结算栏从容器内部移至外部，使其完全独立于滚动区域
+- 将购物车底部结算栏的定位调整为`bottom: calc(100rpx + env(safe-area-inset-bottom))`
+- 增加了页面内容区的底部内边距(220rpx)，确保所有内容完全可见
+- 修复了JSON配置中的渲染器设置，确保所有页面正确使用Skyline渲染器
+- 使用小程序的安全区域适配变量，适配不同设备的显示效果
+
+### 使用的技术栈
+- 微信小程序
+- WXML (小程序页面结构)
+- WXSS (小程序样式)
+- Skyline渲染器
+- Vant UI组件库
+
+### 修改了哪些文件
+- mall-miniprogram/pages/index/index.json - 添加Skyline渲染器和自定义导航配置
+- mall-miniprogram/pages/cart/index.json - 更新Skyline渲染器配置
+- mall-miniprogram/pages/cart/index.wxml - 重构页面结构，将底部结算栏移出容器
+- mall-miniprogram/pages/cart/index.wxss - 调整样式，修改底部结算栏定位和容器内边距
+- mall-miniprogram/app.json - 更新全局导航配置
