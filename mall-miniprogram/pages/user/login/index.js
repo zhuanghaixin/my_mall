@@ -107,9 +107,9 @@ Page({
                             }
                         },
                         fail: (err) => {
-                            console.error('wx.login调用失败:', err);
+                            console.error('获取用户信息失败:', err);
                             this.setData({ loading: false });
-                            util.showErrorToast('登录失败');
+                            util.showErrorToast('获取用户信息失败');
                         }
                     });
                 },
@@ -198,32 +198,41 @@ Page({
             console.log('登录成功:', res);
 
             if (res.code === 200) {
-                // 保存token和用户信息
-                auth.setToken(res.data.token);
+                // 保存token到本地
+                wx.setStorageSync('token', res.data.token);
 
-                // 缓存用户信息
-                wx.setStorageSync('userInfo', res.data.userInfo);
-
-                // 更新全局用户信息
+                // 更新全局登录状态
                 const app = getApp();
-                app.globalData.userInfo = res.data.userInfo;
-                app.globalData.isLogin = true;
+                app.globalData.token = res.data.token;
+                app.globalData.hasLogin = true;
+                app.globalData.userInfo = userInfo;
 
-                // 显示登录成功提示
-                util.showToast('登录成功');
+                this.setData({ loading: false });
 
-                // 跳转到重定向页面或首页
-                setTimeout(() => {
-                    this.navigateBack();
-                }, 1500);
+                // 返回上一页或重定向
+                if (this.data.redirectUrl) {
+                    wx.redirectTo({
+                        url: this.data.redirectUrl
+                    });
+                } else {
+                    // 返回上一页或首页
+                    const pages = getCurrentPages();
+                    if (pages.length > 1) {
+                        wx.navigateBack();
+                    } else {
+                        wx.switchTab({
+                            url: '/pages/index/index'
+                        });
+                    }
+                }
             } else {
                 this.setData({ loading: false });
-                util.showErrorToast(res.msg || '登录失败');
+                util.showErrorToast(res.message || '登录失败');
             }
         }).catch(err => {
             console.error('登录请求失败:', err);
             this.setData({ loading: false });
-            util.showErrorToast('网络错误，请重试');
+            util.showErrorToast('网络异常，请稍后再试');
         });
     },
 

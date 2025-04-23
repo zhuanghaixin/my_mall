@@ -1,43 +1,69 @@
 <!--pages/cart/index.wxml-->
 <view class="container">
-  <navigation-bar title="购物车"></navigation-bar>
+  <view class="cart-header">
+    <view class="cart-title">购物车</view>
+    <view class="manage-btn" bindtap="toggleEditMode" wx:if="{{cartList.length > 0}}">
+      {{isEdit ? '完成' : '管理'}}
+    </view>
+  </view>
   
-  <block wx:if="{{cartList.length > 0}}">
-    <view class="cart-list">
-      <van-swipe-cell
-        wx:for="{{cartList}}"
-        wx:key="id"
-        right-width="{{ 65 }}"
-      >
-        <van-card
-          num="{{item.quantity}}"
-          price="{{item.price}}"
-          title="{{item.title}}"
-          thumb="{{item.image}}"
-        >
-          <view slot="footer">
-            <van-stepper value="{{ item.quantity }}" bind:change="onChangeQuantity" data-id="{{item.id}}" min="1" />
-          </view>
-        </van-card>
-        <view slot="right" class="delete-btn" bindtap="onDeleteItem" data-id="{{item.id}}">删除</view>
-      </van-swipe-cell>
+  <block wx:if="{{isLogin}}">
+    <view wx:if="{{loadingStatus}}" class="loading">
+      <van-loading type="spinner" size="24px" />
     </view>
     
-    <van-submit-bar
-      price="{{ totalPrice * 100 }}"
-      button-text="结算"
-      bind:submit="onSubmit"
-      tip="{{ true }}"
-    >
-      <van-checkbox value="{{ checkedAll }}" bind:change="onToggleAll" custom-class="select-all">全选</van-checkbox>
-      <view slot="tip">
-        共计 {{totalItems}} 件商品
+    <block wx:elif="{{cartList.length > 0}}">
+      <view class="cart-list">
+        <view class="cart-item" wx:for="{{cartList}}" wx:key="id">
+          <view class="checkbox-wrapper" bindtap="onToggleItem" data-id="{{item.id}}" data-selected="{{item.selected}}">
+            <van-checkbox value="{{item.selected}}" catch:tap="onToggleItem" data-id="{{item.id}}" data-selected="{{item.selected}}" class="checkbox" />
+          </view>
+          <view class="goods-info">
+            <image class="goods-image" src="{{item.goodsInfo.list_pic_url}}" mode="aspectFill"></image>
+            <view class="goods-detail">
+              <view class="goods-name">{{item.goodsInfo.name}}</view>
+              <view class="goods-spec" wx:if="{{item.goodsSpec}}">规格: {{item.goodsSpec}}</view>
+              <view class="goods-price">¥{{item.goodsInfo.retail_price}}</view>
+              <view class="goods-quantity">
+                <van-stepper value="{{item.count}}" min="1" max="{{item.goodsInfo.stock}}" bind:change="onChangeQuantity" data-id="{{item.id}}" />
+              </view>
+            </view>
+          </view>
+        </view>
       </view>
-    </van-submit-bar>
+      
+      <!-- 底部操作区 -->
+      <view class="cart-footer">
+        <view class="footer-left">
+          <van-checkbox value="{{checkedAll}}" bind:change="onToggleAll" class="checkbox">全选</van-checkbox>
+        </view>
+        <view class="footer-right">
+          <block wx:if="{{!isEdit}}">
+            <view class="total-info">
+              <text>合计: </text>
+              <text class="price">¥{{checkedTotalPrice}}</text>
+            </view>
+            <view class="checkout-btn" bindtap="onSubmit">
+              结算({{checkedTotalCount}})
+            </view>
+          </block>
+          <block wx:else>
+            <view class="delete-btn" bindtap="deleteSelected">
+              删除
+            </view>
+          </block>
+        </view>
+      </view>
+    </block>
+    
+    <view wx:else class="empty-cart">
+      <van-empty description="购物车是空的" />
+      <view class="start-shopping" bindtap="goShopping">去购物</view>
+    </view>
   </block>
   
-  <view wx:else class="empty-cart">
-    <van-empty description="购物车是空的" />
-    <van-button type="danger" custom-class="start-shopping" bind:click="goShopping">去购物</van-button>
+  <view wx:else class="not-login">
+    <van-empty description="请先登录" />
+    <view class="login-btn" bindtap="goToLogin">去登录</view>
   </view>
 </view>

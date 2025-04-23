@@ -3,7 +3,7 @@
  */
 
 // Token在Storage中的key
-const TOKEN_KEY = 'userToken';
+const TOKEN_KEY = 'token';
 
 /**
  * 设置登录Token
