@@ -66,9 +66,17 @@ Page({
     const token = wx.getStorageSync('token');
 
     if (token) {
-      this.setData({
-        isLogin: true
-      });
+      // 先从本地缓存中获取用户信息，避免每次都请求接口
+      const cachedUserInfo = wx.getStorageSync('userInfo');
+
+      if (cachedUserInfo) {
+        this.setData({
+          isLogin: true,
+          userInfo: cachedUserInfo
+        });
+      }
+
+      // 然后再请求最新的用户信息
       this.getUserInfo();
       this.getOrderCount();
     } else {
@@ -90,6 +98,9 @@ Page({
     userApi.getUserInfo()
       .then(res => {
         if (res.code === 200 && res.data) {
+          // 保存到本地存储
+          wx.setStorageSync('userInfo', res.data);
+
           this.setData({
             userInfo: res.data
           });
@@ -100,6 +111,7 @@ Page({
         // 如果获取用户信息失败，可能是token过期
         if (err.statusCode === 401) {
           wx.removeStorageSync('token');
+          wx.removeStorageSync('userInfo');
           this.setData({
             isLogin: false,
             userInfo: null
@@ -213,6 +225,14 @@ Page({
           // 清除本地存储的token和用户信息
           wx.removeStorageSync('token');
           wx.removeStorageSync('userInfo');
+
+          // 更新全局状态
+          const app = getApp();
+          if (app.globalData) {
+            app.globalData.userInfo = null;
+            app.globalData.isLogin = false;
+            app.globalData.token = '';
+          }
 
           // 更新页面状态
           this.setData({

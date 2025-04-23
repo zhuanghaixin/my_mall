@@ -36,27 +36,27 @@
       <view class="order-icon-item" bindtap="goOrderList" data-type="unpaid">
         <view class="icon-wrapper">
           <text class="badge" wx:if="{{orderCount.unpaid > 0}}">{{orderCount.unpaid}}</text>
-          <image src="/assets/icons/order-unpaid.png" mode="aspectFit"></image>
+          <view class="custom-icon order-unpaid"></view>
         </view>
         <text>待付款</text>
       </view>
       <view class="order-icon-item" bindtap="goOrderList" data-type="unshipped">
         <view class="icon-wrapper">
           <text class="badge" wx:if="{{orderCount.unshipped > 0}}">{{orderCount.unshipped}}</text>
-          <image src="/assets/icons/order-unshipped.png" mode="aspectFit"></image>
+          <view class="custom-icon order-unshipped"></view>
         </view>
         <text>待发货</text>
       </view>
       <view class="order-icon-item" bindtap="goOrderList" data-type="unreceived">
         <view class="icon-wrapper">
           <text class="badge" wx:if="{{orderCount.unreceived > 0}}">{{orderCount.unreceived}}</text>
-          <image src="/assets/icons/order-unreceived.png" mode="aspectFit"></image>
+          <view class="custom-icon order-unreceived"></view>
         </view>
         <text>待收货</text>
       </view>
       <view class="order-icon-item" bindtap="goOrderList" data-type="completed">
         <view class="icon-wrapper">
-          <image src="/assets/icons/order-completed.png" mode="aspectFit"></image>
+          <view class="custom-icon order-completed"></view>
         </view>
         <text>已完成</text>
       </view>
@@ -70,19 +70,19 @@
     </view>
     <view class="tools-grid">
       <view class="tool-item" bindtap="goAddressList">
-        <image src="/assets/icons/address.png" mode="aspectFit"></image>
+        <view class="custom-icon tool-address"></view>
         <text>收货地址</text>
       </view>
       <view class="tool-item" bindtap="goFavorites">
-        <image src="/assets/icons/favorite.png" mode="aspectFit"></image>
+        <view class="custom-icon tool-favorite"></view>
         <text>我的收藏</text>
       </view>
       <view class="tool-item" bindtap="goSettings">
-        <image src="/assets/icons/settings.png" mode="aspectFit"></image>
+        <view class="custom-icon tool-setting"></view>
         <text>设置</text>
       </view>
       <view class="tool-item" bindtap="contactService">
-        <image src="/assets/icons/service.png" mode="aspectFit"></image>
+        <view class="custom-icon tool-service"></view>
         <text>联系客服</text>
       </view>
     </view>

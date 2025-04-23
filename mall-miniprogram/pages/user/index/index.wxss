@@ -124,6 +124,9 @@
   width: 80rpx;
   height: 80rpx;
   margin-bottom: 16rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .icon-wrapper image {
@@ -144,6 +147,55 @@
   text-align: center;
   border-radius: 18rpx;
   padding: 0 6rpx;
+  z-index: 1;
+}
+
+/* 自定义图标 */
+.custom-icon {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36rpx;
+  color: #ff4444;
+  position: relative;
+}
+
+/* 订单图标样式 */
+.order-unpaid::before {
+  content: "￥";
+  font-weight: bold;
+}
+
+.order-unshipped::before {
+  content: "📦";
+}
+
+.order-unreceived::before {
+  content: "🚚";
+}
+
+.order-completed::before {
+  content: "✓";
+  font-weight: bold;
+}
+
+/* 工具图标样式 */
+.tool-address::before {
+  content: "📍";
+}
+
+.tool-favorite::before {
+  content: "❤️";
+}
+
+.tool-setting::before {
+  content: "⚙️";
+}
+
+.tool-service::before {
+  content: "💬";
 }
 
 /* 工具栏 */
@@ -161,9 +213,7 @@
   padding: 20rpx 0;
 }
 
-.tool-item image {
-  width: 60rpx;
-  height: 60rpx;
+.tool-item .custom-icon {
   margin-bottom: 16rpx;
 }
 
