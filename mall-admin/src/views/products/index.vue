@@ -6,10 +6,12 @@
           <el-input v-model="queryParams.keyword" placeholder="请输入商品名称" clearable />
         </el-form-item>
         <el-form-item label="商品分类">
-          <el-select v-model="queryParams.parent_category_id" placeholder="请选择大类" clearable style="width: 140px;" @change="handleParentCategoryChange">
+          <el-select v-model="queryParams.parent_category_id" placeholder="请选择大类" clearable style="width: 140px;"
+            @change="handleParentCategoryChange">
             <el-option v-for="item in parentCategoryOptions" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
-          <el-select v-model="queryParams.category_id" placeholder="请选择小类" clearable style="width: 140px;" :disabled="!queryParams.parent_category_id">
+          <el-select v-model="queryParams.category_id" placeholder="请选择小类" clearable style="width: 140px;"
+            :disabled="!queryParams.parent_category_id">
             <el-option v-for="item in subCategoryOptions" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
@@ -290,9 +292,9 @@ const handleParentCategoryChange = async (parentId: number | undefined) => {
   // 重置子分类选择和列表
   queryParams.category_id = undefined
   subCategoryOptions.value = []
-  
+
   if (!parentId) return
-  
+
   try {
     const res = await getSubCategories(parentId)
     if (res.success && res.data) {
@@ -318,10 +320,10 @@ const resetQuery = () => {
   queryParams.status = undefined
   queryParams.is_recommend = undefined
   queryParams.page = 1
-  
+
   // 清空子分类列表
   subCategoryOptions.value = []
-  
+
   // 重新获取数据
   fetchProductList()
 }
