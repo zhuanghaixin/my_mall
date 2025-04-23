@@ -202,6 +202,39 @@ Page({
   },
 
   /**
+   * 处理退出登录
+   */
+  handleLogout() {
+    wx.showModal({
+      title: '提示',
+      content: '确定要退出登录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          // 清除本地存储的token和用户信息
+          wx.removeStorageSync('token');
+          wx.removeStorageSync('userInfo');
+
+          // 更新页面状态
+          this.setData({
+            isLogin: false,
+            userInfo: null,
+            orderCount: {
+              unpaid: 0,
+              unshipped: 0,
+              unreceived: 0
+            }
+          });
+
+          wx.showToast({
+            title: '已退出登录',
+            icon: 'success'
+          });
+        }
+      }
+    });
+  },
+
+  /**
    * 页面相关事件处理函数--监听用户下拉动作
    */
   onPullDownRefresh() {
