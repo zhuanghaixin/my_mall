@@ -117,4 +117,27 @@
 1. `mall-server/src/controllers/cartController.js`：添加获取已选中商品的接口实现
 2. `mall-server/src/routes/api/cart.js`：添加新接口的路由
 3. `mall-miniprogram/pages/order/confirm/index.js`：优化数据处理和地址选择逻辑
-4. `mall-miniprogram/pages/order/confirm/index.wxml`：修复商品图片和数量显示问题 
+4. `mall-miniprogram/pages/order/confirm/index.wxml`：修复商品图片和数量显示问题
+
+## 2024年5月10日 - 补充
+
+### 会话的主要目的
+修复确认订单页面当商品数量较多时无法滚动的问题。
+
+### 完成的主要任务
+1. 修改订单确认页面的布局结构，使商品列表区域支持滚动
+2. 优化商品列表区域的样式，限制其最大高度并设置滚动模式
+3. 调整容器的样式设置，确保整体页面可滚动
+
+### 关键决策和解决方案
+1. 将普通`view`组件替换为`scroll-view`组件，并设置`scroll-y`属性为`true`
+2. 设置商品列表的`max-height`和`overflow-y: auto`属性，确保内容过多时可滚动
+3. 调整图片样式，防止在滚动区域内被压缩
+
+### 使用的技术栈
+- 微信小程序
+- WXML/WXSS
+
+### 修改了哪些文件
+1. `mall-miniprogram/pages/order/confirm/index.wxml`：添加滚动视图组件
+2. `mall-miniprogram/pages/order/confirm/index.wxss`：调整滚动和布局相关样式 

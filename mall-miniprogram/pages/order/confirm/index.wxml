@@ -19,7 +19,7 @@
   <!-- 订单商品 -->
   <view class="order-goods">
     <view class="section-title">商品信息</view>
-    <view class="goods-list">
+    <scroll-view scroll-y="true" class="goods-list">
       <view class="goods-item" wx:for="{{cartList}}" wx:key="id">
         <image class="goods-image" src="{{item.goods.image || item.goods.main_image}}" mode="aspectFill"></image>
         <view class="goods-info">
@@ -30,7 +30,7 @@
           </view>
         </view>
       </view>
-    </view>
+    </scroll-view>
   </view>
 
   <!-- 订单备注 -->
