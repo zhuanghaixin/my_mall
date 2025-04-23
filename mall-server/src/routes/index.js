@@ -12,6 +12,7 @@ const goodsRoutes = require('./api/goods');
 const searchRoutes = require('./api/search');
 const userRoutes = require('./api/user');
 const cartRoutes = require('./api/cart');
+const addressRoutes = require('./api/address');
 
 const router = express.Router();
 
@@ -179,5 +180,8 @@ router.use('/search', searchRoutes);
 
 // 注册购物车相关路由
 router.use('/cart', cartRoutes);
+
+// 注册地址管理相关路由
+router.use('/address', addressRoutes);
 
 module.exports = router; 

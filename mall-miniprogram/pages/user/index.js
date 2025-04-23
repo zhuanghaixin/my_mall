@@ -1,20 +1,35 @@
 // pages/user/index.js
+// 引入用户API服务
+const userApi = require('../../api/user');
+const orderApi = require('../../api/order');
+const app = getApp();
+
 Page({
 
   /**
    * 页面的初始数据
    */
   data: {
-    isLogin: false,
-    userInfo: null
+    userInfo: {},
+    hasUserInfo: false,
+    canIUseGetUserProfile: false,
+    orderCounts: {
+      unpaid: 0,
+      unshipped: 0,
+      delivered: 0,
+      completed: 0
+    }
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
-    // 检查是否已登录
-    this.checkLogin();
+    if (wx.getUserProfile) {
+      this.setData({
+        canIUseGetUserProfile: true
+      });
+    }
   },
 
   /**
@@ -28,8 +43,10 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
-    // 每次显示页面时更新登录状态
-    this.checkLogin();
+    this.checkLoginStatus();
+    if (app.globalData.token) {
+      this.fetchOrderCounts();
+    }
   },
 
   /**
@@ -67,34 +84,143 @@ Page({
 
   },
 
-  checkLogin: function () {
-    const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo) {
-      this.setData({
-        isLogin: true,
-        userInfo: JSON.parse(userInfo)
-      });
+  // 检查登录状态
+  checkLoginStatus() {
+    const token = wx.getStorageSync('token');
+    if (token) {
+      app.globalData.token = token;
+      this.fetchUserInfo();
     } else {
       this.setData({
-        isLogin: false,
-        userInfo: null
+        userInfo: {},
+        hasUserInfo: false
       });
     }
   },
 
-  onLogin: function () {
-    // 模拟用户登录
+  // 获取用户信息
+  fetchUserInfo() {
+    wx.showLoading({
+      title: '加载中',
+    });
+
+    userApi.getUserInfo()
+      .then(res => {
+        if (res.code === 200) {
+          this.setData({
+            userInfo: res.data,
+            hasUserInfo: true
+          });
+          app.globalData.userInfo = res.data;
+        } else {
+          wx.showToast({
+            title: res.message || '获取用户信息失败',
+            icon: 'none'
+          });
+        }
+      })
+      .catch(err => {
+        console.error('获取用户信息失败', err);
+        // 可能是token失效
+        this.handleLogout();
+      })
+      .finally(() => {
+        wx.hideLoading();
+      });
+  },
+
+  // 获取订单数量统计
+  fetchOrderCounts() {
+    orderApi.getOrderCounts()
+      .then(res => {
+        if (res.code === 200) {
+          this.setData({
+            orderCounts: {
+              unpaid: res.data.unpaid || 0,
+              unshipped: res.data.unshipped || 0,
+              delivered: res.data.delivered || 0,
+              completed: res.data.completed || 0
+            }
+          });
+        }
+      })
+      .catch(err => {
+        console.error('获取订单统计失败', err);
+      });
+  },
+
+  // 去登录页
+  goLogin() {
     wx.navigateTo({
-      url: '/pages/login/index'
+      url: '/pages/user/login/index'
     });
   },
 
-  // 模拟登录后回调
-  loginCallback: function (userInfo) {
+  // 登出处理
+  handleLogout() {
+    wx.removeStorageSync('token');
+    app.globalData.token = '';
+    app.globalData.userInfo = null;
     this.setData({
-      isLogin: true,
-      userInfo
+      userInfo: {},
+      hasUserInfo: false
     });
-    wx.setStorageSync('userInfo', JSON.stringify(userInfo));
+  },
+
+  // 我的订单列表
+  goOrderList(e) {
+    const type = e.currentTarget.dataset.type;
+    wx.navigateTo({
+      url: `/pages/order/list/index?status=${type}`
+    });
+  },
+
+  // 查看全部订单
+  goAllOrders() {
+    wx.navigateTo({
+      url: '/pages/order/list/index'
+    });
+  },
+
+  // 收货地址管理
+  goAddress() {
+    wx.navigateTo({
+      url: '/pages/address/list/index'
+    });
+  },
+
+  // 优惠券
+  goCoupon() {
+    wx.navigateTo({
+      url: '/pages/coupon/index'
+    });
+  },
+
+  // 设置
+  goSetting() {
+    wx.navigateTo({
+      url: '/pages/user/setting/index'
+    });
+  },
+
+  // 收藏夹
+  goFavorite() {
+    wx.navigateTo({
+      url: '/pages/user/favorite/index'
+    });
+  },
+
+  // 浏览历史
+  goHistory() {
+    wx.navigateTo({
+      url: '/pages/user/history/index'
+    });
+  },
+
+  // 关于我们
+  goAbout() {
+    wx.navigateTo({
+      url: '/pages/about/index'
+    });
   }
 })

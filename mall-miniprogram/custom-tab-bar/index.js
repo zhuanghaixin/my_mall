@@ -18,7 +18,7 @@ Component({
                 iconName: "cart-o"
             },
             {
-                pagePath: "/pages/user/index",
+                pagePath: "/pages/user/index/index",
                 text: "我的",
                 iconName: "user-o"
             }

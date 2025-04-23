@@ -1,2 +1,90 @@
 <!--pages/user/index/index.wxml-->
-<text>pages/user/index/index.wxml</text>
+<view class="container">
+  <!-- 顶部导航栏 -->
+  <view class="header">
+    <view class="title">我的</view>
+  </view>
+
+  <!-- 用户信息区域 -->
+  <view class="user-info" bindtap="goLogin" wx:if="{{!userInfo}}">
+    <view class="avatar-box">
+      <image class="avatar" src="/assets/images/default-avatar.png" mode="aspectFill"></image>
+    </view>
+    <view class="login-tip">点击登录</view>
+  </view>
+
+  <view class="user-info" wx:else>
+    <view class="avatar-box">
+      <image class="avatar" src="{{userInfo.avatar || '/assets/images/default-avatar.png'}}" mode="aspectFill"></image>
+    </view>
+    <view class="user-detail">
+      <view class="nickname">{{userInfo.nickname || '微信用户'}}</view>
+      <view class="phone" wx:if="{{userInfo.phone}}">{{userInfo.phone}}</view>
+    </view>
+  </view>
+
+  <!-- 我的订单 -->
+  <view class="card order-card">
+    <view class="card-header">
+      <view class="card-title">我的订单</view>
+      <view class="card-more" bindtap="goOrderList" data-type="all">
+        <text>查看全部</text>
+        <view class="arrow"></view>
+      </view>
+    </view>
+    <view class="order-icons">
+      <view class="order-icon-item" bindtap="goOrderList" data-type="unpaid">
+        <view class="icon-wrapper">
+          <text class="badge" wx:if="{{orderCount.unpaid > 0}}">{{orderCount.unpaid}}</text>
+          <image src="/assets/icons/order-unpaid.png" mode="aspectFit"></image>
+        </view>
+        <text>待付款</text>
+      </view>
+      <view class="order-icon-item" bindtap="goOrderList" data-type="unshipped">
+        <view class="icon-wrapper">
+          <text class="badge" wx:if="{{orderCount.unshipped > 0}}">{{orderCount.unshipped}}</text>
+          <image src="/assets/icons/order-unshipped.png" mode="aspectFit"></image>
+        </view>
+        <text>待发货</text>
+      </view>
+      <view class="order-icon-item" bindtap="goOrderList" data-type="unreceived">
+        <view class="icon-wrapper">
+          <text class="badge" wx:if="{{orderCount.unreceived > 0}}">{{orderCount.unreceived}}</text>
+          <image src="/assets/icons/order-unreceived.png" mode="aspectFit"></image>
+        </view>
+        <text>待收货</text>
+      </view>
+      <view class="order-icon-item" bindtap="goOrderList" data-type="completed">
+        <view class="icon-wrapper">
+          <image src="/assets/icons/order-completed.png" mode="aspectFit"></image>
+        </view>
+        <text>已完成</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 常用工具 -->
+  <view class="card tools-card">
+    <view class="card-header">
+      <view class="card-title">常用工具</view>
+    </view>
+    <view class="tools-grid">
+      <view class="tool-item" bindtap="goAddressList">
+        <image src="/assets/icons/address.png" mode="aspectFit"></image>
+        <text>收货地址</text>
+      </view>
+      <view class="tool-item" bindtap="goFavorites">
+        <image src="/assets/icons/favorite.png" mode="aspectFit"></image>
+        <text>我的收藏</text>
+      </view>
+      <view class="tool-item" bindtap="goSettings">
+        <image src="/assets/icons/settings.png" mode="aspectFit"></image>
+        <text>设置</text>
+      </view>
+      <view class="tool-item" bindtap="contactService">
+        <image src="/assets/icons/service.png" mode="aspectFit"></image>
+        <text>联系客服</text>
+      </view>
+    </view>
+  </view>
+</view>

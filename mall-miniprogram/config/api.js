@@ -45,14 +45,16 @@ module.exports = {
     OrderCancel: ApiBaseUrl + '/order/cancel', // 取消订单
     OrderConfirm: ApiBaseUrl + '/order/confirm', // 确认收货
     OrderDelete: ApiBaseUrl + '/order/delete', // 删除订单
+    OrderCounts: ApiBaseUrl + '/order/counts', // 获取订单数量统计
 
     // 地址相关
     AddressList: ApiBaseUrl + '/address/list', // 获取地址列表
-    AddressDetail: ApiBaseUrl + '/address/detail', // 获取地址详情
     AddressAdd: ApiBaseUrl + '/address/add', // 添加地址
     AddressUpdate: ApiBaseUrl + '/address/update', // 更新地址
     AddressDelete: ApiBaseUrl + '/address/delete', // 删除地址
-    AddressSetDefault: ApiBaseUrl + '/address/setDefault', // 设置默认地址
+    AddressDefault: ApiBaseUrl + '/address/default', // 设置默认地址
+    AddressDefaultGet: ApiBaseUrl + '/address/default', // 获取默认地址
+    AddressDetail: ApiBaseUrl + '/address', // 获取地址详情
 
     // 搜索相关
     Search: ApiBaseUrl + '/search', // 搜索商品
