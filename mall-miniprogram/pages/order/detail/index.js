@@ -51,8 +51,24 @@ Page({
           // 设置状态描述
           const statusDesc = this.getStatusDesc(res.data);
 
+          // 数据映射处理 - 将orderGoods映射到goods属性
+          const orderData = res.data;
+          if (orderData.orderGoods && orderData.orderGoods.length > 0) {
+            // 将orderGoods字段映射到goods字段，以便页面渲染
+            orderData.goods = orderData.orderGoods.map(item => {
+              return {
+                id: item.id,
+                name: item.goods_name,
+                image: item.goods_image,
+                price: item.price,
+                quantity: item.quantity,
+                specs: item.specs || ''
+              };
+            });
+          }
+
           this.setData({
-            order: res.data,
+            order: orderData,
             statusDesc: statusDesc
           });
         } else {

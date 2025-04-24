@@ -2274,3 +2274,32 @@ npm run dev
 - `mall-miniprogram/pages/index/index.json` - 渲染引擎从skyline改为webview
 - `mall-miniprogram/pages/cart/index.json` - 渲染引擎从skyline改为webview
 - `iOS小程序显示问题.md` - 新建文档记录问题和解决方案
+
+## 2024年4月25日 12:30
+
+### 会话主要目的
+修复订单详情页面商品信息不显示的问题
+
+### 完成的主要任务
+1. 分析订单详情页面显示问题原因，发现API返回的商品数据字段名与模板期望的字段名不匹配
+2. 修改订单详情页面的JavaScript代码，增加数据映射处理，将API返回的orderGoods映射到goods字段
+3. 更新订单详情页面的模板，修正金额相关字段的绑定，包括商品总额、运费和实付款
+4. 改进订单状态判断条件，同时支持数字状态码和字符串状态码
+
+### 关键决策和解决方案
+- 保持前端模板不变，而是在JS中添加数据转换逻辑，将API返回的数据结构映射为模板期望的结构
+- 识别并修复了多处字段名不匹配的问题：
+  1. 商品数据：orderGoods -> goods
+  2. 商品价格：total_amount -> 商品总额，freight_amount -> 运费，pay_amount -> 实付款
+- 增强了状态判断条件，使其既支持数字状态码(0,1,2,3,4)也支持字符串状态码(unpaid,unshipped等)
+
+### 使用的技术栈
+- 微信小程序
+- JavaScript数据处理
+- WXML模板
+- 条件渲染(wx:if)
+- 数据映射与转换
+
+### 修改了哪些文件
+- `mall-miniprogram/pages/order/detail/index.js` - 添加数据映射处理逻辑
+- `mall-miniprogram/pages/order/detail/index.wxml` - 修正价格字段和状态判断条件

@@ -64,7 +64,7 @@
         <image class="goods-image" src="{{item.image}}" mode="aspectFill"></image>
         <view class="goods-info">
           <view class="goods-name">{{item.name}}</view>
-          <view class="goods-specs">{{item.specs}}</view>
+          <view class="goods-specs" wx:if="{{item.specs}}">{{item.specs}}</view>
           <view class="goods-price-quantity">
             <view class="goods-price">¥{{item.price}}</view>
             <view class="goods-quantity">x{{item.quantity}}</view>
@@ -78,11 +78,11 @@
   <view class="card amount-card">
     <view class="amount-item">
       <text class="item-label">商品总额</text>
-      <text class="item-value">¥{{order.goods_amount}}</text>
+      <text class="item-value">¥{{order.total_amount}}</text>
     </view>
     <view class="amount-item">
       <text class="item-label">运费</text>
-      <text class="item-value">¥{{order.shipping_fee}}</text>
+      <text class="item-value">¥{{order.freight_amount || '0.00'}}</text>
     </view>
     <view class="amount-item" wx:if="{{order.discount_amount > 0}}">
       <text class="item-label">优惠</text>
@@ -90,24 +90,24 @@
     </view>
     <view class="amount-item total-amount">
       <text class="item-label">实付款</text>
-      <text class="item-value">¥{{order.total_amount}}</text>
+      <text class="item-value">¥{{order.pay_amount}}</text>
     </view>
   </view>
 
   <!-- 底部按钮 -->
   <view class="footer-btns">
-    <view class="btn-group" wx:if="{{order.status === 'unpaid'}}">
+    <view class="btn-group" wx:if="{{order.status === 0 || order.status === 'unpaid'}}">
       <button class="btn btn-cancel" bindtap="cancelOrder">取消订单</button>
       <button class="btn btn-pay" bindtap="payOrder">立即支付</button>
     </view>
-    <view class="btn-group" wx:if="{{order.status === 'unshipped'}}">
+    <view class="btn-group" wx:if="{{order.status === 1 || order.status === 'unshipped'}}">
       <button class="btn btn-contact" bindtap="contactService">联系客服</button>
     </view>
-    <view class="btn-group" wx:if="{{order.status === 'unreceived'}}">
+    <view class="btn-group" wx:if="{{order.status === 2 || order.status === 'unreceived'}}">
       <button class="btn btn-logistics" bindtap="checkLogistics">查看物流</button>
       <button class="btn btn-confirm" bindtap="confirmOrder">确认收货</button>
     </view>
-    <view class="btn-group" wx:if="{{order.status === 'completed' || order.status === 'canceled'}}">
+    <view class="btn-group" wx:if="{{order.status === 3 || order.status === 4 || order.status === 'completed' || order.status === 'canceled'}}">
       <button class="btn btn-delete" bindtap="deleteOrder">删除订单</button>
     </view>
   </view>
