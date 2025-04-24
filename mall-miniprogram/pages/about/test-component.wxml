@@ -1,0 +1,43 @@
+<view class="container">
+  <navigation-bar title="组件测试" />
+  
+  <view class="card">
+    <view class="title">Vant组件测试</view>
+    
+    <view class="section">
+      <view class="section-title">图标组件测试</view>
+      <view class="icon-list">
+        <view class="icon-item" wx:for="{{iconList}}" wx:key="*this">
+          <van-icon name="{{item}}" size="24px" />
+          <text class="icon-name">{{item}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="section">
+      <view class="section-title">按钮组件测试</view>
+      <view class="button-list">
+        <van-button type="primary" custom-class="my-button">主要按钮</van-button>
+        <van-button type="info" custom-class="my-button">信息按钮</van-button>
+        <van-button type="warning" custom-class="my-button">警告按钮</van-button>
+        <van-button type="danger" custom-class="my-button">危险按钮</van-button>
+      </view>
+    </view>
+    
+    <view class="section">
+      <view class="section-title">加载组件测试</view>
+      <view class="loading-list">
+        <van-loading type="spinner" color="#1989fa" />
+        <van-loading color="#1989fa" />
+      </view>
+    </view>
+    
+    <view class="section">
+      <view class="section-title">表单组件测试</view>
+      <view class="form-list">
+        <van-checkbox value="{{ true }}">复选框</van-checkbox>
+        <van-stepper value="{{ 1 }}" />
+      </view>
+    </view>
+  </view>
+</view> 

@@ -15,15 +15,17 @@ const app = express();
 app.use(cors({
     origin: '*', // 允许所有来源的请求
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Disposition', 'API-Key'],
+    credentials: true,
+    maxAge: 86400 // 预检请求缓存24小时
 }));
 
 // 解析JSON格式的请求体
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // 解析URL编码的请求体,extended:true允许解析复杂对象
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // 配置日志中间件
 // 生产环境使用combined格式(包含更多信息)
@@ -31,8 +33,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // 静态文件目录
-app.use(express.static(path.join(__dirname, '../public')));
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+app.use(express.static(path.join(__dirname, '../public'), {
+    maxAge: '1d', // 缓存一天
+    etag: true,
+    lastModified: true
+}));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads'), {
+    maxAge: '1d',
+    etag: true
+}));
 
 // 配置Swagger文档UI
 app.use('/mall-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

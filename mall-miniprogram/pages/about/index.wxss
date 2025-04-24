@@ -1,1 +1,81 @@
 /* pages/about/index.wxss */
+.container {
+  padding: 100rpx 30rpx 30rpx;
+  background-color: #f7f8fa;
+  min-height: 100vh;
+}
+
+.card {
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+  color: #333;
+}
+
+.section {
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.section-content {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.5;
+}
+
+.resource-list {
+  margin-top: 20rpx;
+}
+
+.resource-item {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16rpx 0;
+}
+
+.resource-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.resource-url {
+  font-size: 24rpx;
+  color: #999;
+  margin: 6rpx 0;
+  word-break: break-all;
+}
+
+.resource-status {
+  font-size: 26rpx;
+  margin-top: 6rpx;
+}
+
+.success {
+  color: #07c160;
+}
+
+.error {
+  color: #fa5151;
+}
+
+.btn {
+  margin-top: 30rpx;
+  background-color: #07c160;
+  color: #fff;
+  border-radius: 8rpx;
+  font-size: 30rpx;
+}

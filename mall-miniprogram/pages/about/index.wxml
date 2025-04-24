@@ -1,2 +1,41 @@
 <!--pages/about/index.wxml-->
-<text>pages/about/index.wxml</text>
+<view class="container">
+  <navigation-bar title="关于" />
+
+  <view class="card">
+    <view class="title">资源测试工具</view>
+    <view class="section">
+      <view class="section-title">API基础URL:</view>
+      <view class="section-content">{{apiBaseUrl}}</view>
+    </view>
+    
+    <view class="section">
+      <view class="section-title">资源状态检查:</view>
+      <view class="resource-list">
+        <view class="resource-item" wx:for="{{resourceStatus}}" wx:key="name">
+          <view class="resource-name">{{item.name}}</view>
+          <view class="resource-url">{{item.url}}</view>
+          <view class="resource-status {{item.status.indexOf('✓') !== -1 ? 'success' : (item.status === '检查中...' ? '' : 'error')}}">
+            {{item.status}}
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <button class="btn" bindtap="recheck">重新检查</button>
+  </view>
+
+  <view class="card">
+    <view class="title">关于商城小程序</view>
+    <view class="section">
+      <view class="section-title">版本</view>
+      <view class="section-content">v1.0.0</view>
+    </view>
+    <view class="section">
+      <view class="section-title">简介</view>
+      <view class="section-content">
+        这是一个微信小程序商城演示项目，提供商品浏览、购物车、下单、支付等功能。
+      </view>
+    </view>
+  </view>
+</view>

@@ -19,7 +19,8 @@
     "pages/user/history/index",
     "pages/user/setting/index",
     "pages/user/service/index",
-    "pages/about/index"
+    "pages/about/index",
+    "pages/about/test-component"
   ],
   "window": {
     "backgroundTextStyle": "light",
