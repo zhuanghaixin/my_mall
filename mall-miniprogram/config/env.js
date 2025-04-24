@@ -2,7 +2,7 @@
 const ENV = {
     // 开发环境
     development: {
-        apiHost: 'http://192.168.0.131',
+        apiHost: 'http://127.0.0.1',
         apiPort: '8080',
         apiPrefix: '/api',
         envName: 'development',
@@ -10,8 +10,8 @@ const ENV = {
     },
     // 测试环境
     testing: {
-        apiHost: 'https://test-api.example.com',
-        apiPort: '443',
+        apiHost: 'http://192.168.0.131',
+        apiPort: '8080',
         apiPrefix: '/api',
         envName: 'testing',
         envVersion: 'trial'
