@@ -220,9 +220,9 @@ router.get('/stats', orderController.getOrderStats);
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
  *         description: 订单ID
  *     responses:
  *       200:
@@ -240,14 +240,12 @@ router.get('/stats', orderController.getOrderStats);
  *                   example: 获取成功
  *                 data:
  *                   $ref: '#/components/schemas/OrderDetail'
- *       401:
- *         description: 未授权
  *       404:
  *         description: 订单不存在
  *       500:
  *         description: 服务器错误
  */
-router.get('/:id', orderController.getOrderDetail);
+router.get('/:id', orderController.getAdminOrderDetail);
 
 /**
  * @swagger

@@ -150,10 +150,10 @@ exports.getOrderDetail = catchAsync(async (req, res) => {
     } catch (error) {
         // logger.error(`获取订单详情失败: ${error.message}`);
         // throw error;
-        res.status(200).json({
-            code: 200,
-            message: '获取成功',
-            data: order
+        res.status(500).json({
+            code: 500,
+            message: '获取订单详情失败',
+            error: error.message
         });
     }
 });
@@ -331,64 +331,107 @@ exports.getOrderStats = async (req, res) => {
 };
 
 /**
- * 删除订单
+ * 管理员获取订单详情
  * @param {Object} req - 请求对象
  * @param {Object} res - 响应对象
  */
-exports.deleteOrder = async (req, res) => {
-    const transaction = await sequelize.transaction();
-
+exports.getAdminOrderDetail = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const order = await Order.findByPk(id);
+        const order = await Order.findOne({
+            where: { id },
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'nickname', 'phone', 'avatar']
+                },
+                {
+                    model: OrderGoods,
+                    as: 'orderGoods',
+                    include: [
+                        {
+                            model: Goods,
+                            as: 'goods',
+                            attributes: ['id', 'name', 'main_image', 'price']
+                        }
+                    ]
+                },
+                {
+                    model: Address,
+                    as: 'address',
+                    attributes: ['id', 'name', 'phone', 'province', 'city', 'district', 'detail']
+                }
+            ]
+        });
 
         if (!order) {
-            await transaction.rollback();
             return res.status(404).json({
                 code: 404,
                 message: '订单不存在'
             });
         }
 
-        // 不允许删除非取消状态的订单
-        if (order.status !== 4) {
-            await transaction.rollback();
-            return res.status(400).json({
-                code: 400,
-                message: '只能删除已取消的订单'
-            });
-        }
-
-        // 先删除订单商品
-        await OrderGoods.destroy({
-            where: { order_id: id },
-            transaction
-        });
-
-        // 删除订单
-        await Order.destroy({
-            where: { id },
-            transaction
-        });
-
-        await transaction.commit();
+        logger.info(`管理员获取订单详情成功，订单ID: ${id}`);
 
         res.status(200).json({
             code: 200,
-            message: '删除成功',
-            data: { id }
+            message: '获取成功',
+            data: order
         });
     } catch (error) {
-        await transaction.rollback();
-        logger.error('删除订单失败:', error);
+        logger.error(`管理员获取订单详情失败: ${error.message}`);
         res.status(500).json({
             code: 500,
-            message: '删除订单失败',
+            message: '获取订单详情失败',
             error: error.message
         });
     }
 };
+
+/**
+ * 删除订单
+ * @route DELETE /api/order/:id
+ * @access Private
+ */
+exports.deleteOrder = catchAsync(async (req, res) => {
+    const userId = req.user.id;
+    const orderId = req.params.id;
+
+    try {
+        // 查询订单
+        const order = await Order.findOne({
+            where: {
+                id: orderId,
+                user_id: userId
+            }
+        });
+
+        if (!order) {
+            throw new NotFoundError('订单不存在');
+        }
+
+        // 只有已完成或已取消状态的订单才能删除
+        if (order.status !== 3 && order.status !== 4) {
+            throw new ValidationError('只有已完成或已取消状态的订单才能删除');
+        }
+
+        // 删除订单及关联的订单商品（通过外键约束实现级联删除）
+        await order.destroy();
+
+        logger.info(`用户(ID: ${userId})删除订单成功，订单ID: ${orderId}`);
+
+        res.status(200).json({
+            code: 200,
+            message: '删除成功',
+            data: null
+        });
+    } catch (error) {
+        logger.error(`删除订单失败: ${error.message}`);
+        throw error;
+    }
+});
 
 /**
  * 生成订单号
@@ -780,49 +823,6 @@ exports.confirmOrder = catchAsync(async (req, res) => {
         });
     } catch (error) {
         logger.error(`确认收货失败: ${error.message}`);
-        throw error;
-    }
-});
-
-/**
- * 删除订单
- * @route DELETE /api/order/:id
- * @access Private
- */
-exports.deleteOrder = catchAsync(async (req, res) => {
-    const userId = req.user.id;
-    const orderId = req.params.id;
-
-    try {
-        // 查询订单
-        const order = await Order.findOne({
-            where: {
-                id: orderId,
-                user_id: userId
-            }
-        });
-
-        if (!order) {
-            throw new NotFoundError('订单不存在');
-        }
-
-        // 只有已完成或已取消状态的订单才能删除
-        if (order.status !== 3 && order.status !== 4) {
-            throw new ValidationError('只有已完成或已取消状态的订单才能删除');
-        }
-
-        // 删除订单及关联的订单商品（通过外键约束实现级联删除）
-        await order.destroy();
-
-        logger.info(`用户(ID: ${userId})删除订单成功，订单ID: ${orderId}`);
-
-        res.status(200).json({
-            code: 200,
-            message: '删除成功',
-            data: null
-        });
-    } catch (error) {
-        logger.error(`删除订单失败: ${error.message}`);
         throw error;
     }
 });
