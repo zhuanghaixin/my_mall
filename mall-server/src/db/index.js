@@ -17,7 +17,7 @@ const {
 
 // 使用特定的配置确保连接成功
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
-    host: '127.0.0.1', // 强制使用IP而不是域名
+    host: DB_HOST || '127.0.0.1', // 使用环境变量中的主机名，而不是硬编码
     port: parseInt(DB_PORT, 10),
     dialect: 'mysql',
     dialectModule: mysql2,
@@ -57,7 +57,7 @@ const connectToDatabase = async () => {
     while (retries > 0) {
         try {
             logger.debug(`尝试连接数据库 (${4 - retries}/3)...`);
-            logger.debug(`连接配置: 127.0.0.1:${DB_PORT}, 数据库: ${DB_NAME}, 用户: ${DB_USER}`);
+            logger.debug(`连接配置: ${DB_HOST}:${DB_PORT}, 数据库: ${DB_NAME}, 用户: ${DB_USER}`);
 
             await sequelize.authenticate();
             logger.info('数据库连接成功');

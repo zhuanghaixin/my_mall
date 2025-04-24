@@ -2241,7 +2241,7 @@ npm run dev
 - RESTful API设计
 - 静态资源服务配置
 
-### 修改了哪些文件
+### 修改的文件
 - `mall-server/public/uploads/banners/banner_readme.txt` (新增)
 - `mall-server/public/static/readme.txt` (新增)
 - `mall-server/public/index.html` (完善)
@@ -2372,3 +2372,85 @@ npm run dev
 
 ### 修改了哪些文件
 - mall-miniprogram/pages/user/index/index.js
+
+## 会话总结 (2023-05-28)
+
+### 会话主要目的
+优化和完善商城管理系统前端的环境配置系统，实现更灵活的多环境配置管理。
+
+### 完成的主要任务
+1. 创建了统一的环境服务（EnvService）用于管理和访问环境变量
+2. 修复了前端HTML中API URL变量名拼写错误
+3. 创建了环境信息展示组件，用于在非生产环境显示当前环境信息
+4. 增加了测试环境和预发布环境的配置文件
+5. 创建了环境变量验证脚本，确保必要的环境变量已定义
+6. 优化了Docker配置，包括入口脚本和Dockerfile
+7. 创建了环境切换与启动脚本，简化环境操作
+8. 编写了详细的环境配置说明文档
+
+### 关键决策和解决方案
+1. 使用TypeScript类进行环境变量封装，提供类型安全的访问方式
+2. 通过扩展Window接口解决API_URL全局变量的类型问题
+3. 创建可视化环境指示器，帮助开发人员识别当前环境
+4. 设计更灵活的Docker入口脚本，支持批量环境变量替换
+5. 采用环境验证机制，避免由于缺少关键环境变量导致的问题
+
+### 使用的技术栈
+- Vue 3 + TypeScript：前端框架和类型系统
+- Vite：构建工具和环境变量处理
+- Docker/Docker Compose：容器化和多环境部署
+- Bash脚本：环境切换和启动自动化
+- Node.js：环境变量验证脚本
+
+### 修改的文件
+1. `mall-admin/src/utils/env.ts`：创建环境服务
+2. `mall-admin/src/env.d.ts`：扩展环境变量类型定义
+3. `mall-admin/index.html`：修复环境变量占位符
+4. `mall-admin/src/components/EnvInfo.vue`：创建环境信息组件
+5. `mall-admin/src/App.vue`：集成环境信息组件
+
+## 会话总结 (2024-11-20)
+
+### 会话主要目的
+优化和完善商城管理系统前端的环境配置系统，实现更灵活的多环境配置管理。
+
+### 完成的主要任务
+1. 创建了统一的环境服务（EnvService）用于管理和访问环境变量
+2. 修复了前端HTML中API URL变量名拼写错误
+3. 创建了环境信息展示组件，用于在非生产环境显示当前环境信息
+4. 增加了测试环境和预发布环境的配置文件
+5. 创建了环境变量验证脚本，确保必要的环境变量已定义
+6. 优化了Docker配置，包括入口脚本和Dockerfile
+7. 创建了环境切换与启动脚本，简化环境操作
+8. 编写了详细的环境配置说明文档
+
+### 关键决策和解决方案
+1. 使用TypeScript类进行环境变量封装，提供类型安全的访问方式
+2. 通过扩展Window接口解决API_URL全局变量的类型问题
+3. 创建可视化环境指示器，帮助开发人员识别当前环境
+4. 设计更灵活的Docker入口脚本，支持批量环境变量替换
+5. 采用环境验证机制，避免由于缺少关键环境变量导致的问题
+
+### 使用的技术栈
+- Vue 3 + TypeScript：前端框架和类型系统
+- Vite：构建工具和环境变量处理
+- Docker/Docker Compose：容器化和多环境部署
+- Bash脚本：环境切换和启动自动化
+- Node.js：环境变量验证脚本
+
+### 修改的文件
+1. `mall-admin/src/utils/env.ts`：创建环境服务
+2. `mall-admin/src/env.d.ts`：扩展环境变量类型定义
+3. `mall-admin/index.html`：修复环境变量占位符
+4. `mall-admin/src/components/EnvInfo.vue`：创建环境信息组件
+5. `mall-admin/src/App.vue`：集成环境信息组件
+6. `mall-admin/.env.staging`：添加预发布环境配置
+7. `mall-admin/.env.testing`：添加测试环境配置
+8. `mall-admin/scripts/verify-env.js`：创建环境验证脚本
+9. `mall-admin/package.json`：添加环境脚本命令
+10. `mall-admin/docker-entrypoint.sh`：创建增强的Docker入口脚本
+11. `mall-admin/Dockerfile`：优化Docker构建流程
+12. `mall-admin/环境配置说明.md`：创建配置文档
+13. `mall-admin/.env.example`：创建环境变量示例
+14. `docker-compose.staging.yml`：创建预发布环境Docker配置
+15. `start.sh`：创建环境切换脚本

@@ -12,27 +12,30 @@ services:
 
   mall-server:
     container_name: mall-server-test
+    build:
+      context: ./mall-server
+      dockerfile: Dockerfile
     environment:
-      - NODE_ENV=testing
+      - NODE_ENV=test
       - DB_HOST=mysql
-      - DB_PORT=3306
+      - PORT=8080
       - DB_NAME=shop
       - DB_USER=root
       - DB_PASSWORD=zhx199710085470
       - API_PREFIX=/api
       - LOG_LEVEL=info
       - ENABLE_MOCK=false
-      - JWT_SECRET=testing_jwt_secret_key
+      - JWT_SECRET=test-secret-key
 
   mall-admin:
     container_name: mall-admin-test
     build:
       args:
-        - BUILD_MODE=testing
+        - BUILD_MODE=test
     environment:
-      - VITE_API_URL=http://test-api.example.com
+      - VITE_API_URL=http://api.test.example.com
       - VITE_USE_MOCK=false
-      - VITE_USE_DEVTOOLS=true
+      - VITE_USE_DEVTOOLS=false
 
 volumes:
   mysql-data-test: 

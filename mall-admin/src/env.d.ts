@@ -10,4 +10,9 @@ interface ImportMetaEnv {
 
 interface ImportMeta {
   readonly env: ImportMetaEnv
+}
+
+// 扩展Window接口，添加API_URL属性
+interface Window {
+  API_URL?: string
 } 

@@ -12,10 +12,14 @@ services:
 
   mall-server:
     container_name: mall-server-dev
+    build:
+      context: ./mall-server
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=development
       - DB_HOST=mysql
-      - DB_PORT=3306
+      - PORT=8080
+      - DEBUG=app:*
       - DB_NAME=shop
       - DB_USER=root
       - DB_PASSWORD=zhx199710085470
@@ -34,7 +38,7 @@ services:
       args:
         - BUILD_MODE=development
     environment:
-      - VITE_API_URL=http://localhost:8080
+      - VITE_API_URL=http://localhost:8081
       - VITE_USE_MOCK=true
       - VITE_USE_DEVTOOLS=true
 
