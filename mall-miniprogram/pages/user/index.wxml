@@ -12,6 +12,7 @@
         <view class="login-btn" wx:else bindtap="goLogin">点击登录</view>
       </view>
     </view>
+    <view class="logout-btn" wx:if="{{hasUserInfo}}" bindtap="handleLogout">退出登录</view>
   </view>
   
   <!-- 我的订单区域 -->

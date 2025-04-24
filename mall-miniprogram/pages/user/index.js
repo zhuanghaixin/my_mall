@@ -3,6 +3,8 @@
 const userApi = require('../../api/user');
 const orderApi = require('../../api/order');
 const app = getApp();
+// 引入工具函数
+const { showModal } = require('../../utils/util');
 
 Page({
 
@@ -171,12 +173,34 @@ Page({
 
   // 登出处理
   handleLogout() {
-    wx.removeStorageSync('token');
-    app.globalData.token = '';
-    app.globalData.userInfo = null;
-    this.setData({
-      userInfo: {},
-      hasUserInfo: false
+    showModal({
+      title: '提示',
+      content: '确定要退出登录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          // 清除用户登录信息
+          wx.removeStorageSync('token');
+          wx.removeStorageSync('userInfo');
+          app.globalData.token = '';
+          app.globalData.userInfo = null;
+
+          this.setData({
+            userInfo: {},
+            hasUserInfo: false,
+            orderCounts: {
+              unpaid: 0,
+              unshipped: 0,
+              delivered: 0,
+              completed: 0
+            }
+          });
+
+          // 跳转到登录页
+          wx.navigateTo({
+            url: '/pages/user/login/index'
+          });
+        }
+      }
     });
   },
 

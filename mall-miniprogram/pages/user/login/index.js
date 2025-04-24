@@ -69,84 +69,188 @@ Page({
                         });
                     } else {
                         // 已经接受隐私协议，直接获取用户信息
-                        this.getUserProfileDirectly();
+                        this.setData({ loading: true });
+
+                        if (this.data.canIUseGetUserProfile) {
+                            wx.getUserProfile({
+                                desc: '用于完善会员资料',
+                                success: (profileRes) => {
+                                    // 获取用户信息成功后，再获取登录code
+                                    wx.login({
+                                        success: (loginRes) => {
+                                            if (loginRes.code) {
+                                                // 发送登录请求
+                                                this.doLogin(loginRes.code, profileRes.userInfo);
+                                            } else {
+                                                console.error('登录失败，未获取到code');
+                                                this.setData({ loading: false });
+                                                util.showErrorToast('登录失败');
+                                            }
+                                        },
+                                        fail: (err) => {
+                                            console.error('获取用户信息失败:', err);
+                                            this.setData({ loading: false });
+                                            util.showErrorToast('获取用户信息失败');
+                                        }
+                                    });
+                                },
+                                fail: (err) => {
+                                    console.error('获取用户信息失败:', err);
+                                    this.setData({ loading: false });
+                                    util.showErrorToast('获取用户信息失败');
+                                }
+                            });
+                        } else {
+                            // 兼容低版本
+                            wx.getUserInfo({
+                                success: (infoRes) => {
+                                    // 获取用户信息成功后，再获取登录code
+                                    wx.login({
+                                        success: (loginRes) => {
+                                            if (loginRes.code) {
+                                                this.doLogin(loginRes.code, infoRes.userInfo);
+                                            } else {
+                                                console.error('登录失败，未获取到code');
+                                                this.setData({ loading: false });
+                                                util.showErrorToast('登录失败');
+                                            }
+                                        },
+                                        fail: (err) => {
+                                            console.error('wx.login调用失败:', err);
+                                            this.setData({ loading: false });
+                                            util.showErrorToast('登录失败');
+                                        }
+                                    });
+                                },
+                                fail: (err) => {
+                                    console.error('获取用户信息失败:', err);
+                                    this.setData({ loading: false });
+                                    util.showErrorToast('获取用户信息失败');
+                                }
+                            });
+                        }
                     }
                 },
                 fail: () => {
-                    // 接口调用失败，尝试直接获取用户信息
-                    this.getUserProfileDirectly();
+                    // 接口调用失败，也直接在这里获取用户信息
+                    this.setData({ loading: true });
+
+                    if (this.data.canIUseGetUserProfile) {
+                        wx.getUserProfile({
+                            desc: '用于完善会员资料',
+                            success: (profileRes) => {
+                                wx.login({
+                                    success: (loginRes) => {
+                                        if (loginRes.code) {
+                                            this.doLogin(loginRes.code, profileRes.userInfo);
+                                        } else {
+                                            console.error('登录失败，未获取到code');
+                                            this.setData({ loading: false });
+                                            util.showErrorToast('登录失败');
+                                        }
+                                    },
+                                    fail: (err) => {
+                                        console.error('wx.login调用失败:', err);
+                                        this.setData({ loading: false });
+                                        util.showErrorToast('登录失败');
+                                    }
+                                });
+                            },
+                            fail: (err) => {
+                                console.error('获取用户信息失败:', err);
+                                this.setData({ loading: false });
+                                util.showErrorToast('获取用户信息失败');
+                            }
+                        });
+                    } else {
+                        // 兼容低版本
+                        wx.getUserInfo({
+                            success: (infoRes) => {
+                                wx.login({
+                                    success: (loginRes) => {
+                                        if (loginRes.code) {
+                                            this.doLogin(loginRes.code, infoRes.userInfo);
+                                        } else {
+                                            console.error('登录失败，未获取到code');
+                                            this.setData({ loading: false });
+                                            util.showErrorToast('登录失败');
+                                        }
+                                    },
+                                    fail: (err) => {
+                                        console.error('wx.login调用失败:', err);
+                                        this.setData({ loading: false });
+                                        util.showErrorToast('登录失败');
+                                    }
+                                });
+                            },
+                            fail: (err) => {
+                                console.error('获取用户信息失败:', err);
+                                this.setData({ loading: false });
+                                util.showErrorToast('获取用户信息失败');
+                            }
+                        });
+                    }
                 }
             });
         } else {
-            // 低版本直接获取用户信息
-            this.getUserProfileDirectly();
-        }
-    },
+            // 低版本也在这里直接调用，不通过其他函数
+            this.setData({ loading: true });
 
-    /**
-     * 获取用户信息（直接调用，不在异步回调中）
-     */
-    getUserProfileDirectly: function () {
-        this.setData({ loading: true });
-
-        // 先获取用户信息
-        if (this.data.canIUseGetUserProfile) {
-            wx.getUserProfile({
-                desc: '用于完善会员资料',
-                success: (profileRes) => {
-                    // 获取用户信息成功后，再获取登录code
-                    wx.login({
-                        success: (loginRes) => {
-                            if (loginRes.code) {
-                                // 发送登录请求
-                                this.doLogin(loginRes.code, profileRes.userInfo);
-                            } else {
-                                console.error('登录失败，未获取到code');
+            if (this.data.canIUseGetUserProfile) {
+                wx.getUserProfile({
+                    desc: '用于完善会员资料',
+                    success: (profileRes) => {
+                        wx.login({
+                            success: (loginRes) => {
+                                if (loginRes.code) {
+                                    this.doLogin(loginRes.code, profileRes.userInfo);
+                                } else {
+                                    console.error('登录失败，未获取到code');
+                                    this.setData({ loading: false });
+                                    util.showErrorToast('登录失败');
+                                }
+                            },
+                            fail: (err) => {
+                                console.error('wx.login调用失败:', err);
                                 this.setData({ loading: false });
                                 util.showErrorToast('登录失败');
                             }
-                        },
-                        fail: (err) => {
-                            console.error('获取用户信息失败:', err);
-                            this.setData({ loading: false });
-                            util.showErrorToast('获取用户信息失败');
-                        }
-                    });
-                },
-                fail: (err) => {
-                    console.error('获取用户信息失败:', err);
-                    this.setData({ loading: false });
-                    util.showErrorToast('获取用户信息失败');
-                }
-            });
-        } else {
-            // 兼容低版本
-            wx.getUserInfo({
-                success: (infoRes) => {
-                    // 获取用户信息成功后，再获取登录code
-                    wx.login({
-                        success: (loginRes) => {
-                            if (loginRes.code) {
-                                this.doLogin(loginRes.code, infoRes.userInfo);
-                            } else {
-                                console.error('登录失败，未获取到code');
+                        });
+                    },
+                    fail: (err) => {
+                        console.error('获取用户信息失败:', err);
+                        this.setData({ loading: false });
+                        util.showErrorToast('获取用户信息失败');
+                    }
+                });
+            } else {
+                // 兼容低版本
+                wx.getUserInfo({
+                    success: (infoRes) => {
+                        wx.login({
+                            success: (loginRes) => {
+                                if (loginRes.code) {
+                                    this.doLogin(loginRes.code, infoRes.userInfo);
+                                } else {
+                                    console.error('登录失败，未获取到code');
+                                    this.setData({ loading: false });
+                                    util.showErrorToast('登录失败');
+                                }
+                            },
+                            fail: (err) => {
+                                console.error('wx.login调用失败:', err);
                                 this.setData({ loading: false });
                                 util.showErrorToast('登录失败');
                             }
-                        },
-                        fail: (err) => {
-                            console.error('wx.login调用失败:', err);
-                            this.setData({ loading: false });
-                            util.showErrorToast('登录失败');
-                        }
-                    });
-                },
-                fail: (err) => {
-                    console.error('获取用户信息失败:', err);
-                    this.setData({ loading: false });
-                    util.showErrorToast('获取用户信息失败');
-                }
-            });
+                        });
+                    },
+                    fail: (err) => {
+                        console.error('获取用户信息失败:', err);
+                        this.setData({ loading: false });
+                        util.showErrorToast('获取用户信息失败');
+                    }
+                });
+            }
         }
     },
 
@@ -162,16 +266,16 @@ Page({
         if (wx.requirePrivacyAuthorize) {
             wx.requirePrivacyAuthorize({
                 success: () => {
-                    // 隐私授权成功，获取用户信息
-                    this.getUserProfileDirectly();
+                    // 隐私授权成功，直接调用微信登录
+                    this.handleWechatLogin();
                 },
                 fail: () => {
                     util.showToast('请先同意隐私协议');
                 }
             });
         } else {
-            // 低版本直接获取用户信息
-            this.getUserProfileDirectly();
+            // 低版本直接调用微信登录
+            this.handleWechatLogin();
         }
     },
 
@@ -180,7 +284,8 @@ Page({
      */
     onDeclinePrivacy: function () {
         this.setData({
-            showPrivacyModal: false
+            showPrivacyModal: false,
+            loading: false
         });
         util.showToast('需同意隐私协议才能使用');
     },

@@ -2303,3 +2303,51 @@ npm run dev
 ### 修改了哪些文件
 - `mall-miniprogram/pages/order/detail/index.js` - 添加数据映射处理逻辑
 - `mall-miniprogram/pages/order/detail/index.wxml` - 修正价格字段和状态判断条件
+
+## 会话日期: 2023年9月7日
+
+### 会话目的
+解决用户反馈的问题：首次微信登录后，没有退出登录按钮的问题。
+
+### 完成的主要任务
+1. 在用户个人中心页面添加了"退出登录"按钮
+2. 改进了退出登录功能，添加了确认提示
+3. 优化了退出登录流程，包括清除更多用户信息和状态
+
+### 关键决策和解决方案
+- 在用户信息区域右上角添加退出登录按钮，当用户已登录时才显示
+- 改进了`handleLogout`方法，使其与设置页面中的退出登录功能保持一致
+- 添加了确认对话框，增强用户体验
+- 在退出登录后，跳转到登录页面，使流程更加完整
+
+### 使用的技术栈
+- 微信小程序框架
+- WXML/WXSS/JS
+
+### 修改的文件
+1. mall-miniprogram/pages/user/index.wxml - 添加退出登录按钮
+2. mall-miniprogram/pages/user/index.wxss - 添加退出登录按钮样式
+3. mall-miniprogram/pages/user/index.js - 改进退出登录处理逻辑
+
+## 会话日期: 2023年9月8日
+
+### 会话目的
+解决微信登录过程中出现的 `getUserProfile:fail can only be invoked by user TAP gesture` 错误问题。
+
+### 完成的主要任务
+1. 修复了微信登录功能中 `getUserProfile` 调用时机的问题
+2. 优化了隐私协议处理流程
+3. 确保用户登录体验更加流畅和稳定
+
+### 关键决策和解决方案
+- 将 `getUserProfile` 方法的调用直接移至按钮点击事件处理函数内，避免通过中间函数调用
+- 移除了 `getUserProfileDirectly` 中间函数，改为直接在用户点击事件回调中执行获取用户信息的逻辑
+- 确保所有可能的代码路径中，`getUserProfile` 都是直接通过用户点击触发
+- 在拒绝隐私协议的处理函数中，添加重置 loading 状态的逻辑
+
+### 使用的技术栈
+- 微信小程序框架
+- 微信授权和登录API
+
+### 修改的文件
+1. mall-miniprogram/pages/user/login/index.js - 修改微信登录逻辑，确保 getUserProfile 正确调用
