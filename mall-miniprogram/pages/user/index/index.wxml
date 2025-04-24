@@ -85,6 +85,10 @@
         <view class="custom-icon tool-service"></view>
         <text>联系客服</text>
       </view>
+      <view class="tool-item" bindtap="goTest">
+        <view class="custom-icon tool-setting"></view>
+        <text>资源测试</text>
+      </view>
     </view>
   </view>
 

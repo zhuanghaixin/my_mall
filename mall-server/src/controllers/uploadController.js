@@ -160,4 +160,96 @@ exports.uploadImages = catchAsync(async (req, res) => {
             }))
         }
     });
+});
+
+/**
+ * @swagger
+ * /api/upload/list:
+ *   get:
+ *     summary: 获取上传文件列表
+ *     description: 获取已上传的图片文件列表
+ *     tags: [上传]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 获取成功
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       filename:
+ *                         type: string
+ *                         description: 文件名
+ *                       url:
+ *                         type: string
+ *                         description: 文件访问URL
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+exports.getUploadList = catchAsync(async (req, res) => {
+    const uploadDir = path.join(__dirname, '../../public/uploads');
+    const limit = 20; // 最多返回20个文件
+
+    // 读取上传目录文件
+    fs.readdir(uploadDir, (err, files) => {
+        if (err) {
+            logger.error('读取上传目录失败:', err);
+            return res.status(500).json({
+                code: 500,
+                message: '读取文件列表失败',
+                error: err.message
+            });
+        }
+
+        // 过滤出图片文件并按修改时间倒序排序
+        const imageFiles = files
+            .filter(file => {
+                const ext = path.extname(file).toLowerCase();
+                return ['.jpg', '.jpeg', '.png', '.gif'].includes(ext);
+            })
+            .map(file => {
+                const filePath = path.join(uploadDir, file);
+                const stats = fs.statSync(filePath);
+                return {
+                    filename: file,
+                    path: filePath,
+                    mtime: stats.mtime.getTime()
+                };
+            })
+            .sort((a, b) => b.mtime - a.mtime) // 按修改时间倒序
+            .slice(0, limit); // 限制返回数量
+
+        // 构建文件URL
+        const fileList = imageFiles.map(file => {
+            const relativeFilePath = path.relative(path.join(__dirname, '../../public'), file.path);
+            const fileUrl = `${req.protocol}://${req.get('host')}/${relativeFilePath.replace(/\\/g, '/')}`;
+
+            return {
+                filename: file.filename,
+                url: fileUrl,
+                uploadTime: new Date(file.mtime).toISOString()
+            };
+        });
+
+        res.status(200).json({
+            code: 200,
+            message: '获取成功',
+            data: fileList
+        });
+    });
 }); 

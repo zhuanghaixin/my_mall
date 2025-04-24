@@ -28,6 +28,10 @@
       <view class="setting-label">关于我们</view>
       <view class="setting-arrow"></view>
     </view>
+    <view class="setting-item" bindtap="handleNavigate" data-path="/pages/test/index">
+      <view class="setting-label">资源测试</view>
+      <view class="setting-arrow"></view>
+    </view>
   </view>
   
   <button class="exit-btn" bindtap="handleLogout">退出登录</button>

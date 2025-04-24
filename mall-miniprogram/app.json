@@ -20,7 +20,8 @@
     "pages/user/setting/index",
     "pages/user/service/index",
     "pages/about/index",
-    "pages/about/test-component"
+    "pages/about/test-component",
+    "pages/test/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

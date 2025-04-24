@@ -213,6 +213,15 @@ Page({
   },
 
   /**
+   * 资源测试页面
+   */
+  goTest() {
+    wx.navigateTo({
+      url: '/pages/test/index',
+    });
+  },
+
+  /**
    * 处理退出登录
    */
   handleLogout() {

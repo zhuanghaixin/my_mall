@@ -38,4 +38,15 @@ router.post('/image', upload.single('file'), uploadController.uploadImage);
  */
 router.post('/images', upload.array('files', 10), uploadController.uploadImages);
 
+/**
+ * @swagger
+ * /api/upload/list:
+ *   get:
+ *     summary: 获取上传文件列表
+ *     tags: [上传]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/list', uploadController.getUploadList);
+
 module.exports = router; 

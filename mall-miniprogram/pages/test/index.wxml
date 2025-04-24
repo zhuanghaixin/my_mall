@@ -1,0 +1,49 @@
+<!-- pages/test/index.wxml -->
+<view class="container">
+  <view class="title">资源测试页面</view>
+  
+  <view class="section">
+    <view class="section-title">1. 静态资源测试</view>
+    <button class="btn" bindtap="testImageLoad">测试图片加载</button>
+    <view class="image-container" wx:if="{{imageSrc}}">
+      <image src="{{imageSrc}}" mode="aspectFit" class="test-image"/>
+      <view class="image-url">图片URL: {{imageSrc}}</view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-title">2. API测试</view>
+    <button class="btn" bindtap="testApiCall">测试API调用</button>
+    <view class="result-box" wx:if="{{apiResult}}">
+      <view class="result-title">API结果:</view>
+      <view class="result-content">{{apiResult}}</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">3. 文件上传测试</view>
+    <button class="btn" bindtap="chooseImage">选择图片</button>
+    <view class="file-info" wx:if="{{filePath}}">已选择: {{filePath}}</view>
+    <button class="btn btn-primary" bindtap="uploadImage" wx:if="{{filePath}}">上传图片</button>
+    <view class="result-box" wx:if="{{uploadResult}}">
+      <view class="result-title">上传结果:</view>
+      <view class="result-content">{{uploadResult}}</view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{imageList.length > 0}}">
+    <view class="section-title">4. 服务器图片列表</view>
+    <view class="image-list">
+      <block wx:for="{{imageList}}" wx:key="url">
+        <view class="image-item">
+          <image src="{{item.url}}" mode="aspectFill" class="server-image"/>
+          <view class="image-name">{{item.filename}}</view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="tips">
+    <text>提示: 请确保服务器地址正确，并且已登录获取token</text>
+  </view>
+</view> 
