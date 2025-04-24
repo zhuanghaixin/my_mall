@@ -217,13 +217,24 @@ Page({
             submitting: true
         });
 
+        // 生成客户端订单ID，用于幂等性处理
+        const userId = wx.getStorageSync('userId') || '';
+        const clientOrderId = `${userId}_${new Date().getTime()}_${Math.floor(Math.random() * 1000)}`;
+
         // 创建订单
         const orderData = {
             address_id: this.data.address.id,
-            remark: this.data.remark
+            remark: this.data.remark,
+            client_order_id: clientOrderId
         };
 
+        wx.showLoading({
+            title: '提交订单中...',
+            mask: true
+        });
+
         orderService.createOrder(orderData).then(res => {
+            wx.hideLoading();
             if (res.code === 200) {
                 // 创建订单成功，跳转到支付页面
                 wx.navigateTo({
@@ -236,11 +247,31 @@ Page({
                 });
             }
         }).catch(err => {
+            wx.hideLoading();
             console.error('创建订单失败', err);
-            wx.showToast({
-                title: '创建订单失败',
-                icon: 'none'
-            });
+
+            // 处理特定错误
+            if (err && err.message && err.message.includes('购物车中没有选中的商品')) {
+                wx.showModal({
+                    title: '提示',
+                    content: '购物车中没有选中商品，请返回购物车选择要购买的商品',
+                    showCancel: false,
+                    success: function (res) {
+                        if (res.confirm) {
+                            // 用户点击确定后跳转到购物车页面
+                            wx.switchTab({
+                                url: '/pages/cart/index'
+                            });
+                        }
+                    }
+                });
+            } else {
+                // 其他错误
+                wx.showToast({
+                    title: '创建订单失败，请重试',
+                    icon: 'none'
+                });
+            }
         }).finally(() => {
             // 恢复提交按钮状态
             this.setData({

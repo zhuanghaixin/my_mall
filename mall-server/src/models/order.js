@@ -19,6 +19,11 @@ const Order = sequelize.define('orders', {
         allowNull: false,
         comment: '用户ID'
     },
+    client_order_id: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        comment: '客户端订单ID，用于幂等性处理'
+    },
     total_amount: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
@@ -95,6 +100,15 @@ const Order = sequelize.define('orders', {
         },
         {
             fields: ['status']
+        },
+        {
+            fields: ['user_id', 'client_order_id'],
+            unique: true,
+            where: {
+                client_order_id: {
+                    [sequelize.Sequelize.Op.ne]: null
+                }
+            }
         }
     ]
 });

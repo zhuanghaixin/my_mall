@@ -191,9 +191,21 @@ Page({
    * 支付订单
    */
   payOrder: function () {
-    wx.showToast({
-      title: '暂未实现支付功能',
-      icon: 'none'
+    // 获取订单ID和订单号
+    const orderId = this.data.orderId;
+    const orderNo = this.data.order.order_no;
+
+    if (!orderId || !orderNo) {
+      wx.showToast({
+        title: '订单信息不完整',
+        icon: 'none'
+      });
+      return;
+    }
+
+    // 跳转到支付页面
+    wx.navigateTo({
+      url: `/pages/order/pay/index?order_id=${orderId}&order_no=${orderNo}`,
     });
   },
 

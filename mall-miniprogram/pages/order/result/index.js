@@ -61,7 +61,7 @@ Page({
                     });
                 } else {
                     wx.showToast({
-                        title: res.msg || '获取订单信息失败',
+                        title: res.message || '获取订单信息失败',
                         icon: 'none'
                     });
                 }

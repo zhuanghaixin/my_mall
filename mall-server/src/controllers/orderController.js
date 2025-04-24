@@ -409,16 +409,44 @@ const generateOrderNo = () => {
  */
 exports.createOrder = catchAsync(async (req, res) => {
     const userId = req.user.id;
-    const { address_id, remark } = req.body;
+    const { address_id, remark, client_order_id } = req.body;
 
     // 验证参数
     if (!address_id) {
         throw new ValidationError('收货地址不能为空');
     }
 
-    const transaction = await sequelize.transaction();
+    // 生成订单号
+    const orderNo = generateOrderNo();
+
+    // 实现幂等性处理 - 检查是否已存在相同的订单
+    if (client_order_id) {
+        const existingOrder = await Order.findOne({
+            where: {
+                user_id: userId,
+                client_order_id: client_order_id
+            }
+        });
+
+        if (existingOrder) {
+            logger.info(`重复提交订单请求，返回已存在的订单，用户ID: ${userId}, 客户端订单ID: ${client_order_id}`);
+            return res.status(200).json({
+                code: 200,
+                message: '订单已存在',
+                data: {
+                    order_id: existingOrder.id,
+                    order_no: existingOrder.order_no
+                }
+            });
+        }
+    }
+
+    let transaction;
 
     try {
+        // 开始事务
+        transaction = await sequelize.transaction();
+
         // 1. 获取收货地址
         const address = await Address.findOne({
             where: {
@@ -428,7 +456,6 @@ exports.createOrder = catchAsync(async (req, res) => {
         });
 
         if (!address) {
-            await transaction.rollback();
             throw new NotFoundError('收货地址不存在');
         }
 
@@ -445,7 +472,6 @@ exports.createOrder = catchAsync(async (req, res) => {
         });
 
         if (cartItems.length === 0) {
-            await transaction.rollback();
             throw new ValidationError('购物车中没有选中的商品');
         }
 
@@ -481,10 +507,10 @@ exports.createOrder = catchAsync(async (req, res) => {
         logger.debug(`订单总金额计算: 商品总额=${totalAmount}, 运费=${freightAmount}, 应付金额=${payAmount}`);
 
         // 4. 生成订单
-        const orderNo = generateOrderNo();
         const order = await Order.create({
             order_no: orderNo,
             user_id: userId,
+            client_order_id: client_order_id || null, // 保存客户端订单ID，用于幂等性检查
             total_amount: totalAmount.toFixed(2),
             freight_amount: freightAmount.toFixed(2),
             pay_amount: payAmount.toFixed(2),
@@ -522,6 +548,7 @@ exports.createOrder = catchAsync(async (req, res) => {
             transaction
         });
 
+        // 提交事务
         await transaction.commit();
 
         logger.info(`用户(ID: ${userId})创建订单成功，订单号: ${orderNo}`);
@@ -535,7 +562,10 @@ exports.createOrder = catchAsync(async (req, res) => {
             }
         });
     } catch (error) {
-        await transaction.rollback();
+        // 改进事务处理逻辑，避免重复回滚
+        if (transaction && transaction.finished !== 'rollback') {
+            await transaction.rollback();
+        }
         logger.error(`创建订单失败: ${error.message}`);
         throw error;
     }
