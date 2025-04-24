@@ -127,8 +127,10 @@ Page({
    * 获取订单数量统计
    */
   getOrderCount() {
+    console.log(12111)
     orderApi.getOrderCounts()
       .then(res => {
+        console.log('res---', res)
         if (res.code === 200 && res.data) {
           this.setData({
             orderCount: res.data

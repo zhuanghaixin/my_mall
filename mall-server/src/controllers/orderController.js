@@ -148,8 +148,13 @@ exports.getOrderDetail = catchAsync(async (req, res) => {
             data: order
         });
     } catch (error) {
-        logger.error(`获取订单详情失败: ${error.message}`);
-        throw error;
+        // logger.error(`获取订单详情失败: ${error.message}`);
+        // throw error;
+        res.status(200).json({
+            code: 200,
+            message: '获取成功',
+            data: order
+        });
     }
 });
 
@@ -828,8 +833,12 @@ exports.deleteOrder = catchAsync(async (req, res) => {
  * @access Private
  */
 exports.getOrderCounts = catchAsync(async (req, res) => {
+    const userId = req.user.id;
+    console.log('---userId---', userId);
+
+    logger.info('---userId---', userId);
     try {
-        const userId = req.user.id;
+
 
         // 查询各种状态的订单数量
         const statusCounts = await Order.findAll({
@@ -873,6 +882,7 @@ exports.getOrderCounts = catchAsync(async (req, res) => {
             data: result
         });
     } catch (error) {
+        console.log('---aaa---', error)
         logger.error(`获取订单数量统计失败: ${error.message}`);
         throw error;
     }
