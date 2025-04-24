@@ -62,25 +62,82 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
-# 停止旧容器
-echo "停止旧MySQL容器..."
-docker-compose -f docker-compose.yml -f $ENV_FILE stop mysql
-docker-compose -f docker-compose.yml -f $ENV_FILE rm -f mysql
+# 首先停止所有服务
+echo "停止所有服务..."
+docker-compose -f docker-compose.yml -f $ENV_FILE down
 
-# 清理卷
-VOLUME_NAME="mysql-data-$ENV"
-if [ "$ENV" = "dev" ]; then
-  VOLUME_NAME="mysql-data-dev"
-elif [ "$ENV" = "test" ]; then
-  VOLUME_NAME="mysql-data-test"
-elif [ "$ENV" = "staging" ]; then
-  VOLUME_NAME="mysql-data-staging"
-elif [ "$ENV" = "prod" ]; then
-  VOLUME_NAME="mysql-data-prod"
+# 修复docker-compose.yml和docker-compose.dev.yml中的卷定义问题
+echo "检查并修复Docker Compose配置文件..."
+
+# 运行中间脚本来修改配置
+cat > fix-volume-config.sh << 'EOF'
+#!/bin/bash
+# 该脚本修复docker-compose配置文件中的卷名问题
+
+# 修复主配置文件
+sed -i.bak 's/mysql-data: {}/mysql-data:/' docker-compose.yml
+# 修复环境配置文件
+sed -i.bak 's/mysql-data-dev: {}/mysql-data-dev:/' docker-compose.dev.yml
+sed -i.bak 's/mysql-data-test: {}/mysql-data-test:/' docker-compose.test.yml
+sed -i.bak 's/mysql-data-prod: {}/mysql-data-prod:/' docker-compose.prod.yml
+sed -i.bak 's/mysql-data-staging: {}/mysql-data-staging:/' docker-compose.staging.yml 2>/dev/null || true
+
+echo "配置文件已修复"
+EOF
+
+chmod +x fix-volume-config.sh
+./fix-volume-config.sh
+
+# 如果容器仍在运行，强制停止
+if docker ps | grep -q $MYSQL_CONTAINER; then
+  echo "强制停止容器: $MYSQL_CONTAINER"
+  docker stop $MYSQL_CONTAINER
+  docker rm -f $MYSQL_CONTAINER
 fi
 
-echo "删除MySQL卷: $VOLUME_NAME"
-docker volume rm $VOLUME_NAME || true
+# 查找与MySQL相关的所有卷
+echo "查找MySQL相关卷..."
+MYSQL_VOLUMES=$(docker volume ls --format "{{.Name}}" | grep -E "mysql-data|mysql-data-${ENV}" || echo "")
+
+if [ -z "$MYSQL_VOLUMES" ]; then
+  echo "未找到MySQL相关卷"
+else
+  echo "找到以下MySQL相关卷:"
+  echo "$MYSQL_VOLUMES"
+  
+  # 检查并删除每个卷
+  echo "$MYSQL_VOLUMES" | while read volume; do
+    echo "处理卷: $volume"
+    
+    # 查找使用该卷的容器
+    CONTAINERS=$(docker ps -a --filter "volume=$volume" --format "{{.Names}}" || echo "")
+    
+    if [ ! -z "$CONTAINERS" ]; then
+      echo "卷 $volume 正在被以下容器使用:"
+      echo "$CONTAINERS"
+      echo "停止并删除这些容器..."
+      
+      # 停止并删除容器（macOS兼容方式）
+      for container in $CONTAINERS; do
+        docker rm -f $container || true
+      done
+    fi
+    
+    # 删除卷
+    echo "删除卷 $volume..."
+    docker volume rm $volume || true
+  done
+fi
+
+# 确保Docker网络正确
+echo "清理Docker网络..."
+if docker network ls | grep -q "_mall-network"; then
+  docker network rm _mall-network || true
+fi
+
+if docker network ls | grep -q "mall-system"; then
+  docker network ls | grep "mall-system" | awk '{print $1}' | xargs -I{} docker network rm {} || true
+fi
 
 # 重新创建并启动MySQL容器
 echo "启动新MySQL容器..."
@@ -88,15 +145,18 @@ docker-compose -f docker-compose.yml -f $ENV_FILE up -d mysql
 
 # 等待MySQL启动
 echo "等待MySQL启动..."
-for i in {1..60}; do
-  if docker exec $MYSQL_CONTAINER mysqladmin ping -h localhost -u root -pzhx199710085470 --silent >/dev/null 2>&1; then
-    echo "MySQL已启动"
-    break
+MAX_WAIT=120 # 增加等待时间到2分钟
+for i in $(seq 1 $MAX_WAIT); do
+  if docker ps | grep -q $MYSQL_CONTAINER; then
+    if docker exec $MYSQL_CONTAINER mysqladmin ping -h localhost -u root -pzhx199710085470 --silent >/dev/null 2>&1; then
+      echo "MySQL已启动"
+      break
+    fi
   fi
   echo -n "."
   sleep 1
   
-  if [ $i -eq 60 ]; then
+  if [ $i -eq $MAX_WAIT ]; then
     echo "MySQL启动超时，请检查容器日志"
     docker-compose -f docker-compose.yml -f $ENV_FILE logs mysql
     exit 1
@@ -138,6 +198,14 @@ else
   docker-compose -f docker-compose.yml -f $ENV_FILE logs mysql
   exit 1
 fi
+
+# 清理临时文件
+rm -f fix-volume-config.sh
+rm -f docker-compose.yml.bak
+rm -f docker-compose.dev.yml.bak
+rm -f docker-compose.test.yml.bak
+rm -f docker-compose.prod.yml.bak
+rm -f docker-compose.staging.yml.bak 2>/dev/null || true
 
 echo "MySQL修复操作完成"
 echo "您可以使用以下命令查看容器日志："
