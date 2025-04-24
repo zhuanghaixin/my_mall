@@ -2,7 +2,7 @@ const app = getApp();
 const api = require('../../../config/api.js');
 const orderService = require('../../../api/order.js');
 const payService = require('../../../api/pay.js');
-import util from '../../../utils/util.js';
+const util = require('../../../utils/util.js');
 
 Page({
     /**
@@ -70,8 +70,11 @@ Page({
      */
     getOrderDetail: function () {
         wx.showLoading({ title: '加载中...' });
-        util.request(api.OrderDetail, { order_id: this.data.orderId }, 'GET')
+
+        // 使用orderService获取订单详情，正确传递orderId参数
+        orderService.getOrderDetail(this.data.orderId)
             .then(res => {
+                wx.hideLoading();
                 if (res.code === 200 && res.data) {
                     this.setData({
                         orderInfo: res.data,
@@ -82,14 +85,31 @@ Page({
                         orderTime: util.formatTime(new Date(res.data.create_time))
                     });
                 } else {
-                    util.showErrorToast('获取订单信息失败');
+                    wx.showToast({
+                        title: res.message || '获取订单信息失败',
+                        icon: 'none',
+                        duration: 2000,
+                        complete: () => {
+                            setTimeout(() => {
+                                wx.navigateBack();
+                            }, 2000);
+                        }
+                    });
                 }
-                wx.hideLoading();
             })
             .catch(err => {
-                console.error(err);
                 wx.hideLoading();
-                util.showErrorToast('系统异常，请稍后再试');
+                console.error('获取订单详情失败', err);
+                wx.showToast({
+                    title: err.message || '系统异常，请稍后再试',
+                    icon: 'none',
+                    duration: 2000,
+                    complete: () => {
+                        setTimeout(() => {
+                            wx.navigateBack();
+                        }, 2000);
+                    }
+                });
             });
     },
 
@@ -148,7 +168,11 @@ Page({
      * 订单超时
      */
     orderExpired: function () {
-        util.showErrorToast('支付超时，订单已取消');
+        wx.showToast({
+            title: '支付超时，订单已取消',
+            icon: 'error',
+            duration: 1500
+        });
         setTimeout(() => {
             wx.navigateBack({
                 delta: 1

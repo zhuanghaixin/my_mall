@@ -1893,3 +1893,56 @@ npm run dev
 ### 修改了哪些文件
 - mall-server/src/controllers/orderController.js
 - mall-server/src/models/index.js
+
+## 2024-07-09 会话总结
+
+### 会话的主要目的
+解决商城小程序中"订单不存在"的错误问题。
+
+### 完成的主要任务
+- 分析了服务器端返回的"订单不存在"错误信息并定位到问题所在
+- 检查了订单详情API接口调用路径
+- 分析了订单控制器和路由配置来确认正确的API端点格式
+- 确认了需要在API请求URL中正确拼接订单ID参数
+
+### 关键决策和解决方案
+- 发现问题的根本原因是API请求路径不正确，服务器端期望的路径是`/api/order/:id`而不是`/api/order/detail?order_id=xxx`
+- 微信小程序端的订单API服务模块使用了`${api.OrderDetail}/${orderId}`的格式，但在支付页面中使用了`api.OrderDetail`加上查询参数的格式
+- 需要修改`getOrderDetail`方法的请求格式，以匹配后端API的期望
+
+### 使用的技术栈
+- 微信小程序 JavaScript
+- Node.js Express后端
+- Sequelize ORM
+- RESTful API
+
+### 修改了哪些文件
+- `mall-miniprogram/pages/order/pay/index.js` - 修改了支付页面的订单详情获取方法和错误处理
+
+## 2024-07-09 会话总结（2）
+
+### 会话的主要目的
+调整API接口文档，确保其与实际代码实现一致，特别是关于地址API的部分。
+
+### 完成的主要任务
+- 对比了API接口文档与实际代码中定义的地址相关接口
+- 修改了API接口文档中的地址API路径，使其与代码实现保持一致
+- 添加了缺失的两个API接口文档：获取默认地址和获取地址详情
+
+### 关键决策和解决方案
+- 确认以代码实现为准，修正文档中的API路径
+- 地址API的主要修改包括：
+  1. 添加地址: 从`/api/address`修改为`/api/address/add`
+  2. 更新地址: 从`/api/address/:id`修改为`/api/address/update/:id`
+  3. 删除地址: 从`/api/address/:id`修改为`/api/address/delete/:id`
+  4. 设置默认地址: 从`/api/address/:id/default`修改为`/api/address/default/:id`
+  5. 新增接口: 获取默认地址`GET /api/address/default`
+  6. 新增接口: 获取地址详情`GET /api/address/:id`
+
+### 使用的技术栈
+- Markdown文档
+- RESTful API设计
+- Express.js路由
+
+### 修改了哪些文件
+- `API接口文档.md` - 更新了地址相关API的路径和新增了两个接口文档
