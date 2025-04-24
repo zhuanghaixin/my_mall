@@ -20,16 +20,38 @@ Page({
         actualPrice: 0, // 实际需要支付的金额
         remark: '', // 订单备注
         submitting: false, // 是否正在提交订单
+        buyNow: false,
+        directBuyInfo: null,
     },
 
     /**
      * 生命周期函数--监听页面加载
      */
     onLoad: function (options) {
+        console.log('订单确认页面参数:', options);
+
+        // 保存直接购买标识和商品信息
+        if (options.buy_now && options.goods_id) {
+            this.setData({
+                buyNow: true,
+                directBuyInfo: {
+                    goodsId: parseInt(options.goods_id),
+                    quantity: parseInt(options.quantity || 1)
+                }
+            });
+        }
+
         // 获取默认收货地址
         this.getDefaultAddress();
-        // 获取购物车中选中的商品
-        this.getCheckedCartList();
+
+        // 获取商品数据
+        if (this.data.buyNow && this.data.directBuyInfo) {
+            // 直接购买场景，获取单个商品信息
+            this.getDirectBuyGoods();
+        } else {
+            // 正常场景，获取购物车中选中的商品
+            this.getCheckedCartList();
+        }
     },
 
     /**
@@ -221,12 +243,19 @@ Page({
         const userId = wx.getStorageSync('userId') || '';
         const clientOrderId = `${userId}_${new Date().getTime()}_${Math.floor(Math.random() * 1000)}`;
 
-        // 创建订单
+        // 创建订单数据
         const orderData = {
             address_id: this.data.address.id,
             remark: this.data.remark,
             client_order_id: clientOrderId
         };
+
+        // 如果是直接购买，添加商品信息
+        if (this.data.buyNow && this.data.directBuyInfo) {
+            orderData.buy_now = true;
+            orderData.goods_id = this.data.directBuyInfo.goodsId;
+            orderData.quantity = this.data.directBuyInfo.quantity;
+        }
 
         wx.showLoading({
             title: '提交订单中...',
@@ -299,5 +328,68 @@ Page({
                 selectedAddress: null
             });
         }
+    },
+
+    /**
+     * 获取直接购买的商品信息
+     */
+    getDirectBuyGoods: function () {
+        const { goodsId, quantity } = this.data.directBuyInfo;
+
+        wx.showLoading({
+            title: '加载中...',
+            mask: true
+        });
+
+        // 调用商品API获取商品详情
+        const goodsApi = require('../../../api/goods.js');
+        goodsApi.getGoodsDetail(goodsId).then(res => {
+            wx.hideLoading();
+            if (res.code === 200 && res.data) {
+                // 构建购买商品列表格式，与购物车保持一致
+                const goods = res.data;
+                const formattedGoods = [
+                    {
+                        goods_id: goods.id,
+                        quantity: quantity,
+                        goods: {
+                            id: goods.id,
+                            name: goods.name,
+                            price: goods.price,
+                            image: goods.main_image || goods.image
+                        }
+                    }
+                ];
+
+                // 计算总价
+                const totalPrice = goods.price * quantity;
+                // 计算实际支付金额
+                const actualPrice = totalPrice + this.data.freightPrice;
+
+                this.setData({
+                    cartList: formattedGoods,
+                    totalPrice: totalPrice.toFixed(2),
+                    actualPrice: actualPrice.toFixed(2)
+                });
+            } else {
+                wx.showToast({
+                    title: res.message || '获取商品信息失败',
+                    icon: 'none'
+                });
+                setTimeout(() => {
+                    wx.navigateBack();
+                }, 1500);
+            }
+        }).catch(err => {
+            wx.hideLoading();
+            console.error('获取商品信息失败:', err);
+            wx.showToast({
+                title: '获取商品信息失败',
+                icon: 'none'
+            });
+            setTimeout(() => {
+                wx.navigateBack();
+            }, 1500);
+        });
     }
 }); 

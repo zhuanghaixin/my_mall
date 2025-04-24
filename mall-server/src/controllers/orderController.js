@@ -409,7 +409,7 @@ const generateOrderNo = () => {
  */
 exports.createOrder = catchAsync(async (req, res) => {
     const userId = req.user.id;
-    const { address_id, remark, client_order_id } = req.body;
+    const { address_id, remark, client_order_id, buy_now, goods_id, quantity } = req.body;
 
     // 验证参数
     if (!address_id) {
@@ -459,42 +459,65 @@ exports.createOrder = catchAsync(async (req, res) => {
             throw new NotFoundError('收货地址不存在');
         }
 
-        // 2. 获取用户购物车中已选中的商品
-        const cartItems = await Cart.findAll({
-            where: {
-                user_id: userId,
-                selected: 1
-            },
-            include: [{
-                model: Goods,
-                as: 'goods'
-            }]
-        });
+        let cartItems = [];
+        let goodsData = null;
 
-        if (cartItems.length === 0) {
-            throw new ValidationError('购物车中没有选中的商品');
+        // 2. 处理商品数据
+        if (buy_now && goods_id) {
+            // 直接购买场景：获取指定商品信息
+            logger.debug(`用户(ID: ${userId})直接购买商品，商品ID: ${goods_id}, 数量: ${quantity}`);
+
+            goodsData = await Goods.findByPk(goods_id);
+            if (!goodsData) {
+                throw new NotFoundError('商品不存在');
+            }
+        } else {
+            // 购物车购买场景：获取用户购物车中已选中的商品
+            cartItems = await Cart.findAll({
+                where: {
+                    user_id: userId,
+                    selected: 1
+                },
+                include: [{
+                    model: Goods,
+                    as: 'goods'
+                }]
+            });
+
+            if (cartItems.length === 0) {
+                throw new ValidationError('购物车中没有选中的商品');
+            }
+
+            // 记录购物车商品数据，便于调试
+            logger.debug(`用户(ID: ${userId})的购物车商品数据: ${JSON.stringify(cartItems.map(item => ({
+                id: item.id,
+                goods_id: item.goods_id,
+                count: item.count,
+                goods_name: item.goods?.name,
+                goods_price: item.goods?.price
+            })))}`);
         }
-
-        // 记录购物车商品数据，便于调试
-        logger.debug(`用户(ID: ${userId})的购物车商品数据: ${JSON.stringify(cartItems.map(item => ({
-            id: item.id,
-            goods_id: item.goods_id,
-            count: item.count,
-            goods_name: item.goods?.name,
-            goods_price: item.goods?.price
-        })))}`);
 
         // 3. 计算订单总金额和运费
         let totalAmount = 0;
         const freightAmount = 10.00; // 运费，可以根据商品重量或其他规则计算
 
-        for (const item of cartItems) {
-            // 确保price和quantity都是有效数字
-            const price = parseFloat(item.goods.price) || 0;
-            const quantity = parseInt(item.count) || 0;
-            totalAmount += price * quantity;
-            // 记录每个商品的金额计算
-            logger.debug(`商品(ID: ${item.goods_id})金额计算: 价格=${price}, 数量=${quantity}, 小计=${price * quantity}`);
+        if (buy_now && goodsData) {
+            // 直接购买场景的金额计算
+            const price = parseFloat(goodsData.price) || 0;
+            const qty = parseInt(quantity) || 1;
+            totalAmount = price * qty;
+            logger.debug(`直接购买商品(ID: ${goods_id})金额计算: 价格=${price}, 数量=${qty}, 小计=${totalAmount}`);
+        } else {
+            // 购物车场景的金额计算
+            for (const item of cartItems) {
+                // 确保price和quantity都是有效数字
+                const price = parseFloat(item.goods.price) || 0;
+                const qty = parseInt(item.count) || 0;
+                totalAmount += price * qty;
+                // 记录每个商品的金额计算
+                logger.debug(`商品(ID: ${item.goods_id})金额计算: 价格=${price}, 数量=${qty}, 小计=${price * qty}`);
+            }
         }
 
         // 确保totalAmount是有效数字
@@ -524,34 +547,48 @@ exports.createOrder = catchAsync(async (req, res) => {
 
         // 5. 创建订单商品记录
         const orderGoods = [];
-        for (const item of cartItems) {
-            // 确保price是有效数字
-            const price = parseFloat(item.goods.price) || 0;
+
+        if (buy_now && goodsData) {
+            // 直接购买场景：添加单个商品
             orderGoods.push({
                 order_id: order.id,
-                goods_id: item.goods_id,
-                goods_name: item.goods.name,
-                goods_image: item.goods.main_image,
-                price: price.toFixed(2),
-                quantity: item.count
+                goods_id: goodsData.id,
+                goods_name: goodsData.name,
+                goods_image: goodsData.main_image,
+                price: parseFloat(goodsData.price).toFixed(2),
+                quantity: parseInt(quantity) || 1
+            });
+        } else {
+            // 购物车场景：添加购物车中选中的商品
+            for (const item of cartItems) {
+                // 确保price是有效数字
+                const price = parseFloat(item.goods.price) || 0;
+                orderGoods.push({
+                    order_id: order.id,
+                    goods_id: item.goods_id,
+                    goods_name: item.goods.name,
+                    goods_image: item.goods.main_image,
+                    price: price.toFixed(2),
+                    quantity: item.count
+                });
+            }
+
+            // 6. 清空购物车中已选中的商品（仅在购物车场景）
+            await Cart.destroy({
+                where: {
+                    user_id: userId,
+                    selected: 1
+                },
+                transaction
             });
         }
 
         await OrderGoods.bulkCreate(orderGoods, { transaction });
 
-        // 6. 清空购物车中已选中的商品
-        await Cart.destroy({
-            where: {
-                user_id: userId,
-                selected: 1
-            },
-            transaction
-        });
-
         // 提交事务
         await transaction.commit();
 
-        logger.info(`用户(ID: ${userId})创建订单成功，订单号: ${orderNo}`);
+        logger.info(`用户(ID: ${userId})创建订单成功，订单号: ${orderNo}, 订单方式: ${buy_now ? '直接购买' : '购物车'}`);
 
         res.status(201).json({
             code: 200,

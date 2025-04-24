@@ -423,7 +423,7 @@ Page({
 
         // 跳转到订单确认页面
         wx.navigateTo({
-            url: `/pages/order/order-confirm/index?goods_id=${goods.id}&quantity=${quantity}&buy_now=1`
+            url: `/pages/order/confirm/index?goods_id=${goods.id}&quantity=${quantity}&buy_now=1`
         });
     },
 

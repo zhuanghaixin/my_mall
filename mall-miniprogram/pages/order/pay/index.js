@@ -252,7 +252,7 @@ Page({
                         success: () => {
                             setTimeout(() => {
                                 wx.redirectTo({
-                                    url: '/pages/order/result/index?order_id=' + orderId + '&status=success'
+                                    url: '/pages/order/result/index?orderId=' + orderId + '&status=success'
                                 });
                             }, 1500);
                         }
@@ -287,7 +287,7 @@ Page({
             success: (res) => {
                 console.log('支付成功', res);
                 wx.redirectTo({
-                    url: '/pages/order/result/index?order_id=' + this.data.orderId + '&status=success'
+                    url: '/pages/order/result/index?orderId=' + this.data.orderId + '&status=success'
                 });
             },
             fail: (err) => {

@@ -129,7 +129,7 @@ Page({
      */
     repay: function () {
         wx.redirectTo({
-            url: '/pages/order/pay/index?orderId=' + this.data.orderId
+            url: '/pages/order/pay/index?order_id=' + this.data.orderId
         });
     }
 }) 
