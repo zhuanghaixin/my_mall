@@ -2245,3 +2245,32 @@ npm run dev
 - `mall-server/public/uploads/banners/banner_readme.txt` (新增)
 - `mall-server/public/static/readme.txt` (新增)
 - `mall-server/public/index.html` (完善)
+
+## 2024年4月24日 18:30
+
+### 会话主要目的
+解决小程序在iOS设备(iPhone 12)上的显示问题和兼容性问题
+
+### 完成的主要任务
+1. 分析iOS设备上图标缺失和布局错乱的原因
+2. 修改app.json中的渲染引擎配置，从skyline切换到webview
+3. 统一修改首页和购物车页面的JSON配置，确保渲染引擎一致
+4. 编写iOS问题总结文档，记录问题原因和解决方案
+
+### 关键决策和解决方案
+- 识别出问题根源是Skyline渲染引擎在iOS设备上的兼容性问题
+- 决定使用更兼容的WebView渲染引擎替代Skyline
+- 完全移除rendererOptions配置部分，避免冲突
+- 统一所有页面的渲染引擎配置，确保前后一致
+
+### 使用的技术栈
+- 微信小程序开发框架
+- 微信渲染引擎(webview vs skyline)
+- JSON配置
+- iOS兼容性调试
+
+### 修改了哪些文件
+- `mall-miniprogram/app.json` - 渲染引擎从skyline改为webview，删除rendererOptions配置
+- `mall-miniprogram/pages/index/index.json` - 渲染引擎从skyline改为webview
+- `mall-miniprogram/pages/cart/index.json` - 渲染引擎从skyline改为webview
+- `iOS小程序显示问题.md` - 新建文档记录问题和解决方案
