@@ -1,10 +1,18 @@
+// 引入环境配置
+const { getEnv, getApiBaseUrl } = require('./env');
+
+// 获取当前环境配置
+const currentEnv = getEnv();
+
 // API基础URL
-const ApiBaseUrl = 'http://192.168.0.131:8080/api';
+const ApiBaseUrl = getApiBaseUrl(currentEnv);
 
 // API接口地址
 module.exports = {
     // 基础URL
     BaseUrl: ApiBaseUrl,
+    // 环境名称
+    EnvName: currentEnv.envName,
 
     // 用户相关
     UserLogin: ApiBaseUrl + '/user/wxlogin', // 微信登录

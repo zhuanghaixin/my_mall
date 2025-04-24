@@ -1,3 +1,120 @@
+# 会话总结 - 2024年7月15日（导航栏更新）
+
+## 会话主要目的
+为测试页面添加自定义导航栏组件和返回按钮功能。
+
+## 完成的主要任务
+- 在测试页面中集成了自定义导航栏组件
+- 配置了带返回按钮的导航栏
+- 修改了页面配置，隐藏默认导航栏
+- 优化了页面布局，适配自定义导航栏
+
+## 关键决策和解决方案
+- 使用项目中现有的 navigation-bar 组件实现自定义导航
+- 设置 navigationStyle: "custom" 隐藏默认导航栏
+- 配置组件的 back 属性为 true，启用返回按钮功能
+- 调整容器样式，确保布局正确
+
+## 使用的技术栈
+- 微信小程序自定义组件
+- 微信小程序页面配置
+- 样式优化
+
+## 修改的文件
+- pages/test/index.wxml：添加导航栏组件
+- pages/test/index.js：配置导航栏相关逻辑
+- pages/test/index.json：隐藏默认导航栏，引入组件
+- pages/test/index.wxss：优化页面样式
+- cursor_log.md：更新开发日志
+
+# 会话总结 - 2024年7月15日（测试页面更新）
+
+## 会话主要目的
+更新测试页面，使其使用环境配置系统，替代硬编码的服务器URL。
+
+## 完成的主要任务
+- 修改了 pages/test/index.js，使用环境配置系统替代硬编码URL
+- 添加了 getServerUrl 函数用于获取不含 API 前缀的服务器基础地址
+- 更新了页面界面，添加了环境信息显示区域
+- 添加了环境信息的样式，提升用户体验
+
+## 关键决策和解决方案
+- 添加了服务器URL获取函数，处理静态资源访问需求
+- 将所有API请求URL替换为使用 getApiBaseUrl 函数
+- 添加环境名称和服务器地址显示，方便测试和调试
+- 优化了界面样式，使环境信息更加醒目
+
+## 使用的技术栈
+- 微信小程序原生开发
+- 环境配置系统
+- 小程序UI组件和样式
+
+## 修改的文件
+- pages/test/index.js：使用环境配置系统替代硬编码URL
+- pages/test/index.wxml：添加环境信息显示区域
+- pages/test/index.wxss：添加环境信息区域样式
+- cursor_log.md：更新开发日志
+
+# 会话总结 - 2024年7月15日（更新）
+
+## 会话主要目的
+优化微信小程序的环境配置，将 API URL 中的 IP 地址和端口分开配置，提高灵活性。
+
+## 完成的主要任务
+- 修改了 config/env.js 文件，将 apiBaseUrl 拆分为 apiHost、apiPort 和 apiPrefix
+- 添加了 getApiBaseUrl 函数用于组合完整的 API 基础 URL
+- 更新了 config/api.js 使用新的 getApiBaseUrl 函数
+- 更新了 ENV_README.md 文档，反映新的配置方式
+
+## 关键决策和解决方案
+- 分离 IP 和端口配置，使环境配置更灵活，便于单独修改
+- 添加了标准端口判断逻辑，对 HTTP(80) 和 HTTPS(443) 标准端口自动省略显示
+- 完善文档，提供更详细的环境配置修改说明和示例
+
+## 使用的技术栈
+- 微信小程序原生开发
+- JavaScript 字符串模板
+- 环境变量配置
+
+## 修改的文件
+- config/env.js：将 apiBaseUrl 拆分为 apiHost、apiPort 和 apiPrefix，添加 getApiBaseUrl 函数
+- config/api.js：更新引用和 API 基础 URL 的获取方式
+- ENV_README.md：更新文档内容，反映新的配置方式
+- cursor_log.md：更新开发日志
+
+# 会话总结 - 2024年7月15日
+
+## 会话主要目的
+实现微信小程序的多环境配置，通过 project.config.json 和环境变量的方式实现不同环境切换。
+
+## 完成的主要任务
+- 创建了环境配置文件 config/env.js，定义了开发、测试和生产三种环境
+- 修改了 config/api.js，使用环境变量设置 API 基础 URL
+- 更新了 project.config.json，添加了条件编译配置
+- 创建了环境工具函数 utils/env-util.js，方便获取和显示环境信息
+- 修改了 app.js，在应用启动时初始化环境设置
+- 创建了环境配置说明文档 ENV_README.md
+
+## 关键决策和解决方案
+- 使用 project.config.json 的 condition 字段配置不同环境
+- 通过环境变量和全局配置区分开发、测试和生产环境
+- 利用微信小程序的 __wxConfig.envVersion 自动识别运行环境
+- 在非生产环境显示环境标识，便于开发和测试
+
+## 使用的技术栈
+- 微信小程序原生开发
+- 条件编译
+- 环境变量配置
+
+## 修改的文件
+- config/env.js (新建)：创建环境配置文件
+- config/api.js (修改)：使用环境变量设置 API 基础 URL
+- utils/env-util.js (新建)：创建环境工具函数
+- app.js (修改)：添加环境初始化逻辑
+- project.config.json (修改)：添加条件编译配置
+- ENV_README.md (新建)：创建环境配置说明文档
+- cursor_log.md (更新)：更新开发日志
+
 # 会话总结 - 2024年7月6日
 
 ## 会话主要目的

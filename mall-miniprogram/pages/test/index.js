@@ -1,19 +1,50 @@
 const app = getApp();
 const util = require('../../utils/util.js');
+const { getEnv, getApiBaseUrl } = require('../../config/env.js');
+
+// 获取当前环境配置
+const currentEnv = getEnv();
+// 获取API基础URL（不包含/api前缀）
+const getServerUrl = () => {
+    const env = getEnv();
+    // 处理标准端口
+    const isHttps = env.apiHost.startsWith('https://');
+    if ((isHttps && env.apiPort === '443') || (!isHttps && env.apiPort === '80')) {
+        return `${env.apiHost}`;
+    }
+    return `${env.apiHost}:${env.apiPort}`;
+};
 
 Page({
     data: {
         imageSrc: '',
         apiResult: '',
-        serverUrl: 'http://192.168.0.131:8080',
+        serverUrl: '',
         filePath: '',
         uploadResult: '',
-        imageList: []
+        imageList: [],
+        currentEnv: ''
     },
 
     onLoad: function () {
+        // 隐藏默认导航栏
+        wx.hideNavigationBarLoading();
+
+        // 设置当前环境服务器URL
+        this.setData({
+            serverUrl: getServerUrl(),
+            currentEnv: currentEnv.envName
+        });
+
         // 页面加载时自动获取服务器图片列表
         this.getImageList();
+
+        // 显示当前环境名称
+        wx.showToast({
+            title: `环境：${currentEnv.envName}`,
+            icon: 'none',
+            duration: 2000
+        });
     },
 
     // 测试图片加载
@@ -26,8 +57,10 @@ Page({
 
     // 测试API调用
     testApiCall() {
+        const apiUrl = getApiBaseUrl(); // 获取完整API基础URL（包含/api前缀）
+
         wx.request({
-            url: this.data.serverUrl + '/api/health',
+            url: apiUrl + '/health', // 使用API配置，已包含/api前缀，因此不需要再加
             success: (res) => {
                 this.setData({
                     apiResult: JSON.stringify(res.data)
@@ -68,8 +101,10 @@ Page({
             title: '上传中...',
         });
 
+        const apiUrl = getApiBaseUrl();
+
         wx.uploadFile({
-            url: this.data.serverUrl + '/api/upload/image',
+            url: apiUrl + '/upload/image', // 使用API配置
             filePath: this.data.filePath,
             name: 'file',
             header: {
@@ -103,8 +138,10 @@ Page({
 
     // 获取服务器图片列表
     getImageList() {
+        const apiUrl = getApiBaseUrl();
+
         wx.request({
-            url: this.data.serverUrl + '/api/upload/list',
+            url: apiUrl + '/upload/list', // 使用API配置
             method: 'GET',
             header: {
                 'Authorization': 'Bearer ' + wx.getStorageSync('token')

@@ -1,6 +1,19 @@
 <!-- pages/test/index.wxml -->
+<!-- 自定义导航栏 -->
+<navigation-bar 
+  title="资源测试页面" 
+  back="{{true}}" 
+  background="#ffffff" 
+  color="#000000">
+</navigation-bar>
+
 <view class="container">
   <view class="title">资源测试页面</view>
+  
+  <view class="env-info">
+    <text>当前环境: {{currentEnv}}</text>
+    <text>服务器地址: {{serverUrl}}</text>
+  </view>
   
   <view class="section">
     <view class="section-title">1. 静态资源测试</view>
