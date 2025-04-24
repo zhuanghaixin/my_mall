@@ -1,0 +1,42 @@
+version: '3.8'
+
+# 开发环境配置
+services:
+  mysql:
+    container_name: mall-mysql-dev
+    volumes:
+      - mysql-data-dev:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=zhx199710085470
+      - MYSQL_DATABASE=shop
+
+  mall-server:
+    container_name: mall-server-dev
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=shop
+      - DB_USER=root
+      - DB_PASSWORD=zhx199710085470
+      - API_PREFIX=/api
+      - LOG_LEVEL=debug
+      - ENABLE_MOCK=true
+    volumes:
+      - ./mall-server:/app
+      - /app/node_modules
+    command: npm run dev
+    # 使用nodemon进行开发自动重载
+
+  mall-admin:
+    container_name: mall-admin-dev
+    build:
+      args:
+        - BUILD_MODE=development
+    environment:
+      - VITE_API_URL=http://localhost:8080
+      - VITE_USE_MOCK=true
+      - VITE_USE_DEVTOOLS=true
+
+volumes:
+  mysql-data-dev: 

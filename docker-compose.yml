@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: mall-mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=zhx199710085470
+      - MYSQL_DATABASE=shop
+      - MYSQL_ROOT_HOST=%
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collate-server=utf8mb4_unicode_ci
+    networks:
+      - mall-network
+
+  # 后端服务
+  mall-server:
+    build:
+      context: ./mall-server
+      dockerfile: Dockerfile
+    container_name: mall-server
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=8080
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=shop
+      - DB_USER=root
+      - DB_PASSWORD=zhx199710085470
+      - API_PREFIX=/api
+      - JWT_SECRET=your_jwt_secret_key
+      - JWT_EXPIRES_IN=7d
+      - UPLOAD_DIR=public/uploads
+      - MAX_FILE_SIZE=5242880
+    volumes:
+      - ./mall-server/public/uploads:/app/public/uploads
+      - ./mall-server/logs:/app/logs
+    networks:
+      - mall-network
+
+  # 前端服务
+  mall-admin:
+    build:
+      context: ./mall-admin
+      dockerfile: Dockerfile
+      args:
+        - BUILD_MODE=${NODE_ENV:-development}
+    container_name: mall-admin
+    restart: always
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    depends_on:
+      - mall-server
+    networks:
+      - mall-network
+
+networks:
+  mall-network:
+    driver: bridge
+
+volumes:
+  mysql-data: 
