@@ -12,7 +12,12 @@ const app = express();
 
 // 中间件
 // 启用CORS跨域资源共享
-app.use(cors());
+app.use(cors({
+    origin: '*', // 允许所有来源的请求
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 
 // 解析JSON格式的请求体
 app.use(express.json());

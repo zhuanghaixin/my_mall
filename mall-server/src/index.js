@@ -28,8 +28,9 @@ connectToDatabase()
         await initAllSeedData();
 
         // 启动服务器
-        app.listen(PORT, () => {
+        app.listen(PORT, '0.0.0.0', () => {
             logger.info(`服务器运行在 http://localhost:${PORT}`);
+            logger.info(`服务器在局域网可通过 http://192.168.0.131:${PORT} 访问`);
             logger.info(`API前缀: ${process.env.API_PREFIX}`);
             logger.info(`环境: ${process.env.NODE_ENV}`);
         });
