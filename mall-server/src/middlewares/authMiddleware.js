@@ -30,7 +30,7 @@ exports.protect = (req, res, next) => {
 
         // 验证令牌并解码
         const decoded = verifyToken(token);
-
+        console.log('解码后的用户信息:', decoded);
         // 将解码后的用户信息存储在请求对象中，供后续路由使用
         req.user = decoded;
 

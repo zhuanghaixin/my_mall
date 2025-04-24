@@ -311,6 +311,54 @@ router.delete('/:id', orderController.deleteOrder);
 
 /**
  * @swagger
+ * /api/order/count:
+ *   get:
+ *     summary: 获取订单数量统计
+ *     tags: [用户订单]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功返回各状态订单数量
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: 获取成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     unpaid:
+ *                       type: integer
+ *                       description: 待付款订单数量
+ *                       example: 2
+ *                     unshipped:
+ *                       type: integer
+ *                       description: 待发货订单数量
+ *                       example: 1
+ *                     delivered:
+ *                       type: integer
+ *                       description: 待收货订单数量
+ *                       example: 3
+ *                     completed:
+ *                       type: integer
+ *                       description: 已完成订单数量
+ *                       example: 5
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/count', orderController.getOrderCounts);
+
+/**
+ * @swagger
  * components:
  *   schemas:
  *     Order:

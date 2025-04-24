@@ -50,7 +50,7 @@ module.exports = {
     OrderCancel: ApiBaseUrl + '/order', // 取消订单（使用 PUT /order/:id/cancel）
     OrderConfirm: ApiBaseUrl + '/order', // 确认收货（使用 PUT /order/:id/confirm）
     OrderDelete: ApiBaseUrl + '/order', // 删除订单（使用 DELETE /order/:id）
-    OrderCounts: ApiBaseUrl + '/order/counts', // 获取订单数量统计
+    OrderCounts: ApiBaseUrl + '/order/count', // 获取订单数量统计
 
     // 地址相关
     AddressList: ApiBaseUrl + '/address/list', // 地址列表

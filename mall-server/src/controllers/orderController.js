@@ -820,4 +820,60 @@ exports.deleteOrder = catchAsync(async (req, res) => {
         logger.error(`删除订单失败: ${error.message}`);
         throw error;
     }
+});
+
+/**
+ * 获取用户订单各状态数量统计
+ * @route GET /api/order/count
+ * @access Private
+ */
+exports.getOrderCounts = catchAsync(async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // 查询各种状态的订单数量
+        const statusCounts = await Order.findAll({
+            attributes: [
+                'status',
+                [fn('COUNT', col('id')), 'count']
+            ],
+            where: {
+                user_id: userId,
+                status: {
+                    [Op.in]: [0, 1, 2, 3] // 只统计 待付款(0)、待发货(1)、待收货(2)、已完成(3) 状态
+                }
+            },
+            group: ['status']
+        });
+
+        // 格式化结果
+        const result = {
+            unpaid: 0,     // 待付款 (status=0)
+            unshipped: 0,  // 待发货 (status=1)
+            delivered: 0,  // 待收货 (status=2)
+            completed: 0   // 已完成 (status=3)
+        };
+
+        // 填充查询结果
+        statusCounts.forEach(item => {
+            const status = item.status;
+            const count = parseInt(item.getDataValue('count'));
+
+            if (status === 0) result.unpaid = count;
+            else if (status === 1) result.unshipped = count;
+            else if (status === 2) result.delivered = count;
+            else if (status === 3) result.completed = count;
+        });
+
+        logger.info(`用户(ID: ${userId})获取订单数量统计成功`);
+
+        res.status(200).json({
+            code: 200,
+            message: '获取成功',
+            data: result
+        });
+    } catch (error) {
+        logger.error(`获取订单数量统计失败: ${error.message}`);
+        throw error;
+    }
 }); 
