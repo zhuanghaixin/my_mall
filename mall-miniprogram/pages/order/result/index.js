@@ -55,7 +55,7 @@ Page({
         orderService.getOrderDetail(orderId)
             .then(res => {
                 wx.hideLoading();
-                if (res.code === 0) {
+                if (res.code === 200) {
                     this.setData({
                         orderInfo: res.data
                     });

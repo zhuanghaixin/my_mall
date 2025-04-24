@@ -1,72 +1,72 @@
 /**
- * 收货地址相关API请求
+ * 地址相关API服务
  */
 const api = require('../config/api.js');
 const request = require('../utils/request.js');
 
 /**
- * 获取收货地址列表
- * @returns {Promise} 返回获取结果
+ * 获取地址列表
+ * @returns {Promise} 获取地址列表的Promise
  */
 function getAddressList() {
     return request.get(api.AddressList);
 }
 
 /**
- * 获取默认收货地址
- * @returns {Promise} 返回默认地址
+ * 获取默认地址
+ * @returns {Promise} 获取默认地址的Promise
  */
 function getDefaultAddress() {
-    return request.get(api.AddressDefault);
+    return request.get(api.AddressDefaultGet);
 }
 
 /**
- * 获取收货地址详情
- * @param {string} id 地址ID
- * @returns {Promise} 返回获取结果
+ * 获取地址详情
+ * @param {number} id - 地址ID
+ * @returns {Promise} 获取地址详情的Promise
  */
 function getAddressDetail(id) {
     return request.get(`${api.AddressDetail}/${id}`);
 }
 
 /**
- * 保存地址信息（创建或更新）
- * @param {Object} data 地址信息
+ * 保存地址
+ * @param {Object} data - 地址数据
+ * @returns {Promise} 保存地址的Promise
  */
 function saveAddress(data) {
     if (data.id) {
         // 更新地址
         return request.put(api.AddressUpdate, data);
     } else {
-        // 创建新地址
+        // 新增地址
         return request.post(api.AddressAdd, data);
     }
 }
 
 /**
- * 删除收货地址
- * @param {string} id 地址ID
- * @returns {Promise} 返回删除结果
+ * 删除地址
+ * @param {number} id - 地址ID
+ * @returns {Promise} 删除地址的Promise
  */
 function deleteAddress(id) {
-    return request.del(api.AddressDelete.replace(':id', id));
+    return request.del(`${api.AddressDelete}/${id}`);
 }
 
 /**
- * 设置默认收货地址
- * @param {string} id 地址ID
- * @returns {Promise} 返回设置结果
+ * 设置默认地址
+ * @param {number} id - 地址ID
+ * @returns {Promise} 设置默认地址的Promise
  */
 function setDefaultAddress(id) {
-    // return request.put(api.AddressDefault, { id });
     return request.put(`${api.AddressDefault}/${id}`);
 }
 
 module.exports = {
     getAddressList,
+    getDefaultAddress,
     getAddressDetail,
     saveAddress,
     deleteAddress,
-    setDefaultAddress,
-    getDefaultAddress
+    setDefaultAddress
 }; 

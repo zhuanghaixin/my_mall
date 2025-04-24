@@ -40,7 +40,7 @@ function createOrder(data) {
  * @returns {Promise} 返回取消结果
  */
 function cancelOrder(orderId) {
-    return request.post(`${api.OrderCancel}/${orderId}`);
+    return request.put(`${api.OrderCancel}/${orderId}/cancel`);
 }
 
 /**
@@ -49,7 +49,7 @@ function cancelOrder(orderId) {
  * @returns {Promise} 返回确认结果
  */
 function confirmOrder(orderId) {
-    return request.post(`${api.OrderConfirm}/${orderId}`);
+    return request.put(`${api.OrderConfirm}/${orderId}/confirm`);
 }
 
 /**

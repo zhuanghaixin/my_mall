@@ -46,21 +46,20 @@ module.exports = {
     // 订单相关
     OrderCreate: ApiBaseUrl + '/order/create', // 创建订单
     OrderList: ApiBaseUrl + '/order/list', // 获取订单列表
-    OrderDetail: ApiBaseUrl + '/order/detail', // 获取订单详情
-    OrderCancel: ApiBaseUrl + '/order/cancel', // 取消订单
-    OrderConfirm: ApiBaseUrl + '/order/confirm', // 确认收货
-    OrderDelete: ApiBaseUrl + '/order/delete', // 删除订单
+    OrderDetail: ApiBaseUrl + '/order', // 获取订单详情（使用 GET /order/:id）
+    OrderCancel: ApiBaseUrl + '/order', // 取消订单（使用 PUT /order/:id/cancel）
+    OrderConfirm: ApiBaseUrl + '/order', // 确认收货（使用 PUT /order/:id/confirm）
+    OrderDelete: ApiBaseUrl + '/order', // 删除订单（使用 DELETE /order/:id）
     OrderCounts: ApiBaseUrl + '/order/counts', // 获取订单数量统计
 
     // 地址相关
     AddressList: ApiBaseUrl + '/address/list', // 地址列表
-    AddressDetail: ApiBaseUrl + '/address', // 地址详情
+    AddressDetail: ApiBaseUrl + '/address', // 地址详情（使用 GET /address/:id）
     AddressAdd: ApiBaseUrl + '/address/add', // 添加地址
     AddressUpdate: ApiBaseUrl + '/address/update', // 更新地址
-    AddressDelete: ApiBaseUrl + '/address/delete/:id', // 删除地址
+    AddressDelete: ApiBaseUrl + '/address/delete', // 删除地址
     AddressDefault: ApiBaseUrl + '/address/default', // 设置默认地址
     AddressDefaultGet: ApiBaseUrl + '/address/default', // 获取默认地址
-    AddressDetail: ApiBaseUrl + '/address/detail', // 获取地址详情
 
     // 搜索相关
     Search: ApiBaseUrl + '/search', // 搜索商品
@@ -71,16 +70,16 @@ module.exports = {
     // 收藏相关
     FavoriteList: ApiBaseUrl + '/favorites/list', // 获取收藏列表
     FavoriteAdd: ApiBaseUrl + '/favorites/add', // 添加收藏
-    FavoriteDelete: ApiBaseUrl + '/favorites/delete/:id', // 取消收藏
+    FavoriteDelete: ApiBaseUrl + '/favorites/delete', // 取消收藏
     FavoriteCheck: ApiBaseUrl + '/favorites/check', // 检查商品是否已收藏
 
     // 浏览历史相关
     HistoryList: ApiBaseUrl + '/browse/history/list', // 获取浏览历史
-    HistoryDelete: ApiBaseUrl + '/browse/history/delete/:id', // 删除单条浏览历史
+    HistoryDelete: ApiBaseUrl + '/browse/history/delete', // 删除单条浏览历史
     HistoryClear: ApiBaseUrl + '/browse/history/clear', // 清空浏览历史
 
     // 支付相关
-    PayWxpay: ApiBaseUrl + '/pay/wxpay', // 获取微信支付参数
-    PayMock: ApiBaseUrl + '/pay/mockpay', // 模拟支付
-    PayStatus: ApiBaseUrl + '/pay/status', // 查询支付状态
+    PayWxpay: ApiBaseUrl + '/pay/wxpay', // 获取微信支付参数（使用 POST）
+    PayMock: ApiBaseUrl + '/pay/mockpay', // 模拟支付（使用 POST）
+    PayStatus: ApiBaseUrl + '/pay/status', // 查询支付状态（使用 GET /pay/status/:orderId）
 }; 

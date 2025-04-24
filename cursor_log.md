@@ -1946,3 +1946,64 @@ npm run dev
 
 ### 修改了哪些文件
 - `API接口文档.md` - 更新了地址相关API的路径和新增了两个接口文档
+
+## 2024-07-09 会话总结（3）
+
+### 会话的主要目的
+分析和统一RESTful API接口设计，规范HTTP请求方法（特别是POST vs PUT）的使用，并确保前后端接口一致。
+
+### 完成的主要任务
+- 分析了订单和支付相关API的HTTP方法使用
+- 修改了前端API配置文件，使其基础路径与后端路由匹配
+- 更新了订单API服务的方法实现，使用正确的HTTP方法（PUT而非POST）
+- 更新了API接口文档，确保文档与实际实现一致
+
+### 关键决策和解决方案
+- 采用RESTful API设计原则，对不同操作使用合适的HTTP方法：
+  - POST: 用于创建资源（如创建订单）
+  - PUT: 用于更新资源（如取消订单、确认收货）
+  - DELETE: 用于删除资源（如删除订单）
+  - GET: 用于获取资源（如获取订单列表、订单详情）
+- 统一URL路径格式，使用`:id`表示参数化路径段
+- 保留了支付相关API的POST方法，因为它们代表不可重复的操作
+
+### 使用的技术栈
+- RESTful API设计
+- JavaScript ES6
+- 微信小程序API
+- Express.js路由
+- HTTP协议和方法
+
+### 修改了哪些文件
+- `mall-miniprogram/config/api.js` - 修改了API基础路径配置
+- `mall-miniprogram/api/order.js` - 修改了订单操作的HTTP方法
+- `API接口文档.md` - 更新了订单与支付API的文档
+
+## 2024-07-09 会话总结（4）
+
+### 会话的主要目的
+修复和统一API接口路径、HTTP方法及响应处理，确保前端请求与后端接口保持一致。
+
+### 完成的主要任务
+- 修复了`mall-miniprogram/pages/order/result/index.js`中响应码判断不一致的问题
+- 调整了订单和地址相关API服务的方法，使其与配置的路径保持一致
+- 检查并确保各API服务使用正确的HTTP方法（GET、POST、PUT、DELETE）
+- 更新了API服务中的注释文档
+
+### 关键决策和解决方案
+- 将`res.code === 0`的判断统一修改为`res.code === 200`，确保响应码判断一致
+- 遵循RESTful API设计规范，对不同操作使用合适的HTTP方法
+- 调整API路径，正确使用参数化路径段格式（如`/:id`）
+- 确保所有API服务方法与`config/api.js`中定义的路径匹配
+
+### 使用的技术栈
+- JavaScript ES6
+- 微信小程序API
+- RESTful API设计
+- HTTP协议和请求方法
+
+### 修改了哪些文件
+- `mall-miniprogram/pages/order/result/index.js` - 修复响应码判断
+- `mall-miniprogram/api/address.js` - 更新地址API服务的方法实现
+- `mall-miniprogram/api/order.js` - 已验证订单API与路径一致，未做修改
+- `mall-miniprogram/api/pay.js` - 已验证支付API与路径一致，未做修改
