@@ -25,9 +25,123 @@
   gap: 10rpx;
 }
 
+.env-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.env-switch-btn {
+  background-color: #0277bd;
+  color: #fff;
+  font-size: 24rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
 .env-info text {
   font-size: 26rpx;
   color: #0277bd;
+}
+
+/* 环境选择器弹窗 */
+.env-picker-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.env-picker {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  z-index: 1001;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.env-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.env-picker-header text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.env-picker-close {
+  font-size: 40rpx;
+  color: #999;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.env-picker-content {
+  max-height: 600rpx;
+  overflow-y: auto;
+}
+
+.env-picker-item {
+  padding: 30rpx;
+  border-bottom: 1rpx solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.env-picker-item.active {
+  background-color: #f0f9ff;
+  position: relative;
+}
+
+.env-picker-item.active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 30rpx;
+  transform: translateY(-50%);
+  width: 30rpx;
+  height: 30rpx;
+  border-radius: 50%;
+  background-color: #0277bd;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+  background-size: 20rpx 20rpx;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.env-picker-item text:first-child {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.env-picker-item-host {
+  font-size: 24rpx;
+  color: #666;
 }
 
 .section {

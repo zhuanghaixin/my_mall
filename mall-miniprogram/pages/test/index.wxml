@@ -11,8 +11,31 @@
   <view class="title">资源测试页面</view>
   
   <view class="env-info">
-    <text>当前环境: {{currentEnv}}</text>
+    <view class="env-header">
+      <text>当前环境: {{currentEnv}}</text>
+      <view class="env-switch-btn" bindtap="showEnvSelector">切换环境</view>
+    </view>
     <text>服务器地址: {{serverUrl}}</text>
+  </view>
+  
+  <!-- 环境选择弹窗 -->
+  <view class="env-picker-mask" wx:if="{{showEnvPicker}}" bindtap="cancelEnvSelect"></view>
+  <view class="env-picker" wx:if="{{showEnvPicker}}">
+    <view class="env-picker-header">
+      <text>选择环境</text>
+      <view class="env-picker-close" bindtap="cancelEnvSelect">×</view>
+    </view>
+    <view class="env-picker-content">
+      <view 
+        class="env-picker-item {{item.envName === currentEnv ? 'active' : ''}}" 
+        wx:for="{{availableEnvs}}" 
+        wx:key="name"
+        data-env="{{item.name}}"
+        bindtap="switchEnv">
+        <text>{{item.envName}}</text>
+        <text class="env-picker-item-host">{{item.apiHost}}:{{item.apiPort}}</text>
+      </view>
+    </view>
   </view>
   
   <view class="section">

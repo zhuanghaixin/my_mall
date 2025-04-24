@@ -1,6 +1,6 @@
 const app = getApp();
 const util = require('../../utils/util.js');
-const { getEnv, getApiBaseUrl } = require('../../config/env.js');
+const { getEnv, getApiBaseUrl, setEnv, getAllEnvs } = require('../../config/env.js');
 
 // 获取当前环境配置
 const currentEnv = getEnv();
@@ -23,27 +23,75 @@ Page({
         filePath: '',
         uploadResult: '',
         imageList: [],
-        currentEnv: ''
+        currentEnv: '',
+        availableEnvs: [], // 可用的环境列表
+        showEnvPicker: false // 是否显示环境选择器
     },
 
+    // 页面的自定义导航配置
     onLoad: function () {
         // 隐藏默认导航栏
         wx.hideNavigationBarLoading();
 
-        // 设置当前环境服务器URL
-        this.setData({
-            serverUrl: getServerUrl(),
-            currentEnv: currentEnv.envName
-        });
+        this.refreshEnvInfo();
 
         // 页面加载时自动获取服务器图片列表
         this.getImageList();
+    },
+
+    // 刷新环境信息
+    refreshEnvInfo() {
+        // 获取当前环境
+        const env = getEnv();
+        // 获取所有可用环境
+        const availableEnvs = getAllEnvs();
+
+        // 设置当前环境服务器URL和环境信息
+        this.setData({
+            serverUrl: getServerUrl(),
+            currentEnv: env.envName,
+            availableEnvs: availableEnvs
+        });
 
         // 显示当前环境名称
         wx.showToast({
-            title: `环境：${currentEnv.envName}`,
+            title: `环境：${env.envName}`,
             icon: 'none',
             duration: 2000
+        });
+    },
+
+    // 显示环境选择器
+    showEnvSelector() {
+        this.setData({
+            showEnvPicker: true
+        });
+    },
+
+    // 切换环境
+    switchEnv(e) {
+        const envName = e.currentTarget.dataset.env;
+        if (setEnv(envName)) {
+            this.refreshEnvInfo();
+            // 重新获取图片列表
+            this.getImageList();
+
+            wx.showToast({
+                title: `切换到环境：${envName}`,
+                icon: 'success',
+                duration: 2000
+            });
+        }
+
+        this.setData({
+            showEnvPicker: false
+        });
+    },
+
+    // 取消选择环境
+    cancelEnvSelect() {
+        this.setData({
+            showEnvPicker: false
         });
     },
 

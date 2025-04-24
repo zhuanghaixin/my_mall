@@ -32,19 +32,43 @@
         {
           "name": "开发环境",
           "pathName": "pages/index/index",
-          "query": "",
+          "query": "environment=development",
+          "launchMode": "default",
           "scene": null
         },
         {
           "name": "测试环境",
           "pathName": "pages/index/index",
-          "query": "",
+          "query": "environment=testing",
+          "launchMode": "default",
           "scene": null
         },
         {
           "name": "生产环境",
           "pathName": "pages/index/index",
-          "query": "",
+          "query": "environment=production",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "测试页面-开发环境",
+          "pathName": "pages/test/index",
+          "query": "environment=development",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "测试页面-测试环境",
+          "pathName": "pages/test/index",
+          "query": "environment=testing",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "测试页面-生产环境",
+          "pathName": "pages/test/index",
+          "query": "environment=production",
+          "launchMode": "default",
           "scene": null
         }
       ]
