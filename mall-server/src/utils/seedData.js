@@ -610,7 +610,7 @@ const initSearchHotData = async () => {
  */
 const initAllSeedData = async () => {
     await initCategories();
-    await initBanners();
+    // await initBanners();
     await initUsers();
     await initGoods();
     await initOrders();
