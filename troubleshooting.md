@@ -242,3 +242,128 @@ newgrp docker
 3. 验证MySQL数据库名、用户名和密码设置
 4. 确认端口3000、8080和3306未被占用
 5. 测试网络连接性 
+
+## MySQL容器启动错误
+
+### 问题症状
+
+启动MySQL容器时出现以下错误：
+
+```
+ERROR [MY-000067] [Server] unknown variable 'collate-server=utf8mb4_unicode_ci'.
+ERROR [MY-010119] [Server] Aborting
+```
+
+### 原因分析
+
+1. MySQL配置参数错误：使用了`collate-server`而不是正确的`collation-server`
+2. MySQL 8.0版本对配置参数的要求更严格
+
+### 解决方案
+
+1. 修改Docker Compose配置文件中的命令行参数：
+   ```
+   # 修改前
+   command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collate-server=utf8mb4_unicode_ci
+   
+   # 修改后
+   command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+   ```
+
+2. 执行以下命令修复并重启MySQL：
+   ```bash
+   # 修复主配置
+   sed -i'' -e 's/--collate-server=/--collation-server=/g' docker-compose.yml
+   
+   # 修复环境特定配置
+   sed -i'' -e 's/--collate-server=/--collation-server=/g' docker-compose.*.yml
+   
+   # 重启容器（以开发环境为例）
+   docker-compose -f docker-compose.yml -f docker-compose.dev.yml down mysql
+   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d mysql
+   ```
+
+## MySQL数据库初始化失败
+
+### 问题症状
+
+MySQL启动后，出现以下错误：
+
+```
+Table 'mysql.component' doesn't exist
+Table 'mysql.plugin' doesn't exist
+```
+
+### 原因分析
+
+1. 数据卷可能已损坏或未正确初始化
+2. 初始化脚本可能未正确执行
+
+### 解决方案
+
+1. 删除并重建数据卷：
+   ```bash
+   # 停止容器
+   docker-compose down
+   
+   # 删除数据卷
+   docker volume rm mysql-data-dev
+   
+   # 重启服务
+   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+   ```
+
+2. 检查数据库初始化：
+   ```bash
+   # 查看init.sql是否正确映射
+   docker exec -it mall-mysql-dev ls -la /docker-entrypoint-initdb.d/
+   
+   # 如果需要，手动复制init.sql
+   docker cp init.sql mall-mysql-dev:/docker-entrypoint-initdb.d/
+   ```
+
+## 权限问题
+
+### 问题症状
+
+MySQL日志中出现以下警告：
+
+```
+Warning [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users.
+```
+
+### 原因分析
+
+MySQL容器内部的权限配置问题，通常不会影响正常使用。
+
+### 解决方案
+
+此警告可以忽略，它不会影响MySQL的功能。如果需要解决，可以在Docker容器启动前添加适当的权限：
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml exec mysql mkdir -p /var/run/mysqld && chown mysql:mysql /var/run/mysqld
+```
+
+## 环境切换方法
+
+执行以下命令可以快速切换不同环境：
+
+```bash
+# 启动开发环境
+./start.sh start dev
+
+# 启动测试环境
+./start.sh start test
+
+# 启动预发布环境
+./start.sh start staging
+
+# 启动生产环境
+./start.sh start prod
+```
+
+如需停止所有服务：
+
+```bash
+./start.sh stop
+``` 
