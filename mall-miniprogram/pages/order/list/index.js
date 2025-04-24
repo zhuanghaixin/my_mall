@@ -155,7 +155,20 @@ Page({
    * 获取订单状态文本
    */
   getStatusText: function (status) {
-    const statusMap = {
+    // 支持状态码为数字的情况
+    const statusCode = typeof status === 'number' ? status : status;
+
+    // 数字状态码映射
+    const numberStatusMap = {
+      0: '待付款',
+      1: '待发货',
+      2: '待收货',
+      3: '已完成',
+      4: '已取消'
+    };
+
+    // 字符串状态码映射
+    const stringStatusMap = {
       'unpaid': '待付款',
       'unshipped': '待发货',
       'unreceived': '待收货',
@@ -164,7 +177,9 @@ Page({
       'refunding': '退款中',
       'refunded': '已退款'
     };
-    return statusMap[status] || '未知状态';
+
+    // 先尝试用数字状态码映射，再尝试用字符串状态码映射
+    return numberStatusMap[statusCode] || stringStatusMap[status] || '未知状态';
   },
 
   /**

@@ -2186,3 +2186,32 @@ npm run dev
 ### 修改的文件
 1. `mall-miniprogram/pages/order/pay/index.js` - 修改跳转参数名
 2. `mall-miniprogram/pages/order/result/index.js` - 修改重新支付的跳转参数名
+
+## 2023年8月9日 14:30
+
+### 会话主要目的
+修复订单状态显示问题，使小程序能够正确识别并显示数字状态码。
+
+### 完成的主要任务
+1. 分析了订单状态显示逻辑问题，确认后端使用数字状态码(0-4)而前端使用字符串状态码('unpaid'等)。
+2. 修改了订单详情页的`getStatusText`和`getStatusDesc`方法，添加数字状态码支持。
+3. 验证了订单列表页的`getStatusText`方法已经支持数字状态码。
+4. 检查了后端订单模型(Order.js)和控制器中的状态定义，确认状态码使用0-4的数字格式。
+
+### 关键决策和解决方案
+1. 实现了状态码双重映射机制：
+   - 首先尝试将状态作为数字状态码进行映射
+   - 如果失败，再尝试作为字符串状态码进行映射
+   - 最后提供默认的"未知状态"文本
+2. 同样的映射逻辑也应用于状态描述文本，确保用户可以看到适当的订单状态提示。
+3. 通过类型检查和条件分支处理不同类型的状态码，提高代码健壮性。
+
+### 使用的技术栈
+- JavaScript
+- 微信小程序API
+- 后端Node.js/Express
+- RESTful API设计
+
+### 修改的文件
+- `mall-miniprogram/pages/order/detail/index.js` - 更新了订单详情页的状态文本和状态描述方法
+- 检查并确认了`mall-miniprogram/pages/order/list/index.js`的状态文本方法已支持数字状态码

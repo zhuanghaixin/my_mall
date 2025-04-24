@@ -78,7 +78,20 @@ Page({
    * 获取订单状态文本
    */
   getStatusText: function (status) {
-    const statusMap = {
+    // 支持状态码为数字的情况
+    const statusCode = typeof status === 'number' ? status : status;
+
+    // 数字状态码映射
+    const numberStatusMap = {
+      0: '待付款',
+      1: '待发货',
+      2: '待收货',
+      3: '已完成',
+      4: '已取消'
+    };
+
+    // 字符串状态码映射
+    const stringStatusMap = {
       'unpaid': '待付款',
       'unshipped': '待发货',
       'unreceived': '待收货',
@@ -87,14 +100,39 @@ Page({
       'refunding': '退款中',
       'refunded': '已退款'
     };
-    return statusMap[status] || '未知状态';
+
+    // 先尝试用数字状态码映射，再尝试用字符串状态码映射
+    return numberStatusMap[statusCode] || stringStatusMap[status] || '未知状态';
   },
 
   /**
    * 获取状态描述文本
    */
   getStatusDesc: function (order) {
-    switch (order.status) {
+    // 支持状态码为数字的情况
+    const status = order.status;
+    const statusCode = typeof status === 'number' ? status : status;
+
+    // 数字状态码
+    if (typeof statusCode === 'number') {
+      switch (statusCode) {
+        case 0:
+          return '请在24小时内完成付款，超时订单将自动取消';
+        case 1:
+          return '商家正在处理您的订单，请耐心等待';
+        case 2:
+          return '商家已发货，请注意查收';
+        case 3:
+          return '订单已完成，感谢您的购买';
+        case 4:
+          return '订单已取消';
+        default:
+          return '';
+      }
+    }
+
+    // 字符串状态码
+    switch (status) {
       case 'unpaid':
         return '请在24小时内完成付款，超时订单将自动取消';
       case 'unshipped':
