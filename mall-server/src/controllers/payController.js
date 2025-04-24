@@ -2,7 +2,7 @@
  * 支付控制器
  * 处理支付相关的业务逻辑
  */
-const { Order } = require('../models');
+const { Order, OrderGoods, Goods } = require('../models');
 const catchAsync = require('../utils/catchAsync');
 const { ValidationError, NotFoundError } = require('../utils/errorTypes');
 const logger = require('../utils/logger');
@@ -85,7 +85,11 @@ exports.mockPay = catchAsync(async (req, res) => {
             where: {
                 order_no,
                 user_id: userId
-            }
+            },
+            include: [{
+                model: OrderGoods,
+                as: 'orderGoods'
+            }]
         });
 
         if (!order) {
@@ -104,6 +108,24 @@ exports.mockPay = catchAsync(async (req, res) => {
                 pay_time: new Date(),
                 update_time: new Date()
             });
+
+            // 更新商品库存
+            if (order.orderGoods && order.orderGoods.length > 0) {
+                for (const item of order.orderGoods) {
+                    // 获取当前商品信息
+                    const goods = await Goods.findByPk(item.goods_id);
+                    if (goods) {
+                        // 计算新库存，确保不会出现负库存
+                        const newStock = Math.max(0, goods.stock - item.quantity);
+                        // 更新库存
+                        await goods.update({
+                            stock: newStock,
+                            sale_count: goods.sale_count + item.quantity
+                        });
+                        logger.info(`商品(ID: ${goods.id})库存更新: ${goods.stock} -> ${newStock}, 销量增加: ${item.quantity}`);
+                    }
+                }
+            }
 
             logger.info(`用户(ID: ${userId})支付成功，订单号: ${order_no}`);
 
@@ -181,9 +203,67 @@ exports.getPayStatus = catchAsync(async (req, res) => {
  */
 exports.handlePayNotify = catchAsync(async (req, res) => {
     // 在实际环境中，这里需要解析微信支付回调通知的XML数据，验证签名，更新订单状态
-    // 由于是模拟支付，这里只记录一条日志
+    // 由于是模拟支付，这里只做简单处理
     logger.info('收到支付回调通知');
 
-    // 返回成功响应
+    try {
+        // 模拟从请求中获取订单号
+        // 在实际场景中，需要从微信支付的XML回调数据中提取
+        let orderNo = '';
+        if (req.body && req.body.out_trade_no) {
+            orderNo = req.body.out_trade_no;
+        } else if (req.query && req.query.out_trade_no) {
+            orderNo = req.query.out_trade_no;
+        }
+
+        // 如果有订单号，更新订单状态和库存
+        if (orderNo) {
+            // 查询订单信息
+            const order = await Order.findOne({
+                where: { order_no: orderNo, status: 0 }, // 只处理待支付的订单
+                include: [{
+                    model: OrderGoods,
+                    as: 'orderGoods'
+                }]
+            });
+
+            if (order) {
+                // 更新订单状态为待发货
+                await order.update({
+                    status: 1, // 待发货
+                    pay_time: new Date(),
+                    update_time: new Date()
+                });
+
+                // 更新商品库存
+                if (order.orderGoods && order.orderGoods.length > 0) {
+                    for (const item of order.orderGoods) {
+                        // 获取当前商品信息
+                        const goods = await Goods.findByPk(item.goods_id);
+                        if (goods) {
+                            // 计算新库存，确保不会出现负库存
+                            const newStock = Math.max(0, goods.stock - item.quantity);
+                            // 更新库存
+                            await goods.update({
+                                stock: newStock,
+                                sale_count: goods.sale_count + item.quantity
+                            });
+                            logger.info(`支付回调：商品(ID: ${goods.id})库存更新: ${goods.stock} -> ${newStock}, 销量增加: ${item.quantity}`);
+                        }
+                    }
+                }
+
+                logger.info(`支付回调：订单(${orderNo})状态更新为已支付`);
+            } else {
+                logger.warn(`支付回调：未找到待支付订单(${orderNo})`);
+            }
+        } else {
+            logger.warn('支付回调：未能获取订单号');
+        }
+    } catch (error) {
+        logger.error(`支付回调处理失败: ${error.message}`);
+    }
+
+    // 无论处理结果如何，都返回成功响应给微信支付
     res.send('<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>');
 }); 

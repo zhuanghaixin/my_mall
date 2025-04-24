@@ -127,14 +127,18 @@ Page({
    * 获取订单数量统计
    */
   getOrderCount() {
-    console.log(12111)
     orderApi.getOrderCounts()
       .then(res => {
-        console.log('res---', res)
+        console.log('订单统计数据:', res)
         if (res.code === 200 && res.data) {
-          this.setData({
-            orderCount: res.data
-          });
+          // 修复：后端返回的待收货订单数量字段是delivered，而非unreceived
+          const orderCount = {
+            unpaid: res.data.unpaid || 0,
+            unshipped: res.data.unshipped || 0,
+            unreceived: res.data.delivered || 0 // 从delivered字段获取待收货数量
+          };
+
+          this.setData({ orderCount });
         }
       })
       .catch(err => {
