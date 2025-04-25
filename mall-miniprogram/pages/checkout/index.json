@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "确认订单",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "van-loading": "@vant/weapp/loading/index"
+  }
+} 

@@ -2707,3 +2707,59 @@ npm run dev
 - docker-compose.prod.yml - 添加API_URL环境变量支持
 - 新建deploy-to-prod.sh - 专用生产环境部署脚本
 - 新建.env.prod - 生产环境配置文件
+
+## 2023-07-03 代码同步部署优化方案
+
+### 会话主要目的
+提供更高效的代码同步和部署方案，以替代当前繁琐的GitHub-Gitee-服务器部署流程。
+
+### 完成的主要任务
+- 分析了当前部署流程的痛点
+- 提供了5种优化方案：CI/CD自动化部署、Webhook触发部署、rsync同步、SCP直接传输和Docker镜像推送
+
+### 关键决策和解决方案
+- 推荐使用自动化工具避免手动操作
+- 对于不同规模和需求的项目，提供了不同复杂度的解决方案
+- 重点关注减少中间环节，提高部署效率
+
+### 使用的技术栈
+- CI/CD：GitHub Actions/Gitee Go
+- 文件同步：rsync/SCP
+- 自动化部署：Webhook
+- 容器化：Docker
+
+### 修改的文件
+- 添加：cursor_log.md（追加会话记录）
+
+## 2023-07-04 CI/CD自动化部署方案实现
+
+### 会话主要目的
+提供基于GitHub Actions的CI/CD自动化部署方案详细实施步骤。
+
+### 完成的主要任务
+- 创建GitHub Actions工作流配置
+- 提供服务器端密钥配置指南
+- 编写GitHub到Gitee的自动同步脚本
+- 改进现有deploy-docker.sh部署脚本
+- 配置SSH免密登录方法
+
+### 关键决策和解决方案
+- 利用GitHub Actions作为CI/CD平台
+- 使用SSH密钥实现安全自动部署
+- 维持GitHub-Gitee同步，但通过自动化方式实现
+- 复用现有的deploy-docker.sh脚本，确保兼容性
+- 提供Gitee WebHook方案作为备选
+
+### 使用的技术栈
+- GitHub Actions
+- SSH密钥管理
+- Bash脚本
+- Docker部署
+- Git自动同步
+- WebHook触发器
+
+### 修改的文件
+- 添加：.github/workflows/deploy.yml (GitHub Actions配置)
+- 添加：sync-gitee.sh (GitHub到Gitee同步脚本)
+- 修改：deploy-docker.sh (支持自动化运行)
+- 添加：cursor_log.md (追加会话记录)

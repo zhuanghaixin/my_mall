@@ -1,0 +1,25 @@
+<view class="container">
+  <view class="address-section">
+    <view class="address-empty" wx:if="{{!addressId}}" bindtap="selectAddress">
+      <view class="empty-text">请选择收货地址</view>
+      <view class="empty-icon">></view>
+    </view>
+    <!-- 待完善：展示已选择的地址信息 -->
+  </view>
+  
+  <view class="order-section">
+    <!-- 待完善：展示订单商品信息 -->
+  </view>
+  
+  <view class="remark-section">
+    <view class="section-title">订单备注</view>
+    <input class="remark-input" placeholder="选填，请填写备注信息" bindinput="onRemarkInput" value="{{remark}}"></input>
+  </view>
+  
+  <view class="submit-section">
+    <button class="submit-btn {{submitting ? 'disabled' : ''}}" bindtap="submitOrder" disabled="{{submitting}}">
+      <van-loading wx:if="{{submitting}}" size="20px" color="#fff" />
+      <text wx:else>提交订单</text>
+    </button>
+  </view>
+</view> 
