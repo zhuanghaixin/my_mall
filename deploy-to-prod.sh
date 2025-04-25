@@ -160,7 +160,7 @@ server {
 
     # 日志配置
     access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
+    error_log /var/log/nginx/error.log debug;  # 提高日志级别便于调试
 
     # 支持SPA应用路由
     location / {
@@ -173,9 +173,14 @@ server {
         add_header Cache-Control "public, no-transform";
     }
 
+    # 重写 /admin/login 到 /api/admin/login
+    location = /admin/login {
+        rewrite ^/admin/login$ /api/admin/login last;
+    }
+
     # API代理配置 - 使用容器名代替localhost
     location /api/ {
-        proxy_pass http://$SERVER_CONTAINER:8080;
+        proxy_pass http://$SERVER_CONTAINER:8080/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -184,6 +189,11 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    # 确保所有不带/api前缀的API请求也能正确转发
+    location ~* ^/(?!api/)(.*)$ {
+        try_files \$uri \$uri/ /index.html;
     }
 
     # 健康检查

@@ -106,10 +106,12 @@ chmod +x deploy-docker.sh
 
 ```
 ### 生产环境部署
-```
+```bash
 # 给部署脚本执行权限
 chmod +x deploy-to-prod.sh
 
+
+chmod +x deploy-to-prod.sh deploy-docker.sh clean-docker.sh
 # 执行部署脚本
 ./deploy-to-prod.sh
 ```
