@@ -40,17 +40,26 @@ show_help() {
   echo ""
   echo "参数:"
   echo "  [MySQL密码]  MySQL数据库密码 (默认: zhx123456)"
-  echo "  [环境]       部署环境 (可选: dev/prod, 默认: dev)"
+  echo "  [环境]       部署环境 (可选: dev/test/staging/prod, 默认: dev)"
   echo ""
   echo "示例:"
   echo "  ./deploy-docker.sh                # 使用默认密码zhx123456部署开发环境"
   echo "  ./deploy-docker.sh mypassword     # 使用自定义密码部署开发环境"
-  echo "  ./deploy-docker.sh mypassword prod # 使用自定义密码部署生产环境"
+  echo "  ./deploy-docker.sh mypassword test    # 使用自定义密码部署测试环境"
+  echo "  ./deploy-docker.sh mypassword staging # 使用自定义密码部署预发布环境"
+  echo "  ./deploy-docker.sh mypassword prod    # 使用自定义密码部署生产环境"
 }
 
 if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
   show_help 
   exit 0
+fi
+
+# 验证环境参数
+if [ "$ENV" != "dev" ] && [ "$ENV" != "test" ] && [ "$ENV" != "staging" ] && [ "$ENV" != "prod" ]; then
+  log_error "无效的环境参数: $ENV"
+  log_info "有效的环境参数: dev, test, staging, prod"
+  exit 1
 fi
 
 # 准备环境变量
@@ -143,10 +152,15 @@ docker-compose -p $PROJECT_NAME build mall-server
 ENV_FILE=""
 if [ "$ENV" == "prod" ]; then
   ENV_FILE="docker-compose.prod.yml"
+elif [ "$ENV" == "test" ]; then
+  ENV_FILE="docker-compose.test.yml"
+elif [ "$ENV" == "staging" ]; then
+  ENV_FILE="docker-compose.staging.yml"
 else
   ENV_FILE="docker-compose.dev.yml"
 fi
 
+log_info "使用配置文件: docker-compose.yml 和 $ENV_FILE"
 docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE create mall-server
 docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE start mall-server
 
@@ -165,6 +179,7 @@ docker ps | grep -E "mall-(mysql|server|admin)-${ENV}"
 
 # 显示访问信息
 log_info "服务部署完成！"
+log_info "环境: $ENV"
 log_info "服务访问信息:"
 echo "前端界面: http://localhost:3001"
 echo "后端API: http://localhost:8081/api"
