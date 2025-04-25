@@ -14,6 +14,7 @@ NC='\033[0m' # 恢复默认颜色
 # MySQL密码配置
 MYSQL_PASSWORD=${1:-zhx123456}
 ENV=${2:-dev}
+SERVER_IP=${3:-localhost}
 
 # 日志函数
 log_info() {
@@ -36,11 +37,12 @@ log_error() {
 show_help() {
   echo "商城小程序Docker一键部署脚本"
   echo ""
-  echo "用法: ./deploy-docker.sh [MySQL密码] [环境]"
+  echo "用法: ./deploy-docker.sh [MySQL密码] [环境] [服务器IP]"
   echo ""
   echo "参数:"
   echo "  [MySQL密码]  MySQL数据库密码 (默认: zhx123456)"
   echo "  [环境]       部署环境 (可选: dev/test/staging/prod, 默认: dev)"
+  echo "  [服务器IP]   服务器IP地址 (可选，默认: localhost，生产环境推荐使用公网IP)"
   echo ""
   echo "示例:"
   echo "  ./deploy-docker.sh                # 使用默认密码zhx123456部署开发环境"
@@ -48,6 +50,7 @@ show_help() {
   echo "  ./deploy-docker.sh mypassword test    # 使用自定义密码部署测试环境"
   echo "  ./deploy-docker.sh mypassword staging # 使用自定义密码部署预发布环境"
   echo "  ./deploy-docker.sh mypassword prod    # 使用自定义密码部署生产环境"
+  echo "  ./deploy-docker.sh mypassword prod 47.107.32.143 # 使用自定义密码部署生产环境并指定公网IP"
   echo ""
   echo "各环境端口映射:"
   echo "  开发环境(dev):    前端:3001, 后端:8081, MySQL:3307"
@@ -101,6 +104,7 @@ export NODE_ENV=$ENV
 export FRONTEND_PORT=$FRONTEND_PORT
 export BACKEND_PORT=$BACKEND_PORT
 export MYSQL_PORT=$MYSQL_PORT
+export SERVER_IP=$SERVER_IP
 
 # 设置项目名称和容器名前缀
 PROJECT_NAME="mall-system-${ENV}"
@@ -228,6 +232,7 @@ docker run -d \
   -e DB_USER=root \
   -e DB_PASSWORD=$MYSQL_PASSWORD \
   -e API_PREFIX=/api \
+  -e SERVER_IP=$SERVER_IP \
   -e JWT_SECRET=mall_${ENV}_secret_key_2023 \
   -e JWT_EXPIRES_IN=7d \
   -e ADMIN_USERNAME=dev_admin \
@@ -257,7 +262,7 @@ log_info "创建自定义Nginx配置..."
 cat > custom-nginx.conf <<EOF
 server {
     listen 80;
-    server_name 47.107.32.143;
+    server_name $SERVER_IP;
     root /usr/share/nginx/html;
     index index.html;
 
@@ -309,7 +314,7 @@ docker run -d \
   --name $ADMIN_CONTAINER \
   --network $NETWORK_NAME \
   -p $FRONTEND_PORT:80 \
-  -e VITE_API_URL="http://47.107.32.143:${BACKEND_PORT}/api" \
+  -e VITE_API_URL="http://$SERVER_IP:${BACKEND_PORT}/api" \
   -e NODE_ENV=$ENV \
   -v $(pwd)/custom-nginx.conf:/etc/nginx/conf.d/default.conf \
   --restart unless-stopped \
@@ -334,9 +339,20 @@ docker ps | grep -E "mall-(mysql|server|admin)-${ENV}"
 log_info "服务部署完成！"
 log_info "环境: $ENV"
 log_info "服务访问信息:"
-echo "前端界面: http://localhost:$FRONTEND_PORT"
-echo "后端API: http://localhost:$BACKEND_PORT/api"
-echo "MySQL数据库: localhost:$MYSQL_PORT (用户名: root, 密码: $MYSQL_PASSWORD)"
+
+if [ "$SERVER_IP" == "localhost" ]; then
+  echo "前端界面: http://$SERVER_IP:$FRONTEND_PORT"
+else
+  # 生产环境使用80端口
+  if [ "$ENV" == "prod" ]; then
+    echo "前端界面: http://$SERVER_IP"
+  else
+    echo "前端界面: http://$SERVER_IP:$FRONTEND_PORT"
+  fi
+fi
+
+echo "后端API: http://$SERVER_IP:$BACKEND_PORT/api"
+echo "MySQL数据库: $SERVER_IP:$MYSQL_PORT (用户名: root, 密码: $MYSQL_PASSWORD)"
 
 # 添加诊断信息
 log_info "容器运行状态:"
