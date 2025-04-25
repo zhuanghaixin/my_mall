@@ -257,7 +257,7 @@ log_info "创建自定义Nginx配置..."
 cat > custom-nginx.conf <<EOF
 server {
     listen 80;
-    server_name _;
+    server_name 47.107.32.143;
     root /usr/share/nginx/html;
     index index.html;
 
@@ -309,7 +309,7 @@ docker run -d \
   --name $ADMIN_CONTAINER \
   --network $NETWORK_NAME \
   -p $FRONTEND_PORT:80 \
-  -e VITE_API_URL="http://localhost:${BACKEND_PORT}/api" \
+  -e VITE_API_URL="http://47.107.32.143:${BACKEND_PORT}/api" \
   -e NODE_ENV=$ENV \
   -v $(pwd)/custom-nginx.conf:/etc/nginx/conf.d/default.conf \
   --restart unless-stopped \

@@ -2599,3 +2599,56 @@ npm run dev
 
 ### 修改了哪些文件
 - deploy-docker.sh - 添加JWT和管理员相关环境变量
+
+## 2025-04-25 生产环境部署
+
+### 会话的主要目的
+部署商城小程序的生产环境
+
+### 完成的主要任务
+- 分析部署脚本和Docker配置文件
+- 修复`custom-nginx.conf`目录问题
+- 成功部署生产环境三个服务：数据库、后端API和前端应用
+
+### 关键决策和解决方案
+- 使用`deploy-docker.sh`脚本进行部署
+- 通过删除错误创建的目录解决了前端容器启动失败问题
+- 使用Docker Compose和自定义Nginx配置部署生产环境
+
+### 使用的技术栈
+- Docker
+- Docker Compose
+- Nginx
+- MySQL
+- Node.js
+
+### 修改了哪些文件
+- 未修改任何源代码文件，仅执行部署操作
+
+## 2025-04-25 云服务器部署配置
+
+### 会话的主要目的
+准备商城小程序在公网云服务器上的部署配置
+
+### 完成的主要任务
+- 修改前端API访问URL配置为公网IP
+- 修复数据库密码配置不一致问题
+- 配置Nginx服务器名为公网IP
+- 添加明确的端口映射配置
+
+### 关键决策和解决方案
+- 将所有本地主机引用(localhost)改为公网IP(47.107.32.143)
+- 在docker-compose.prod.yml中添加明确的端口映射
+- 修改Nginx配置以正确处理来自公网的请求
+- 确保数据库密码一致性
+
+### 使用的技术栈
+- Docker
+- Docker Compose
+- Nginx
+- Node.js
+- MySQL
+
+### 修改了哪些文件
+- deploy-docker.sh - 修改前端容器环境变量和Nginx配置
+- docker-compose.prod.yml - 修复密码配置并添加端口映射
