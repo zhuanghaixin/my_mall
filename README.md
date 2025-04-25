@@ -102,6 +102,16 @@ chmod +x deploy-docker.sh
 
 # 查看帮助信息
 ./deploy-docker.sh --help
+
+
+```
+### 生产环境部署
+```
+# 给部署脚本执行权限
+chmod +x deploy-to-prod.sh
+
+# 执行部署脚本
+./deploy-to-prod.sh
 ```
 
 ### 部署后访问服务

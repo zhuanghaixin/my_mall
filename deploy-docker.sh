@@ -3,6 +3,7 @@
 # 商城小程序Docker一键部署脚本
 # 作者: AI助手
 # 日期: 2025-04-25
+# 更新: 使用新版docker compose命令
 
 # 颜色定义
 RED='\033[0;31m'
@@ -32,6 +33,29 @@ log_warn() {
 log_error() {
   echo -e "${RED}[错误] $1${NC}"
 }
+
+# 检查Docker是否安装并支持新版命令格式
+if ! command -v docker &> /dev/null; then
+  log_error "错误: Docker未安装，请先安装Docker"
+  exit 1
+fi
+
+# 检查新版docker compose命令
+DOCKER_COMPOSE_CMD="docker compose"
+DOCKER_COMPOSE_LEGACY=false
+
+if ! docker compose version &> /dev/null; then
+  log_warn "警告: 未检测到新版docker compose命令，将使用旧版docker-compose命令"
+  if ! command -v docker-compose &> /dev/null; then
+    log_error "错误: docker-compose命令也不可用，请安装Docker Compose"
+    exit 1
+  fi
+  DOCKER_COMPOSE_CMD="docker-compose"
+  DOCKER_COMPOSE_LEGACY=true
+  log_info "使用旧版命令: $DOCKER_COMPOSE_CMD"
+else
+  log_info "使用新版命令: $DOCKER_COMPOSE_CMD"
+fi
 
 # 显示帮助信息
 show_help() {
@@ -133,7 +157,7 @@ check_port $MYSQL_PORT || log_warn "MySQL端口 $MYSQL_PORT 已被占用，但�
 log_info "清理旧容器和网络..."
 if docker ps -a | grep -q "${PROJECT_NAME}"; then
   log_info "停止并删除旧容器..."
-  docker-compose -p $PROJECT_NAME down
+  $DOCKER_COMPOSE_CMD -p $PROJECT_NAME down
 fi
 
 # 尝试停止和删除任何相关的旧容器
@@ -215,30 +239,10 @@ fi
 
 log_info "使用配置文件: docker-compose.yml 和 $ENV_FILE"
 
-# 使用普通的docker命令启动后端服务，而不是docker-compose
+# 使用新版或旧版docker compose命令启动后端服务
 log_info "构建并启动后端服务..."
 # 构建镜像
-docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE build mall-server
-
-# 手动启动后端容器
-docker run -d \
-  --name $SERVER_CONTAINER \
-  --network $NETWORK_NAME \
-  -p $BACKEND_PORT:8080 \
-  -e NODE_ENV=$ENV \
-  -e DB_HOST=mysql \
-  -e DB_PORT=3306 \
-  -e DB_NAME=shop \
-  -e DB_USER=root \
-  -e DB_PASSWORD=$MYSQL_PASSWORD \
-  -e API_PREFIX=/api \
-  -e SERVER_IP=$SERVER_IP \
-  -e JWT_SECRET=mall_${ENV}_secret_key_2023 \
-  -e JWT_EXPIRES_IN=7d \
-  -e ADMIN_USERNAME=dev_admin \
-  -e ADMIN_PASSWORD=dev_pass123 \
-  --restart unless-stopped \
-  mall-system-${ENV}_mall-server
+$DOCKER_COMPOSE_CMD -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE build mall-server
 
 # 等待后端服务启动
 log_info "等待后端服务启动..."
@@ -246,7 +250,48 @@ sleep 10
 
 # 确保后端服务已经启动
 log_info "确保后端服务可访问..."
-docker exec $SERVER_CONTAINER curl -s --head --fail http://localhost:8080/api/health || log_warn "后端健康检查失败，但将继续尝试部署前端"
+# 首先检查容器是否存在
+if docker ps | grep -q $SERVER_CONTAINER; then
+  # 容器存在，尝试健康检查
+  docker exec $SERVER_CONTAINER curl -s --head --fail http://localhost:8080/api/health 2>/dev/null || log_warn "后端健康检查失败，但将继续尝试部署前端"
+else
+  log_error "后端容器 $SERVER_CONTAINER 不存在，部署可能失败！尝试检查错误日志..."
+  # 显示构建日志
+  $DOCKER_COMPOSE_CMD -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE logs mall-server
+  
+  # 尝试重新构建和启动
+  log_info "尝试重新构建和启动后端服务..."
+  $DOCKER_COMPOSE_CMD -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE build mall-server
+  
+  # 手动启动后端容器
+  docker run -d \
+    --name $SERVER_CONTAINER \
+    --network $NETWORK_NAME \
+    -p $BACKEND_PORT:8080 \
+    -e NODE_ENV=$ENV \
+    -e DB_HOST=mysql \
+    -e DB_PORT=3306 \
+    -e DB_NAME=shop \
+    -e DB_USER=root \
+    -e DB_PASSWORD=$MYSQL_PASSWORD \
+    -e API_PREFIX=/api \
+    -e SERVER_IP=$SERVER_IP \
+    -e JWT_SECRET=mall_${ENV}_secret_key_2023 \
+    -e JWT_EXPIRES_IN=7d \
+    -e ADMIN_USERNAME=dev_admin \
+    -e ADMIN_PASSWORD=dev_pass123 \
+    --restart unless-stopped \
+    mall-system-${ENV}_mall-server
+  
+  sleep 10
+  
+  # 再次检查容器状态
+  if docker ps | grep -q $SERVER_CONTAINER; then
+    log_success "后端服务重新启动成功！"
+  else
+    log_error "后端服务重新启动失败，但将继续尝试部署前端..."
+  fi
+fi
 
 # 检查容器间网络连接
 log_info "检查容器间网络连接..."
@@ -255,7 +300,7 @@ docker run --rm --network $NETWORK_NAME alpine sh -c "ping -c 2 $SERVER_CONTAINE
 # 手动启动前端容器
 log_info "构建并启动前端服务..."
 # 构建镜像
-docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE build mall-admin
+$DOCKER_COMPOSE_CMD -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE build mall-admin
 
 # 创建适合当前环境的nginx配置
 log_info "创建自定义Nginx配置..."
