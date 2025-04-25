@@ -18,7 +18,7 @@ const ENV = {
     },
     // 生产环境
     production: {
-        apiHost: 'https://api.example.com',
+        apiHost: 'https://47.107.32.143',
         apiPort: '443',
         apiPrefix: '/api',
         envName: 'production',

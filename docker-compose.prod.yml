@@ -44,7 +44,7 @@ services:
       args:
         - BUILD_MODE=production
     environment:
-      - VITE_API_URL=http://api.example.com
+      - VITE_API_URL=http://47.107.32.143
       - VITE_USE_MOCK=false
       - VITE_USE_DEVTOOLS=false
     restart: always
