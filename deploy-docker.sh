@@ -48,6 +48,12 @@ show_help() {
   echo "  ./deploy-docker.sh mypassword test    # 使用自定义密码部署测试环境"
   echo "  ./deploy-docker.sh mypassword staging # 使用自定义密码部署预发布环境"
   echo "  ./deploy-docker.sh mypassword prod    # 使用自定义密码部署生产环境"
+  echo ""
+  echo "各环境端口映射:"
+  echo "  开发环境(dev):    前端:3001, 后端:8081, MySQL:3307"
+  echo "  测试环境(test):   前端:3002, 后端:8082, MySQL:3308"
+  echo "  预发布环境(staging): 前端:3003, 后端:8083, MySQL:3309"
+  echo "  生产环境(prod):   前端:3004, 后端:8084, MySQL:3310"
 }
 
 if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
@@ -62,15 +68,62 @@ if [ "$ENV" != "dev" ] && [ "$ENV" != "test" ] && [ "$ENV" != "staging" ] && [ "
   exit 1
 fi
 
+# 根据不同环境设置不同的端口
+case $ENV in
+  dev)
+    FRONTEND_PORT=3001
+    BACKEND_PORT=8081
+    MYSQL_PORT=3307
+    ;;
+  test)
+    FRONTEND_PORT=3002
+    BACKEND_PORT=8082
+    MYSQL_PORT=3308
+    ;;
+  staging)
+    FRONTEND_PORT=3003
+    BACKEND_PORT=8083
+    MYSQL_PORT=3309
+    ;;
+  prod)
+    FRONTEND_PORT=3004
+    BACKEND_PORT=8084
+    MYSQL_PORT=3310
+    ;;
+esac
+
+log_info "环境: $ENV, 端口配置 - 前端:$FRONTEND_PORT, 后端:$BACKEND_PORT, MySQL:$MYSQL_PORT"
+
 # 准备环境变量
 log_info "准备环境变量..."
 export MYSQL_PASSWORD=$MYSQL_PASSWORD
 export NODE_ENV=$ENV
+export FRONTEND_PORT=$FRONTEND_PORT
+export BACKEND_PORT=$BACKEND_PORT
+export MYSQL_PORT=$MYSQL_PORT
 
 # 设置项目名称和容器名前缀
 PROJECT_NAME="mall-system-${ENV}"
 MYSQL_CONTAINER="mall-mysql-${ENV}"
+SERVER_CONTAINER="mall-server-${ENV}"
+ADMIN_CONTAINER="mall-admin-${ENV}"
 NETWORK_NAME="${PROJECT_NAME}_mall-network"
+
+# 检查是否有运行的容器正在使用预定端口
+check_port() {
+  local port=$1
+  local result=$(lsof -i :$port | grep LISTEN)
+  if [ ! -z "$result" ]; then
+    log_warn "端口 $port 已被占用: $result"
+    return 1
+  fi
+  return 0
+}
+
+log_info "检查端口占用情况..."
+check_port $FRONTEND_PORT || log_warn "前端端口 $FRONTEND_PORT 已被占用，但将继续尝试部署"
+check_port $BACKEND_PORT || log_warn "后端端口 $BACKEND_PORT 已被占用，但将继续尝试部署"
+check_port $MYSQL_PORT || log_warn "MySQL端口 $MYSQL_PORT 已被占用，但将继续尝试部署"
 
 # 清理旧容器和网络
 log_info "清理旧容器和网络..."
@@ -98,7 +151,7 @@ docker run --name $MYSQL_CONTAINER \
   -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD \
   -e MYSQL_DATABASE=shop \
   -e MYSQL_ROOT_HOST=% \
-  -p 3307:3306 \
+  -p $MYSQL_PORT:3306 \
   -v $(pwd)/init.sql:/docker-entrypoint-initdb.d/init.sql \
   --network $NETWORK_NAME \
   --network-alias mysql \
@@ -144,11 +197,7 @@ while [ $RETRY -lt $MAX_RETRY ]; do
   fi
 done
 
-# 启动后端服务
-log_info "启动后端服务..."
-docker-compose -p $PROJECT_NAME build mall-server
-
-# 使用自定义命令启动mall-server，不依赖于mysql服务
+# 使用自定义命令直接启动后端服务和前端服务
 ENV_FILE=""
 if [ "$ENV" == "prod" ]; then
   ENV_FILE="docker-compose.prod.yml"
@@ -161,17 +210,121 @@ else
 fi
 
 log_info "使用配置文件: docker-compose.yml 和 $ENV_FILE"
-docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE create mall-server
-docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE start mall-server
+
+# 使用普通的docker命令启动后端服务，而不是docker-compose
+log_info "构建并启动后端服务..."
+# 构建镜像
+docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE build mall-server
+
+# 手动启动后端容器
+docker run -d \
+  --name $SERVER_CONTAINER \
+  --network $NETWORK_NAME \
+  -p $BACKEND_PORT:8080 \
+  -e NODE_ENV=$ENV \
+  -e DB_HOST=mysql \
+  -e DB_PORT=3306 \
+  -e DB_NAME=shop \
+  -e DB_USER=root \
+  -e DB_PASSWORD=$MYSQL_PASSWORD \
+  -e API_PREFIX=/api \
+  -e JWT_SECRET=mall_${ENV}_secret_key_2023 \
+  -e JWT_EXPIRES_IN=7d \
+  -e ADMIN_USERNAME=dev_admin \
+  -e ADMIN_PASSWORD=dev_pass123 \
+  --restart unless-stopped \
+  mall-system-${ENV}_mall-server
 
 # 等待后端服务启动
 log_info "等待后端服务启动..."
 sleep 10
 
-# 启动前端服务
-log_info "启动前端服务..."
-docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE create mall-admin
-docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE start mall-admin
+# 确保后端服务已经启动
+log_info "确保后端服务可访问..."
+docker exec $SERVER_CONTAINER curl -s --head --fail http://localhost:8080/api/health || log_warn "后端健康检查失败，但将继续尝试部署前端"
+
+# 检查容器间网络连接
+log_info "检查容器间网络连接..."
+docker run --rm --network $NETWORK_NAME alpine sh -c "ping -c 2 $SERVER_CONTAINER" || log_warn "容器间网络连接测试失败，但将继续尝试部署"
+
+# 手动启动前端容器
+log_info "构建并启动前端服务..."
+# 构建镜像
+docker-compose -p $PROJECT_NAME -f docker-compose.yml -f $ENV_FILE build mall-admin
+
+# 创建适合当前环境的nginx配置
+log_info "创建自定义Nginx配置..."
+cat > custom-nginx.conf <<EOF
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # 日志配置
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # 支持SPA应用路由
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    # 静态资源缓存设置
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+
+    # API代理配置 - 使用容器名代替localhost
+    location /api/ {
+        proxy_pass http://mall-server-${ENV}:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    # 健康检查
+    location /health {
+        return 200 'OK';
+        add_header Content-Type text/plain;
+    }
+
+    # 错误页面
+    error_page 404 /index.html;
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}
+EOF
+
+# 手动启动前端容器，添加额外的卷挂载来覆盖Nginx配置
+docker run -d \
+  --name $ADMIN_CONTAINER \
+  --network $NETWORK_NAME \
+  -p $FRONTEND_PORT:80 \
+  -e VITE_API_URL="http://localhost:${BACKEND_PORT}/api" \
+  -e NODE_ENV=$ENV \
+  -v $(pwd)/custom-nginx.conf:/etc/nginx/conf.d/default.conf \
+  --restart unless-stopped \
+  mall-system-${ENV}_mall-admin
+
+# 检查前端容器是否启动成功
+if ! docker ps | grep -q $ADMIN_CONTAINER; then
+  log_error "前端容器启动失败，请检查日志:"
+  docker logs $ADMIN_CONTAINER
+else
+  log_success "前端容器启动成功"
+fi
+
+# 清理临时文件
+rm -f custom-nginx.conf
 
 # 检查服务状态
 log_info "检查服务状态..."
@@ -181,8 +334,27 @@ docker ps | grep -E "mall-(mysql|server|admin)-${ENV}"
 log_info "服务部署完成！"
 log_info "环境: $ENV"
 log_info "服务访问信息:"
-echo "前端界面: http://localhost:3001"
-echo "后端API: http://localhost:8081/api"
-echo "MySQL数据库: localhost:3307 (用户名: root, 密码: $MYSQL_PASSWORD)"
+echo "前端界面: http://localhost:$FRONTEND_PORT"
+echo "后端API: http://localhost:$BACKEND_PORT/api"
+echo "MySQL数据库: localhost:$MYSQL_PORT (用户名: root, 密码: $MYSQL_PASSWORD)"
 
-log_success "所有服务已成功部署！" 
+# 添加诊断信息
+log_info "容器运行状态:"
+docker ps -a | grep -E "mall-(mysql|server|admin)-${ENV}"
+
+log_info "网络信息:"
+docker network inspect $NETWORK_NAME | grep -E 'Name|IPv4Address'
+
+# 检查前端容器日志
+if docker ps | grep -q $ADMIN_CONTAINER; then
+  log_info "前端容器日志 (最后10行):"
+  docker logs --tail 10 $ADMIN_CONTAINER
+else
+  log_warn "前端容器未运行，无法获取日志"
+fi
+
+# 检查后端容器日志
+log_info "后端容器日志 (最后10行):"
+docker logs --tail 10 $SERVER_CONTAINER
+
+log_success "所有服务已成功部署！如有问题，请检查上方日志信息" 
