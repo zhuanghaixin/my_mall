@@ -16,6 +16,11 @@ COPY . .
 # 设置环境变量
 ENV NODE_ENV=development
 ENV PORT=8080
+ENV DB_HOST=mysql
+ENV DB_USER=root
+ENV DB_PASSWORD=zhx123456
+ENV DB_PORT=3306
+ENV DB_NAME=shop
 
 # 暴露端口
 EXPOSE 8080

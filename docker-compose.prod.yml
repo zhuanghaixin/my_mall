@@ -3,11 +3,12 @@ version: '3.8'
 # 生产环境配置
 services:
   mysql:
+    image: mysql:8.0
     container_name: mall-mysql-prod
     volumes:
       - mysql-data-prod:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=zhx199710085470
+      - MYSQL_ROOT_PASSWORD=zhx123456
       - MYSQL_DATABASE=shop
     restart: always
     # 生产环境数据库安全配置
@@ -21,7 +22,7 @@ services:
       - DB_PORT=3306
       - DB_NAME=shop
       - DB_USER=root
-      - DB_PASSWORD=zhx199710085470
+      - DB_PASSWORD=123456
       - API_PREFIX=/api
       - LOG_LEVEL=error
       - ENABLE_MOCK=false
@@ -38,6 +39,8 @@ services:
   mall-admin:
     container_name: mall-admin-prod
     build:
+      context: ./mall-admin
+      dockerfile: Dockerfile
       args:
         - BUILD_MODE=production
     environment:

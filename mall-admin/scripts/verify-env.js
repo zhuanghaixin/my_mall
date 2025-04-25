@@ -5,9 +5,14 @@
  * 确保所有必要的环境变量都已正确定义
  */
 
-const fs = require('fs');
-const path = require('path');
-const dotenv = require('dotenv');
+import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+
+// 获取当前文件的目录
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 获取命令行参数中的环境名称
 const envMode = process.argv[2] || 'development';
