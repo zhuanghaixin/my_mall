@@ -1,0 +1,66 @@
+name: 自动部署到阿里云
+
+on:
+  push:
+    branches: [ main, master ]  # 当推送到main或master分支时触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: 设置SSH密钥
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          
+      - name: 设置已知主机
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 47.107.32.143 >> ~/.ssh/known_hosts
+      
+      - name: 发送部署开始通知
+        run: |
+          chmod +x ./deployment-notification.sh
+          ./deployment-notification.sh start
+        continue-on-error: true
+          
+      - name: 连接服务器并部署
+        id: deploy
+        run: |
+          ssh root@47.107.32.143 << 'EOF'
+            # 进入项目目录或创建项目目录
+            mkdir -p /var/www/my_mall
+            cd /var/www/my_mall
+            
+            # 如果目录已存在代码则更新，否则克隆
+            if [ -d ".git" ]; then
+              git pull
+            else
+              git clone git@github.com:zhuanghaixin/my_mall.git .
+            fi
+            
+            # 授予脚本执行权限
+            chmod +x deploy-to-prod.sh deploy-docker.sh clean-docker.sh
+            
+            # 执行部署脚本
+            ./deploy-to-prod.sh
+          EOF
+
+      - name: 发送部署成功通知
+        if: success()
+        run: |
+          chmod +x ./deployment-notification.sh
+          ./deployment-notification.sh success
+        continue-on-error: true
+
+      - name: 发送部署失败通知
+        if: failure()
+        run: |
+          chmod +x ./deployment-notification.sh
+          ./deployment-notification.sh failure "查看GitHub Actions日志了解详情"
+        continue-on-error: true 
