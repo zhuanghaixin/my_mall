@@ -1,3 +1,6 @@
+// 导入响应式样式工具
+@use "responsive";
+
 // 全局通用样式
 html, body {
   margin: 0;
@@ -14,6 +17,17 @@ html, body {
 
 .app-container {
   padding: 20px;
+  
+  @media (max-width: 768px) {
+    padding: 10px;
+  }
+}
+
+// 移动端默认文字大小
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
 }
 
 // 卡片内容溢出处理
@@ -26,6 +40,26 @@ html, body {
   width: 100% !important;
   max-width: 100%;
   overflow-x: auto;
+}
+
+// 移动端表格优化
+@media (max-width: 768px) {
+  .el-table {
+    font-size: 12px;
+    
+    .cell {
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+    
+    th {
+      padding: 8px 0;
+    }
+    
+    td {
+      padding: 5px 0;
+    }
+  }
 }
 
 // 修复大内容页面的滚动问题
@@ -48,6 +82,30 @@ html, body {
   opacity: 0;
 }
 
+// 移动端表单样式优化
+@media (max-width: 768px) {
+  .el-form-item__label {
+    padding: 0 0 8px;
+    line-height: 1.2;
+    display: block;
+    text-align: left;
+  }
+  
+  .el-form--inline .el-form-item {
+    display: block;
+    margin-right: 0;
+    width: 100%;
+  }
+  
+  .el-select {
+    width: 100%;
+  }
+  
+  .el-date-editor.el-input {
+    width: 100%;
+  }
+}
+
 // 滚动条样式
 ::-webkit-scrollbar {
   width: 8px;
@@ -66,4 +124,23 @@ html, body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(144, 147, 153, 0.5);
+}
+
+// 移动端分页组件优化
+@media (max-width: 480px) {
+  .el-pagination {
+    .el-pagination__sizes, 
+    .el-pagination__jump {
+      display: none !important;
+    }
+    
+    button {
+      min-width: 24px;
+    }
+    
+    .btn-prev, 
+    .btn-next {
+      padding: 0 4px;
+    }
+  }
 } 

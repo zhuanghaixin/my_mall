@@ -1,5 +1,5 @@
 <template>
-    <div class="side-menu">
+    <div class="side-menu" :class="{ 'is-mobile': isMobile }">
         <el-menu :default-active="activeMenu" :collapse="isCollapse" :unique-opened="false" :collapse-transition="false"
             class="el-menu-vertical" background-color="#304156" text-color="#bfcbd9" active-text-color="#409EFF">
             <template v-for="(route, index) in routes" :key="index">
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { RouteRecordRaw } from 'vue-router'
 
@@ -59,10 +59,21 @@ const isCollapse = computed(() => props.collapse)
 const route = useRoute()
 const router = useRouter()
 
-// 调试 - 查看当前routes
-watch(() => props.routes, (newRoutes) => {
-    console.log('Current routes:', newRoutes)
-}, { immediate: true, deep: true })
+// 移动端检测
+const isMobile = ref(false)
+
+const checkMobile = () => {
+    isMobile.value = window.innerWidth < 992
+}
+
+onMounted(() => {
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', checkMobile)
+})
 
 // 当前激活的菜单
 const activeMenu = computed(() => {
@@ -96,6 +107,12 @@ const handleMenuClick = (currentRoute: RouteRecordRaw, parentPath?: string) => {
     }
 
     router.push(path)
+
+    // 触发关闭移动端菜单的事件
+    if (isMobile.value) {
+        const event = new CustomEvent('menu-click-mobile')
+        document.dispatchEvent(event)
+    }
 }
 </script>
 
@@ -104,6 +121,17 @@ const handleMenuClick = (currentRoute: RouteRecordRaw, parentPath?: string) => {
 
 .side-menu {
     height: calc(100% - #{$header-height});
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &.is-mobile {
+        height: 100%;
+        padding-top: 50px; // 为关闭按钮留出空间
+
+        .el-menu-vertical:not(.el-menu--collapse) {
+            width: 100%;
+        }
+    }
 
     .el-menu-vertical {
         height: 100%;
@@ -128,6 +156,22 @@ const handleMenuClick = (currentRoute: RouteRecordRaw, parentPath?: string) => {
         &.is-active {
             background-color: #263445 !important;
         }
+
+        // 移动端菜单项更高以便于触摸
+        @media (max-width: $screen-sm) {
+            height: 56px;
+            line-height: 56px;
+        }
+    }
+
+    // 移动端子菜单标题
+    :deep(.el-sub-menu) {
+        @media (max-width: $screen-sm) {
+            .el-sub-menu__title {
+                height: 56px;
+                line-height: 56px;
+            }
+        }
     }
 
     // 修复折叠状态下文本不显示问题
@@ -139,6 +183,18 @@ const handleMenuClick = (currentRoute: RouteRecordRaw, parentPath?: string) => {
                 }
             }
         }
+    }
+
+    // 处理移动端滚动
+    @media (max-width: $screen-md) {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+// 适配iPhone X等底部安全区域
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .side-menu.is-mobile {
+        padding-bottom: env(safe-area-inset-bottom);
     }
 }
 </style>
