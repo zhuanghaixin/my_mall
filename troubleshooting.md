@@ -33,7 +33,7 @@ docker-compose down -v
 **解决方案**:
 ```bash
 # 直接进入MySQL容器执行SQL
-docker exec -it mall-mysql-dev mysql -uroot -pzhx199710085470
+docker exec -it mall-mysql-dev mysql -uroot -pzhx123456
 
 # 在容器内手动执行初始化
 CREATE DATABASE IF NOT EXISTS shop;
@@ -51,11 +51,11 @@ docker cp init.sql mall-mysql-dev:/docker-entrypoint-initdb.d/
 如果自动初始化失败，可以手动导入备份文件：
 ```bash
 # 方法1：直接导入SQL文件
-cat init.sql | docker exec -i mall-mysql-dev mysql -uroot -pzhx199710085470 shop
+cat init.sql | docker exec -i mall-mysql-dev mysql -uroot -pzhx123456 shop
 
 # 方法2：从容器内部导入
 docker cp init.sql mall-mysql-dev:/tmp/
-docker exec -it mall-mysql-dev bash -c "mysql -uroot -pzhx199710085470 shop < /tmp/init.sql"
+docker exec -it mall-mysql-dev bash -c "mysql -uroot -pzhx123456 shop < /tmp/init.sql"
 ```
 
 ### Node.js后端相关问题
@@ -81,7 +81,7 @@ const mysql = require('mysql2');
 const conn = mysql.createConnection({
   host: 'mysql',
   user: 'root',
-  password: 'zhx199710085470',
+  password: 'zhx123456',
   database: 'shop'
 });
 conn.connect(err => {
@@ -201,7 +201,7 @@ docker system prune -f  # 谨慎使用，会删除未使用的容器、镜像和
 ### 2. 调试容器环境
 ```bash
 # MySQL
-docker exec -it mall-mysql-dev mysql -uroot -pzhx199710085470
+docker exec -it mall-mysql-dev mysql -uroot -pzhx123456
 
 # 后端
 docker exec -it mall-server-dev sh
