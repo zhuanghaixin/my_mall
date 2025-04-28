@@ -1,4 +1,4 @@
-# 商城系统Docker部署
+# 商城系统Docker部署指南
 
 本项目使用Docker部署Mall商城的前端(mall-admin)和后端(mall-server)应用。
 
