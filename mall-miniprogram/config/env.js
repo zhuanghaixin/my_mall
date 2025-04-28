@@ -18,8 +18,8 @@ const ENV = {
     },
     // 生产环境
     production: {
-        apiHost: 'http://47.107.32.143',
-        apiPort: '8084',
+        apiHost: 'https://js101.fun',
+        apiPort: '8443',
         apiPrefix: '/api',
         envName: 'production',
         envVersion: 'release'
