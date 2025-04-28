@@ -2847,3 +2847,74 @@ npm run dev
 2. mall-admin/.env.production - 更新API URL使用HTTPS
 3. mall-server/.env.production - 更新数据库配置，添加域名配置
 4. cursor_log.md - 创建会话日志记录
+
+## 2024-07-30 检查环境配置
+
+### 会话日期和时间
+2024-07-30 14:45
+
+### 会话的主要目的
+分析商城小程序项目的环境配置文件，了解项目的API地址和服务器配置。
+
+### 完成的主要任务
+1. 检查了mall-admin的.env.production配置文件
+2. 检查了mall-server的.env.production配置文件
+3. 分析了mall-server的app.js和index.js中的关键配置
+4. 了解了项目的API地址、数据库配置和SSL配置
+
+### 关键决策和解决方案
+- 确认了生产环境API地址为`https://47.107.32.143:8443`
+- 了解了数据库配置（主机、端口、名称和用户）
+- 分析了SSL配置，确认已启用HTTPS服务
+- 了解了CORS配置和允许的源域名
+- 检查了项目的服务启动和错误处理机制
+
+### 使用的技术栈
+- Node.js
+- Express
+- MySQL数据库
+- HTTPS/SSL
+- Docker部署
+
+### 相关文件
+- mall-admin/.env.production
+- mall-server/.env.production
+- mall-server/src/app.js
+- mall-server/src/index.js
+
+## 2024-07-31 部署生产环境
+
+### 会话的主要目的
+执行商城小程序的生产环境部署，并确保所有服务正常运行。
+
+### 完成的主要任务
+1. 执行deploy-to-prod.sh部署脚本，成功部署生产环境
+2. 部署了MySQL数据库、后端API服务、SSL代理和前端管理服务
+3. 验证了各个服务的连通性和可访问性
+4. 确认了HTTP自动重定向到HTTPS的功能正常
+5. 测试了前端和后端API的健康状态
+
+### 关键决策和解决方案
+- 使用了deploy-to-prod.sh脚本进行自动化部署
+- 为后端API提供了HTTP和HTTPS双重访问方式
+- 配置了Nginx SSL代理，实现前端和API的HTTPS访问
+- 验证了不同服务间的网络连通性
+- 确保安全性：HTTP自动重定向到HTTPS
+
+### 使用的技术栈
+- Docker容器管理
+- MySQL 8.0数据库
+- Node.js/Express后端
+- Vue 3前端
+- Nginx作为Web服务器和SSL代理
+- HTTPS/SSL安全配置
+
+### 修改了哪些文件
+- 无文件修改，仅执行了部署脚本
+- 验证了deploy-to-prod.sh脚本的有效性
+
+### 部署结果
+- 前端服务：https://47.107.32.143
+- 后端API：https://47.107.32.143:8443/api 和 http://47.107.32.143:8084/api
+- 数据库：47.107.32.143:3310
+- 管理员账号：dev_admin/dev_pass123

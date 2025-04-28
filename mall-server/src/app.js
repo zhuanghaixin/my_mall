@@ -10,10 +10,37 @@ const routes = require('./routes');
 // 创建Express应用
 const app = express();
 
+// 获取允许的源
+const getAllowedOrigins = () => {
+    // 从环境变量获取允许的源
+    const originsFromEnv = process.env.ALLOWED_ORIGINS ?
+        process.env.ALLOWED_ORIGINS.split(',') : [];
+
+    // 默认允许的源
+    const defaultOrigins = [
+        'http://localhost:3000',
+        'http://localhost:8080',
+        'https://localhost',
+        'https://localhost:8443'
+    ];
+
+    // 合并环境变量中的源和默认源
+    return [...new Set([...originsFromEnv, ...defaultOrigins])];
+};
+
 // 中间件
 // 启用CORS跨域资源共享
 app.use(cors({
-    origin: '*', // 允许所有来源的请求
+    origin: (origin, callback) => {
+        const allowedOrigins = getAllowedOrigins();
+
+        // 允许没有来源的请求（如移动应用）或允许的来源
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('CORS policy violation'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     exposedHeaders: ['Content-Disposition', 'API-Key'],

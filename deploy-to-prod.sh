@@ -3,7 +3,7 @@
 # 商城小程序生产环境一键部署脚本（Docker原生命令版）
 # 作者: AI助手
 # 日期: 2025-04-25
-# 更新: 使用新版docker compose命令，添加HTTPS支持
+# 更新: 使用新版docker compose命令，添加HTTPS支持，前后端分离Nginx配置
 
 # 颜色定义
 RED='\033[0;31m'
@@ -22,10 +22,12 @@ PROJECT_NAME="mall-system-${ENV}"
 MYSQL_CONTAINER="mall-mysql-${ENV}"
 SERVER_CONTAINER="mall-server-${ENV}"
 ADMIN_CONTAINER="mall-admin-${ENV}"
+BACKEND_PROXY_CONTAINER="mall-backend-proxy-${ENV}"
 NETWORK_NAME="${PROJECT_NAME}_mall-network"
 FRONTEND_PORT=80
 FRONTEND_SSL_PORT=443
 BACKEND_PORT=8084
+BACKEND_SSL_PORT=8443
 MYSQL_PORT=3310
 
 # 日志函数
@@ -63,11 +65,11 @@ echo -e "${BLUE}域名: $DOMAIN / $WWW_DOMAIN${NC}"
 
 # 清理旧容器和网络
 log_info "清理旧容器和网络..."
-docker rm -f $MYSQL_CONTAINER $SERVER_CONTAINER $ADMIN_CONTAINER 2>/dev/null || true
+docker rm -f $MYSQL_CONTAINER $SERVER_CONTAINER $ADMIN_CONTAINER $BACKEND_PROXY_CONTAINER 2>/dev/null || true
 docker network rm $NETWORK_NAME 2>/dev/null || true
 
 # 将API_URL导出为环境变量供下面的命令使用
-export API_URL="https://$SERVER_IP:$BACKEND_PORT"
+export API_URL="https://$SERVER_IP:$BACKEND_SSL_PORT"
 export MYSQL_PASSWORD=$MYSQL_PASSWORD
 export SERVER_IP=$SERVER_IP
 
@@ -165,14 +167,72 @@ cd mall-admin
 docker build -t mall-system-${ENV}_mall-admin .
 cd ..
 
-# 创建适合当前环境的nginx配置
-log_info "创建自定义Nginx配置..."
+# 创建后端SSL代理的Nginx配置
+log_info "创建后端SSL代理的Nginx配置..."
+mkdir -p backend-nginx-conf
+cat > backend-nginx-conf/default.conf <<EOF
+# 后端API的SSL代理配置
+server {
+    listen 8443 ssl;
+    server_name $SERVER_IP $DOMAIN $WWW_DOMAIN localhost;
+    
+    # SSL证书配置
+    ssl_certificate /etc/nginx/ssl/js101.fun_bundle.crt;
+    ssl_certificate_key /etc/nginx/ssl/js101.fun.key;
+    
+    # SSL设置
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    
+    # 日志配置
+    access_log /var/log/nginx/backend_access_ssl.log;
+    error_log /var/log/nginx/backend_error_ssl.log debug;
+    
+    # API代理配置 - 转发到后端服务
+    location / {
+        proxy_pass http://$SERVER_CONTAINER:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+    
+    # 健康检查
+    location /health {
+        return 200 'OK';
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+
+# 启动后端SSL代理容器
+log_info "启动后端SSL代理容器..."
+docker run -d \
+  --name $BACKEND_PROXY_CONTAINER \
+  --network $NETWORK_NAME \
+  -p $BACKEND_SSL_PORT:8443 \
+  -v $(pwd)/backend-nginx-conf/default.conf:/etc/nginx/conf.d/default.conf \
+  -v $(pwd)/ssl-certs/js101.fun.key:/etc/nginx/ssl/js101.fun.key \
+  -v $(pwd)/ssl-certs/js101.fun_bundle.crt:/etc/nginx/ssl/js101.fun_bundle.crt \
+  --restart unless-stopped \
+  nginx:alpine
+
+# 创建适合当前环境的前端nginx配置
+log_info "创建前端Nginx配置..."
 mkdir -p nginx-conf
 cat > nginx-conf/default.conf <<EOF
 # HTTP 配置 - 重定向到HTTPS
 server {
     listen 80;
-    server_name $SERVER_IP $DOMAIN $WWW_DOMAIN;
+    server_name $SERVER_IP $DOMAIN $WWW_DOMAIN localhost;
     
     # 日志配置
     access_log /var/log/nginx/access.log;
@@ -193,7 +253,7 @@ server {
 # HTTPS 配置
 server {
     listen 443 ssl;
-    server_name $SERVER_IP $DOMAIN $WWW_DOMAIN;
+    server_name $SERVER_IP $DOMAIN $WWW_DOMAIN localhost;
     
     # SSL证书配置
     ssl_certificate /etc/nginx/ssl/js101.fun_bundle.crt;
@@ -234,9 +294,10 @@ server {
         rewrite ^/admin/login$ /api/admin/login last;
     }
     
-    # API代理配置 - 使用容器名代替localhost
+    # API代理配置 - 使用后端SSL代理
     location /api/ {
-        proxy_pass http://$SERVER_CONTAINER:8080/api/;
+        # 使用后端SSL代理而不是直接连接后端容器
+        proxy_pass https://$BACKEND_PROXY_CONTAINER:8443/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -245,6 +306,8 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        # 如果是本地开发，不验证SSL证书
+        proxy_ssl_verify off;
     }
     
     # 确保所有不带/api前缀的API请求也能正确转发
@@ -274,13 +337,13 @@ docker run -d \
   --network $NETWORK_NAME \
   -p $FRONTEND_PORT:80 \
   -p $FRONTEND_SSL_PORT:443 \
-  -e VITE_API_URL="https://$SERVER_IP/api" \
+  -e VITE_API_URL="https://$SERVER_IP:$BACKEND_SSL_PORT/api" \
   -e NODE_ENV=production \
   -v $(pwd)/nginx-conf/default.conf:/etc/nginx/conf.d/default.conf \
   -v $(pwd)/ssl-certs/js101.fun.key:/etc/nginx/ssl/js101.fun.key \
   -v $(pwd)/ssl-certs/js101.fun_bundle.crt:/etc/nginx/ssl/js101.fun_bundle.crt \
   --restart unless-stopped \
-  nginx:alpine
+  mall-system-${ENV}_mall-admin
 
 # 检查前端容器是否启动成功
 if ! docker ps | grep -q $ADMIN_CONTAINER; then
@@ -290,27 +353,35 @@ else
   log_success "前端容器启动成功"
 fi
 
+# 检查后端SSL代理容器是否启动成功
+if ! docker ps | grep -q $BACKEND_PROXY_CONTAINER; then
+  log_error "后端SSL代理容器启动失败，请检查日志:"
+  docker logs $BACKEND_PROXY_CONTAINER
+else
+  log_success "后端SSL代理容器启动成功"
+fi
+
 # 检查服务状态
 log_info "检查服务状态..."
-docker ps | grep -E "mall-(mysql|server|admin)-${ENV}"
+docker ps | grep -E "(mall-mysql|mall-server|mall-admin|mall-backend-proxy)-${ENV}"
 
 # 检查部署结果
 log_info "验证部署结果..."
-CONTAINERS=$(docker ps | grep -E "mall-(mysql|server|admin)-${ENV}" | wc -l)
+CONTAINERS=$(docker ps | grep -E "(mall-mysql|mall-server|mall-admin|mall-backend-proxy)-${ENV}" | wc -l)
 
-if [ "$CONTAINERS" -eq "3" ]; then
+if [ "$CONTAINERS" -eq "4" ]; then
   log_success "=== 生产环境部署成功! ==="
   log_success "所有容器都在正常运行"
 else
   log_error "=== 部署可能存在问题! ==="
-  log_error "预期3个容器，但只有 $CONTAINERS 个在运行"
-  docker ps | grep -E "mall-(mysql|server|admin)-${ENV}"
+  log_error "预期4个容器，但只有 $CONTAINERS 个在运行"
+  docker ps | grep -E "(mall-mysql|mall-server|mall-admin|mall-backend-proxy)-${ENV}"
   log_warn "请检查上面的容器列表和日志以排查问题"
 fi
 
 # 添加诊断信息
 log_info "容器运行状态:"
-docker ps -a | grep -E "mall-(mysql|server|admin)-${ENV}"
+docker ps -a | grep -E "(mall-mysql|mall-server|mall-admin|mall-backend-proxy)-${ENV}"
 
 log_info "网络信息:"
 docker network inspect $NETWORK_NAME | grep -E 'Name|IPv4Address'
@@ -322,12 +393,16 @@ docker logs --tail 5 $ADMIN_CONTAINER 2>/dev/null || log_warn "前端容器未�
 log_info "后端容器日志 (最后5行):"
 docker logs --tail 5 $SERVER_CONTAINER 2>/dev/null || log_warn "后端容器未运行，无法获取日志"
 
+log_info "后端SSL代理容器日志 (最后5行):"
+docker logs --tail 5 $BACKEND_PROXY_CONTAINER 2>/dev/null || log_warn "后端SSL代理容器未运行，无法获取日志"
+
 log_success "=== 可通过以下地址访问: ==="
 log_success "前端HTTPS: https://$SERVER_IP"
 log_success "前端HTTP (会重定向到HTTPS): http://$SERVER_IP"
+log_success "后端API (HTTPS): https://$SERVER_IP:$BACKEND_SSL_PORT/api"
+log_success "后端API (HTTP): http://$SERVER_IP:$BACKEND_PORT/api"
 log_success "待备案完成后，还可通过以下地址访问:"
 log_success "https://$DOMAIN 或 https://$WWW_DOMAIN"
-log_success "后端API: https://$SERVER_IP/api"
 log_success "管理员用户名: dev_admin"
 log_success "管理员密码: dev_pass123"
 log_success "MySQL数据库: $SERVER_IP:$MYSQL_PORT (用户名: root, 密码: $MYSQL_PASSWORD)"
