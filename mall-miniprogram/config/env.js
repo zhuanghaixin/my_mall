@@ -19,7 +19,6 @@ const ENV = {
     // 生产环境
     production: {
         apiHost: 'https://js101.fun',
-        apiPort: '8443',
         apiPrefix: '/api',
         envName: 'production',
         envVersion: 'release'
@@ -141,8 +140,8 @@ const getApiBaseUrl = (env) => {
     // 根据协议判断使用哪个端口格式
     const isHttps = config.apiHost.startsWith('https://');
 
-    // 如果是标准端口(http:80, https:443)则不显示端口
-    if ((isHttps && config.apiPort === '443') || (!isHttps && config.apiPort === '80')) {
+    // 如果没有定义apiPort属性，或是标准端口(http:80, https:443)，则不显示端口
+    if (!config.apiPort || (isHttps && config.apiPort === '443') || (!isHttps && config.apiPort === '80')) {
         return `${config.apiHost}${config.apiPrefix}`;
     }
 

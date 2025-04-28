@@ -15,7 +15,14 @@ const getBaseUrl = (req) => {
         return process.env.SERVER_BASE_URL;
     }
 
-    // 如果设置了SERVER_IP环境变量，使用它构建URL
+    // 如果设置了SERVER_DOMAIN环境变量（备案后），使用标准域名形式
+    if (process.env.SERVER_DOMAIN) {
+        const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+        // 使用标准端口时不显示端口号
+        return `${protocol}://${process.env.SERVER_DOMAIN}`;
+    }
+
+    // 如果设置了SERVER_IP环境变量（备案前），使用IP+端口形式
     if (process.env.SERVER_IP) {
         const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
         const port = process.env.NODE_ENV === 'production' ? '8443' : '8080';
