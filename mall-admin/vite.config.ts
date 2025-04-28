@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       open: true,
       proxy: {
         '/api': {
-          target: env.API_URL || 'http://localhost:8080',
+          target: env.API_URL || 'http://127.0.0.1:8080',
           changeOrigin: true,
           // 移除rewrite以确保路径能正确传递到后端
           // rewrite: (path) => path.replace(/^\/api/, ''),
