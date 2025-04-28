@@ -3,7 +3,7 @@
 # 商城小程序生产环境一键部署脚本（Docker原生命令版）
 # 作者: AI助手
 # 日期: 2025-04-25
-# 更新: 使用新版docker compose命令
+# 更新: 使用新版docker compose命令，添加HTTPS支持
 
 # 颜色定义
 RED='\033[0;31m'
@@ -14,6 +14,8 @@ NC='\033[0m' # 恢复默认颜色
 
 # 设置服务器IP地址和环境变量
 SERVER_IP="47.107.32.143"
+DOMAIN="js101.fun"
+WWW_DOMAIN="www.js101.fun"
 MYSQL_PASSWORD="zhx123456"
 ENV="prod"
 PROJECT_NAME="mall-system-${ENV}"
@@ -22,6 +24,7 @@ SERVER_CONTAINER="mall-server-${ENV}"
 ADMIN_CONTAINER="mall-admin-${ENV}"
 NETWORK_NAME="${PROJECT_NAME}_mall-network"
 FRONTEND_PORT=80
+FRONTEND_SSL_PORT=443
 BACKEND_PORT=8084
 MYSQL_PORT=3310
 
@@ -56,6 +59,7 @@ fi
 
 echo -e "${BLUE}=== 开始部署商城小程序生产环境 ===${NC}"
 echo -e "${BLUE}服务器IP: $SERVER_IP${NC}"
+echo -e "${BLUE}域名: $DOMAIN / $WWW_DOMAIN${NC}"
 
 # 清理旧容器和网络
 log_info "清理旧容器和网络..."
@@ -63,7 +67,7 @@ docker rm -f $MYSQL_CONTAINER $SERVER_CONTAINER $ADMIN_CONTAINER 2>/dev/null || 
 docker network rm $NETWORK_NAME 2>/dev/null || true
 
 # 将API_URL导出为环境变量供下面的命令使用
-export API_URL="http://$SERVER_IP:$BACKEND_PORT"
+export API_URL="https://$SERVER_IP:$BACKEND_PORT"
 export MYSQL_PASSWORD=$MYSQL_PASSWORD
 export SERVER_IP=$SERVER_IP
 
@@ -76,6 +80,19 @@ fi
 if [ ! -f "init.sql" ]; then
   log_warn "警告: 缺少初始化SQL文件，可能导致数据库未正确初始化"
 fi
+
+# 检查SSL证书文件
+log_info "检查SSL证书文件..."
+if [ ! -d "js101.fun_nginx" ] || [ ! -f "js101.fun_nginx/js101.fun.key" ] || [ ! -f "js101.fun_nginx/js101.fun_bundle.crt" ]; then
+  log_error "错误: 缺少SSL证书文件，请确保js101.fun_nginx目录下有证书文件"
+  exit 1
+fi
+
+# 创建SSL证书目录
+log_info "创建SSL证书目录..."
+mkdir -p ssl-certs
+cp js101.fun_nginx/js101.fun.key ssl-certs/
+cp js101.fun_nginx/js101.fun_bundle.crt ssl-certs/
 
 # 创建网络
 log_info "创建网络 $NETWORK_NAME..."
@@ -152,32 +169,71 @@ cd ..
 log_info "创建自定义Nginx配置..."
 mkdir -p nginx-conf
 cat > nginx-conf/default.conf <<EOF
+# HTTP 配置 - 重定向到HTTPS
 server {
     listen 80;
-    server_name $SERVER_IP;
-    root /usr/share/nginx/html;
-    index index.html;
-
+    server_name $SERVER_IP $DOMAIN $WWW_DOMAIN;
+    
     # 日志配置
     access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log debug;  # 提高日志级别便于调试
+    error_log /var/log/nginx/error.log debug;
+    
+    # 重定向所有HTTP请求到HTTPS
+    location / {
+        return 301 https://\$host\$request_uri;
+    }
+    
+    # 健康检查端点保留在HTTP
+    location /health {
+        return 200 'OK';
+        add_header Content-Type text/plain;
+    }
+}
 
+# HTTPS 配置
+server {
+    listen 443 ssl;
+    server_name $SERVER_IP $DOMAIN $WWW_DOMAIN;
+    
+    # SSL证书配置
+    ssl_certificate /etc/nginx/ssl/js101.fun_bundle.crt;
+    ssl_certificate_key /etc/nginx/ssl/js101.fun.key;
+    
+    # SSL设置
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    
+    # HSTS配置（备案通过后可考虑启用）
+    # add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload";
+    
+    # 根目录配置
+    root /usr/share/nginx/html;
+    index index.html;
+    
+    # 日志配置
+    access_log /var/log/nginx/access_ssl.log;
+    error_log /var/log/nginx/error_ssl.log debug;
+    
     # 支持SPA应用路由
     location / {
         try_files \$uri \$uri/ /index.html;
     }
-
+    
     # 静态资源缓存设置
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
         expires 30d;
         add_header Cache-Control "public, no-transform";
     }
-
+    
     # 重写 /admin/login 到 /api/admin/login
     location = /admin/login {
         rewrite ^/admin/login$ /api/admin/login last;
     }
-
+    
     # API代理配置 - 使用容器名代替localhost
     location /api/ {
         proxy_pass http://$SERVER_CONTAINER:8080/api/;
@@ -190,18 +246,18 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
-
+    
     # 确保所有不带/api前缀的API请求也能正确转发
     location ~* ^/(?!api/)(.*)$ {
         try_files \$uri \$uri/ /index.html;
     }
-
+    
     # 健康检查
     location /health {
         return 200 'OK';
         add_header Content-Type text/plain;
     }
-
+    
     # 错误页面
     error_page 404 /index.html;
     error_page 500 502 503 504 /50x.html;
@@ -217,11 +273,14 @@ docker run -d \
   --name $ADMIN_CONTAINER \
   --network $NETWORK_NAME \
   -p $FRONTEND_PORT:80 \
-  -e VITE_API_URL="http://$SERVER_IP:${BACKEND_PORT}/api" \
+  -p $FRONTEND_SSL_PORT:443 \
+  -e VITE_API_URL="https://$SERVER_IP/api" \
   -e NODE_ENV=production \
   -v $(pwd)/nginx-conf/default.conf:/etc/nginx/conf.d/default.conf \
+  -v $(pwd)/ssl-certs/js101.fun.key:/etc/nginx/ssl/js101.fun.key \
+  -v $(pwd)/ssl-certs/js101.fun_bundle.crt:/etc/nginx/ssl/js101.fun_bundle.crt \
   --restart unless-stopped \
-  mall-system-${ENV}_mall-admin
+  nginx:alpine
 
 # 检查前端容器是否启动成功
 if ! docker ps | grep -q $ADMIN_CONTAINER; then
@@ -264,8 +323,11 @@ log_info "后端容器日志 (最后5行):"
 docker logs --tail 5 $SERVER_CONTAINER 2>/dev/null || log_warn "后端容器未运行，无法获取日志"
 
 log_success "=== 可通过以下地址访问: ==="
-log_success "前端: http://$SERVER_IP"
-log_success "后端API: http://$SERVER_IP:$BACKEND_PORT/api"
+log_success "前端HTTPS: https://$SERVER_IP"
+log_success "前端HTTP (会重定向到HTTPS): http://$SERVER_IP"
+log_success "待备案完成后，还可通过以下地址访问:"
+log_success "https://$DOMAIN 或 https://$WWW_DOMAIN"
+log_success "后端API: https://$SERVER_IP/api"
 log_success "管理员用户名: dev_admin"
 log_success "管理员密码: dev_pass123"
 log_success "MySQL数据库: $SERVER_IP:$MYSQL_PORT (用户名: root, 密码: $MYSQL_PASSWORD)"

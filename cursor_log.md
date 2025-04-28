@@ -2815,3 +2815,35 @@ npm run dev
 - 移动端界面更加友好，便于触摸操作
 - 自动根据屏幕尺寸调整布局和交互方式
 - 提升了系统在各种设备上的可用性
+
+## 2024-07-15
+
+### 会话的主要目的
+配置商城小程序的HTTPS访问及域名支持，以便在备案完成前后都能正常访问网站。
+
+### 完成的主要任务
+1. 修改部署脚本支持HTTPS
+2. 配置SSL证书
+3. 设置多域名访问（IP和两个域名）
+4. 配置HTTP到HTTPS的重定向
+5. 更新前端和后端环境配置
+
+### 关键决策和解决方案
+- 使用Nginx配置SSL，处理证书和HTTPS
+- 配置了两个server块：一个处理HTTP重定向，一个处理HTTPS
+- 通过server_name配置支持IP和域名访问
+- 修改API_URL使用HTTPS协议
+- 将前端容器镜像从自定义镜像改为nginx:alpine以更好地支持SSL
+
+### 使用的技术栈
+- Docker
+- Nginx
+- Node.js
+- SSL/TLS
+- Shell脚本
+
+### 修改了哪些文件
+1. deploy-to-prod.sh - 添加HTTPS和域名支持
+2. mall-admin/.env.production - 更新API URL使用HTTPS
+3. mall-server/.env.production - 更新数据库配置，添加域名配置
+4. cursor_log.md - 创建会话日志记录
