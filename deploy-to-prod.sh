@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # 恢复默认颜色
 
 # 设置服务器IP地址和环境变量
-SERVER_IP="47.107.32.143"
+SERVER_IP="127.0.0.1"
 DOMAIN="js101.fun"
 WWW_DOMAIN="www.js101.fun"
 MYSQL_PASSWORD="zhx123456"
@@ -151,6 +151,7 @@ docker run -d \
   -e DB_PASSWORD=$MYSQL_PASSWORD \
   -e API_PREFIX=/api \
   -e SERVER_IP=$SERVER_IP \
+  -e SERVER_BASE_URL="https://$SERVER_IP:$BACKEND_SSL_PORT" \
   -e JWT_SECRET=mall_${ENV}_secret_key_2023 \
   -e JWT_EXPIRES_IN=7d \
   -e ADMIN_USERNAME=dev_admin \
@@ -192,6 +193,9 @@ server {
     access_log /var/log/nginx/backend_access_ssl.log;
     error_log /var/log/nginx/backend_error_ssl.log debug;
     
+    # 配置上传文件的客户端大小限制
+    client_max_body_size 20M;
+    
     # API代理配置 - 转发到后端服务
     location / {
         proxy_pass http://$SERVER_CONTAINER:8080;
@@ -203,6 +207,18 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+    
+    # 专门处理上传文件目录的路由
+    location /public/uploads/ {
+        proxy_pass http://$SERVER_CONTAINER:8080/public/uploads/;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
     }
     
     # 健康检查
@@ -298,16 +314,24 @@ server {
     location /api/ {
         # 使用后端SSL代理而不是直接连接后端容器
         proxy_pass https://$BACKEND_PROXY_CONTAINER:8443/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
         proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        # 如果是本地开发，不验证SSL证书
-        proxy_ssl_verify off;
+        # 针对大文件上传的优化配置
+        client_max_body_size 20M;
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+    }
+    
+    # 上传文件代理配置
+    location /uploads/ {
+        proxy_pass https://$BACKEND_PROXY_CONTAINER:8443/public/uploads/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
     
     # 确保所有不带/api前缀的API请求也能正确转发

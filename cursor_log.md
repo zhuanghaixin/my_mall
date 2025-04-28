@@ -2370,7 +2370,7 @@ npm run dev
 - 微信小程序
 - JavaScript
 
-### 修改了哪些文件
+### 修改的文件
 - mall-miniprogram/pages/user/index/index.js
 
 ## 会话总结 (2023-05-28)
@@ -2918,3 +2918,112 @@ npm run dev
 - 后端API：https://47.107.32.143:8443/api 和 http://47.107.32.143:8084/api
 - 数据库：47.107.32.143:3310
 - 管理员账号：dev_admin/dev_pass123
+
+## 2024-05-26 修复前端无法访问上传文件问题
+
+### 会话主要目的
+解决生产环境下前端无法正确访问后端上传文件的问题。
+
+### 完成的主要任务
+1. 分析了生产环境下前端访问上传文件的路径配置问题
+2. 修改了`deploy-to-prod.sh`脚本中的Nginx配置
+3. 改进了前端和后端代理的文件访问配置
+4. 添加了文件上传大小限制和缓存控制
+
+### 关键决策和解决方案
+1. 在前端Nginx配置中，将`/uploads/`路径的代理从`http`改为`https`指向后端SSL代理：
+   ```nginx
+   location /uploads/ {
+       proxy_pass https://$BACKEND_PROXY_CONTAINER:8443/public/uploads/;
+       proxy_set_header Host $host;
+       proxy_set_header X-Real-IP $remote_addr;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto $scheme;
+   }
+   ```
+
+2. 在后端SSL代理配置中，增加了专门处理上传文件目录的路由：
+   ```nginx
+   location /public/uploads/ {
+       proxy_pass http://$SERVER_CONTAINER:8080/public/uploads/;
+       proxy_http_version 1.1;
+       proxy_set_header Host $host;
+       proxy_set_header X-Real-IP $remote_addr;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto $scheme;
+       expires 30d;
+       add_header Cache-Control "public, no-transform";
+   }
+   ```
+
+3. 为API和文件上传添加了大文件上传优化配置：
+   ```nginx
+   client_max_body_size 20M;
+   proxy_connect_timeout 300s;
+   proxy_send_timeout 300s;
+   proxy_read_timeout 300s;
+   ```
+
+### 使用的技术栈
+- Nginx - 用于前端和后端代理配置
+- Docker - 用于容器化部署
+- Shell脚本 - 用于部署流程自动化
+- Node.js/Express - 后端服务上传文件处理
+
+### 修改的文件
+1. `/Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/deploy-to-prod.sh` - 修改部署脚本，更新Nginx配置
+2. `/Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/backend-nginx-conf/default.conf` - 更新后端代理配置
+
+## 2024-05-28 修复Docker环境中文件上传URL问题
+
+### 会话主要目的
+解决在Docker容器环境中文件上传后URL生成不正确的问题，以及修复Nginx配置中的语法错误。
+
+### 完成的主要任务
+1. 修复了Nginx配置中变量未正确转义导致的语法错误
+2. 修改了上传控制器中的URL生成逻辑，使其适应Docker环境
+3. 在部署脚本中添加了`SERVER_BASE_URL`环境变量设置
+
+### 关键决策和解决方案
+1. 在Nginx配置中正确转义变量：
+   ```bash
+   # 修改前
+   proxy_set_header Host $host;
+   # 修改后
+   proxy_set_header Host \$host;
+   ```
+
+2. 改进uploadController.js中的URL生成逻辑：
+   ```javascript
+   // 添加辅助函数获取正确的基础URL
+   const getBaseUrl = (req) => {
+       if (process.env.SERVER_BASE_URL) {
+           return process.env.SERVER_BASE_URL;
+       }
+       if (process.env.SERVER_IP) {
+           const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+           const port = process.env.NODE_ENV === 'production' ? '8443' : '8080';
+           return `${protocol}://${process.env.SERVER_IP}:${port}`;
+       }
+       return `${req.protocol}://${req.get('host')}`;
+   };
+   
+   // 使用新的函数生成URL
+   const baseUrl = getBaseUrl(req);
+   const fileUrl = `${baseUrl}/${relativeFilePath.replace(/\\/g, '/')}`;
+   ```
+
+3. 在部署脚本中设置SERVER_BASE_URL环境变量：
+   ```bash
+   -e SERVER_BASE_URL="https://$SERVER_IP:$BACKEND_SSL_PORT" \
+   ```
+
+### 使用的技术栈
+- Node.js/Express - 服务端环境与文件处理
+- Docker - 容器化部署
+- Nginx - 前端和后端的反向代理配置
+- Shell脚本 - 自动化部署配置
+
+### 修改的文件
+1. `/Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/deploy-to-prod.sh` - 修复Nginx配置变量转义问题并添加环境变量
+2. `/Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/mall-server/src/controllers/uploadController.js` - 修改URL生成逻辑

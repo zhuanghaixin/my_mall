@@ -8,6 +8,24 @@ const catchAsync = require('../utils/catchAsync');
 const { ValidationError } = require('../utils/errorTypes');
 const logger = require('../utils/logger');
 
+// 获取配置的服务器基础URL，用于生成访问地址
+const getBaseUrl = (req) => {
+    // 如果设置了SERVER_BASE_URL环境变量，优先使用它
+    if (process.env.SERVER_BASE_URL) {
+        return process.env.SERVER_BASE_URL;
+    }
+
+    // 如果设置了SERVER_IP环境变量，使用它构建URL
+    if (process.env.SERVER_IP) {
+        const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+        const port = process.env.NODE_ENV === 'production' ? '8443' : '8080';
+        return `${protocol}://${process.env.SERVER_IP}:${port}`;
+    }
+
+    // 回退到请求中的host
+    return `${req.protocol}://${req.get('host')}`;
+};
+
 /**
  * @swagger
  * /api/upload/image:
@@ -64,9 +82,10 @@ exports.uploadImage = catchAsync(async (req, res) => {
 
     // 生成文件访问路径
     const relativeFilePath = path.relative(path.join(__dirname, '../../public'), req.file.path);
-    const fileUrl = `${req.protocol}://${req.get('host')}/${relativeFilePath.replace(/\\/g, '/')}`;
+    const baseUrl = getBaseUrl(req);
+    const fileUrl = `${baseUrl}/${relativeFilePath.replace(/\\/g, '/')}`;
 
-    logger.info(`文件上传成功: ${req.file.originalname} -> ${req.file.filename}`);
+    logger.info(`文件上传成功: ${req.file.originalname} -> ${req.file.filename}, URL: ${fileUrl}`);
 
     res.status(200).json({
         code: 200,
@@ -140,9 +159,10 @@ exports.uploadImages = catchAsync(async (req, res) => {
     }
 
     // 生成所有文件的访问路径
+    const baseUrl = getBaseUrl(req);
     const fileUrls = req.files.map(file => {
         const relativeFilePath = path.relative(path.join(__dirname, '../../public'), file.path);
-        return `${req.protocol}://${req.get('host')}/${relativeFilePath.replace(/\\/g, '/')}`;
+        return `${baseUrl}/${relativeFilePath.replace(/\\/g, '/')}`;
     });
 
     logger.info(`批量上传成功: ${req.files.length}个文件`);
@@ -235,9 +255,10 @@ exports.getUploadList = catchAsync(async (req, res) => {
             .slice(0, limit); // 限制返回数量
 
         // 构建文件URL
+        const baseUrl = getBaseUrl(req);
         const fileList = imageFiles.map(file => {
             const relativeFilePath = path.relative(path.join(__dirname, '../../public'), file.path);
-            const fileUrl = `${req.protocol}://${req.get('host')}/${relativeFilePath.replace(/\\/g, '/')}`;
+            const fileUrl = `${baseUrl}/${relativeFilePath.replace(/\\/g, '/')}`;
 
             return {
                 filename: file.filename,
