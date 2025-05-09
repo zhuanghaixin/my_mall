@@ -88,7 +88,16 @@ const initBanners = async () => {
                 ? `https://${process.env.SERVER_IP || 'js101.fun'}:8443`
                 : 'http://localhost:8080');
 
-        logger.info(`使用基础URL: ${baseUrl} 生成轮播图地址`);
+        // 添加详细的环境变量和URL生成日志
+        logger.info('环境变量检查:');
+        logger.info(`NODE_ENV = ${process.env.NODE_ENV}`);
+        logger.info(`SERVER_IP = ${process.env.SERVER_IP}`);
+        logger.info(`SERVER_BASE_URL = ${process.env.SERVER_BASE_URL}`);
+        logger.info(`生成的基础URL: ${baseUrl}`);
+
+        // 记录第一个轮播图URL示例
+        const sampleUrl = `${baseUrl}/uploads/banners/banner1.svg`;
+        logger.info(`轮播图URL示例: ${sampleUrl}`);
 
         // 定义示例轮播图数据，注意这里使用根路径开始的完整路径
         const banners = [
