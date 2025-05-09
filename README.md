@@ -1,4 +1,43 @@
+# 商城小程序系统
+## 项目介绍
+本项目是一个微信商城小程序系统，由三个子项目组成：
+1. **商城小程序前端**：面向用户的微信小程序应用
+![](og9wP5XGw48BCZlDGHCv4xlcpxPU.jpg)
+
+2. **商城管理后台**：面向管理员的Web管理系统
+[https://js101.fun](https://js101.fun) 
+3. **后端API服务**：为小程序前端和管理后台提供数据服务
+ [https://js101.fun:8443/](https://js101.fun:8443/)
+
+## 相关文档及记录
+### 总体
+[项目需求文档](项目需求.md)
+[项目架构设计文档](项目架构设计文档.md)
+[API接口文档](API接口文档.md)
+[CI/CD 自动化部署系统使用说明](cicd-setup.md)
+[CI/CD 流程图](ci&cd.md)
+[问题记录](问题.md)
+[开发记录](cursor_log.md)
+
+### 小程序
+[小程序项目说明](mall-miniprogram/README.md)
+[小程序环境配置说明](mall-miniprogram/ENV_README.md)
+[小程序项目使用指南](mall-miniprogram/cart.md)
+[iOS小程序显示问题](iOS小程序显示问题.md)
+[开发记录](mall-miniprogram/cursor_log.md)
+
+
+### 后台管理
+[后台管理项目说明](mall-admin/README.md)
+[后台管理系统前端环境配置方法](mall-admin/环境配置说明.md)
+[问题记录](mall-admin/问题.md)
+### 后端
+[问题记录](mall-server/README.md)
+
 # 商城系统Docker部署
+
+
+
 
 本项目使用Docker部署Mall商城的前端(mall-admin)和后端(mall-server)应用。
 
