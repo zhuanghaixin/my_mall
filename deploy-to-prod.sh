@@ -29,6 +29,8 @@ FRONTEND_SSL_PORT=443
 BACKEND_PORT=8084
 BACKEND_SSL_PORT=8443
 MYSQL_PORT=3310
+# 添加MySQL数据持久化目录
+MYSQL_DATA_DIR="./mysql-data-${ENV}"
 
 # 日志函数
 log_info() {
@@ -63,9 +65,18 @@ echo -e "${BLUE}=== 开始部署商城小程序生产环境 ===${NC}"
 echo -e "${BLUE}服务器IP: $SERVER_IP${NC}"
 echo -e "${BLUE}域名: $DOMAIN / $WWW_DOMAIN${NC}"
 
-# 清理旧容器和网络
-log_info "清理旧容器和网络..."
-docker rm -f $MYSQL_CONTAINER $SERVER_CONTAINER $ADMIN_CONTAINER $BACKEND_PROXY_CONTAINER 2>/dev/null || true
+# 创建MySQL数据持久化目录
+if [ ! -d "$MYSQL_DATA_DIR" ]; then
+  log_info "创建MySQL数据持久化目录..."
+  mkdir -p $MYSQL_DATA_DIR
+fi
+
+# 修改清理容器的逻辑，保留MySQL容器
+log_info "清理旧服务容器..."
+# 检查MySQL容器是否存在
+MYSQL_EXISTS=$(docker ps -a -q -f name=$MYSQL_CONTAINER)
+# 清理其他服务容器，但保留MySQL容器
+docker rm -f $SERVER_CONTAINER $ADMIN_CONTAINER $BACKEND_PROXY_CONTAINER 2>/dev/null || true
 docker network rm $NETWORK_NAME 2>/dev/null || true
 
 # 将API_URL导出为环境变量供下面的命令使用
@@ -100,20 +111,32 @@ cp js101.fun_nginx/js101.fun_bundle.crt ssl-certs/
 log_info "创建网络 $NETWORK_NAME..."
 docker network create $NETWORK_NAME || true
 
-# 启动MySQL容器
-log_info "启动MySQL容器..."
-docker run --name $MYSQL_CONTAINER \
-  -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD \
-  -e MYSQL_DATABASE=shop \
-  -e MYSQL_ROOT_HOST=% \
-  -p $MYSQL_PORT:3306 \
-  -v $(pwd)/init.sql:/docker-entrypoint-initdb.d/init.sql \
-  --network $NETWORK_NAME \
-  --network-alias mysql \
-  -d mysql:8.0 \
-  --default-authentication-plugin=mysql_native_password \
-  --character-set-server=utf8mb4 \
-  --collation-server=utf8mb4_unicode_ci
+# 处理MySQL容器
+if [ -z "$MYSQL_EXISTS" ]; then
+  # 如果MySQL容器不存在，创建一个新的并初始化
+  log_info "MySQL容器不存在，创建新的MySQL容器并初始化数据库..."
+  docker run --name $MYSQL_CONTAINER \
+    -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD \
+    -e MYSQL_DATABASE=shop \
+    -e MYSQL_ROOT_HOST=% \
+    -p $MYSQL_PORT:3306 \
+    -v $MYSQL_DATA_DIR:/var/lib/mysql \
+    -v $(pwd)/init.sql:/docker-entrypoint-initdb.d/init.sql \
+    --network $NETWORK_NAME \
+    --network-alias mysql \
+    -d mysql:8.0 \
+    --default-authentication-plugin=mysql_native_password \
+    --character-set-server=utf8mb4 \
+    --collation-server=utf8mb4_unicode_ci
+else
+  # 如果MySQL容器已存在，启动它并连接到网络
+  log_info "MySQL容器已存在，启动并连接到网络..."
+  docker start $MYSQL_CONTAINER
+  docker network connect $NETWORK_NAME $MYSQL_CONTAINER || true
+  # 为MySQL容器设置网络别名
+  docker network disconnect $NETWORK_NAME $MYSQL_CONTAINER 2>/dev/null || true
+  docker network connect --alias mysql $NETWORK_NAME $MYSQL_CONTAINER
+fi
 
 # 等待MySQL启动
 log_info "等待MySQL启动..."
