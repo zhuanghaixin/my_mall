@@ -82,39 +82,47 @@ const initBanners = async () => {
         await Banner.destroy({ where: {}, truncate: true });
         logger.info('轮播图表已清空，开始初始化轮播图数据...');
 
+        // 获取基础URL，优先使用环境变量
+        const baseUrl = process.env.SERVER_BASE_URL ||
+            (process.env.NODE_ENV === 'production'
+                ? `https://${process.env.SERVER_IP || 'js101.fun'}:8443`
+                : 'http://localhost:8080');
+
+        logger.info(`使用基础URL: ${baseUrl} 生成轮播图地址`);
+
         // 定义示例轮播图数据，注意这里使用根路径开始的完整路径
         const banners = [
             {
                 title: '新品上市',
-                image: 'http://localhost:8080/uploads/banners/banner1.svg',
+                image: `${baseUrl}/uploads/banners/banner1.svg`,
                 url: '/pages/products?category=new',
                 sort: 1,
                 status: 1  // 启用状态
             },
             {
                 title: '限时折扣',
-                image: 'http://localhost:8080/uploads/banners/banner2.svg',
+                image: `${baseUrl}/uploads/banners/banner2.svg`,
                 url: '/pages/products?type=discount',
                 sort: 2,
                 status: 1  // 启用状态
             },
             {
                 title: '热门推荐',
-                image: 'http://localhost:8080/uploads/banners/banner3.svg',
+                image: `${baseUrl}/uploads/banners/banner3.svg`,
                 url: '/pages/products?type=hot',
                 sort: 3,
                 status: 1  // 启用状态
             },
             {
                 title: '夏季专享',
-                image: 'http://localhost:8080/uploads/banners/banner4.svg',
+                image: `${baseUrl}/uploads/banners/banner4.svg`,
                 url: '/pages/products?season=summer',
                 sort: 4,
                 status: 0  // 禁用状态
             },
             {
                 title: '品牌特卖',
-                image: 'http://localhost:8080/uploads/banners/banner5.svg',
+                image: `${baseUrl}/uploads/banners/banner5.svg`,
                 url: '/pages/products?type=brand',
                 sort: 5,
                 status: 0  // 禁用状态
