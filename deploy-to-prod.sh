@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # 恢复默认颜色
 
 # 设置服务器IP地址和环境变量
-SERVER_IP="47.107.32.143"
+SERVER_IP="js101.fun"
 DOMAIN="js101.fun"
 WWW_DOMAIN="www.js101.fun"
 MYSQL_PASSWORD="zhx123456"

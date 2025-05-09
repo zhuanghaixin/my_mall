@@ -3027,3 +3027,35 @@ npm run dev
 ### 修改的文件
 1. `/Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/deploy-to-prod.sh` - 修复Nginx配置变量转义问题并添加环境变量
 2. `/Users/zhuanghaixin/WebstormProjects/cursor_code/商城小程序/mall-server/src/controllers/uploadController.js` - 修改URL生成逻辑
+
+## 2024-04-30 将生产环境IP替换为域名
+
+### 会话的主要目的
+- 将所有代码中的生产环境IP地址(47.107.32.143)替换为域名(js101.fun或www.js101.fun)
+
+### 完成的主要任务
+- 搜索并定位所有包含生产环境IP地址的文件
+- 将IP地址47.107.32.143替换为js101.fun或www.js101.fun
+- 保持配置文件的其余内容不变
+
+### 关键决策和解决方案
+- 对于配置文件中的SERVER_IP变量，统一使用js101.fun
+- 在API URL中使用js101.fun而非www.js101.fun以保持一致性
+- 保留了CORS配置中对多个域名变体的支持
+- 更新了部署脚本中的说明文本，指明使用域名而非IP
+
+### 使用的技术栈
+- Shell脚本(.sh)
+- 环境配置文件(.env)
+- GitHub Actions工作流配置(deploy.yml)
+- Nginx配置文件
+
+### 修改了哪些文件
+- `.env.prod`: 将SERVER_IP改为js101.fun
+- `deploy-to-prod.sh`: 将SERVER_IP改为js101.fun
+- `deployment-notification.sh`: 将SERVER_IP改为js101.fun
+- `mall-admin/.env.production`: 将API_URL和VITE_API_URL中的IP改为js101.fun
+- `mall-server/.env.production`: 更新ALLOWED_ORIGINS中的IP为js101.fun
+- `.github/workflows/deploy.yml`: 更新ssh连接和主机扫描命令中的IP为js101.fun
+- `ssh-setup-guide.md`: 更新示例中的IP为js101.fun
+- `deploy-docker.sh`: 更新示例说明中的IP为js101.fun

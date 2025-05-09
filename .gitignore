@@ -177,5 +177,6 @@ docker-compose.override.yml
 # SSR 临时文件
 /ssr-dist 
 
-
+# 多文件预览
+多文件预览的简单案例/
 resume*.md

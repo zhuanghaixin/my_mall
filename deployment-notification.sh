@@ -7,7 +7,7 @@
 # ===================================================
 # 项目信息
 PROJECT_NAME="商城小程序"
-SERVER_IP="47.107.32.143"
+SERVER_IP="js101.fun"
 
 # 企业微信配置
 ENABLE_WECHAT_WORK=false  # 设为true启用企业微信通知
