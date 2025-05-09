@@ -3059,3 +3059,36 @@ npm run dev
 - `.github/workflows/deploy.yml`: 更新ssh连接和主机扫描命令中的IP为js101.fun
 - `ssh-setup-guide.md`: 更新示例中的IP为js101.fun
 - `deploy-docker.sh`: 更新示例说明中的IP为js101.fun
+
+## 2023-07-01 添加网站ICP备案信息
+
+### 会话的主要目的
+按照《非经营性互联网信息服务备案管理办法》要求，在网站首页底部中间位置添加备案号（粤ICP备2025413181号）并链接至"http://beian.miit.gov.cn/"。
+
+### 完成的主要任务
+1. 在管理后台（mall-admin）布局中添加备案信息
+2. 在管理后台登录页面添加备案信息
+3. 在小程序"我的"页面添加备案信息
+
+### 关键决策和解决方案
+1. 管理后台：
+   - 创建独立的AppFooter组件，便于复用备案信息
+   - 在BasicLayout布局中引入并显示AppFooter组件
+   - 在登录页面添加备案信息，确保未登录用户也能看到备案信息
+
+2. 小程序：
+   - 在"我的"页面底部添加备案信息，遵循微信小程序的设计规范
+   - 使用navigator组件而非web-view（因为web-view在小程序中有使用限制）
+
+### 使用的技术栈
+- Vue 3 + TypeScript (管理后台)
+- Element Plus UI组件库
+- 微信小程序 WXML/WXSS
+
+### 修改了哪些文件
+1. `mall-admin/src/components/AppFooter.vue`：新建备案信息组件
+2. `mall-admin/src/layouts/BasicLayout.vue`：引入AppFooter组件
+3. `mall-admin/src/views/login/index.vue`：在登录页添加备案信息
+4. `mall-miniprogram/pages/user/index/index.wxml`：添加小程序备案信息
+5. `mall-miniprogram/pages/user/index/index.wxss`：添加备案信息样式
+6. `cursor_log.md`：更新操作日志

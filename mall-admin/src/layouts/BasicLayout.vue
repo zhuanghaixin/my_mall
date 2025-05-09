@@ -52,6 +52,8 @@
         <!-- 路由视图，展示当前路由对应的组件 -->
         <router-view />
       </div>
+      <!-- 底部备案信息 -->
+      <AppFooter />
     </div>
   </div>
 </template>
@@ -65,6 +67,7 @@ import SideMenu from '@/components/SideMenu.vue'
 import { constantRoutes } from '@/router/routes'
 import type { AdminInfo } from '@/api/admin'
 import { RouteRecordRaw } from 'vue-router'
+import AppFooter from '@/components/AppFooter.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -312,11 +315,7 @@ const handleCommand = (command: string) => {
       overflow: auto;
       background-color: #f0f2f5;
       position: relative;
-      height: calc(100vh - #{$header-height});
-
-      @media (max-width: $screen-sm) {
-        padding: 10px;
-      }
+      height: calc(100vh - #{$header-height} - 40px); // 减去footer高度
     }
   }
 }

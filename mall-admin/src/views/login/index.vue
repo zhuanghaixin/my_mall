@@ -18,6 +18,12 @@
         </el-form-item>
       </el-form>
     </div>
+    <!-- 备案信息 -->
+    <div class="beian-info">
+      <a href="http://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+        粤ICP备2025413181号
+      </a>
+    </div>
   </div>
 </template>
 
@@ -83,10 +89,12 @@ const handleLogin = async () => {
 <style lang="scss" scoped>
 .login-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
   background-color: #f5f7fa;
+  position: relative;
 
   .login-box {
     width: 400px;
@@ -107,6 +115,26 @@ const handleLogin = async () => {
 
     .login-button {
       width: 100%;
+    }
+  }
+
+  .beian-info {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+
+    a {
+      color: #666;
+      text-decoration: none;
+
+      &:hover {
+        color: #409eff;
+        text-decoration: underline;
+      }
     }
   }
 }
