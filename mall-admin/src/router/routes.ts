@@ -240,6 +240,15 @@ export const constantRoutes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'fullupload',
+        name: 'ProjectFullUpload',
+        component: () => import('@/views/project/fullUpload.vue'),
+        meta: {
+          title: '大文件上传',
+          icon: 'Upload',
+        },
+      },
+      {
         path: 'preview',
         name: 'ProjectPreview',
         component: () => import('@/views/project/preview.vue'),
