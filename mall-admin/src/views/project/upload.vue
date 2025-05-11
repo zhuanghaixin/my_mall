@@ -18,8 +18,17 @@
         </div>
 
         <div class="upload-actions" v-if="file && !uploading && !uploadSuccess">
-          <el-button type="primary" @click="startUpload">开始上传</el-button>
-          <el-button @click="resetUpload">取消</el-button>
+          <div class="upload-options">
+            <el-switch v-model="isUsingConcurrent" inline-prompt active-text="并发" inactive-text="顺序" size="large"
+              style="margin-right: 10px;" />
+            <el-input-number v-if="isUsingConcurrent" v-model="concurrentLimit" :min="1" :max="10" size="small"
+              :disabled="uploading" placeholder="并发数" controls-position="right"
+              style="width: 120px; margin-right: 10px;"></el-input-number>
+          </div>
+          <div class="button-group">
+            <el-button type="primary" @click="startUpload">开始上传</el-button>
+            <el-button @click="resetUpload">取消</el-button>
+          </div>
         </div>
 
         <div class="upload-progress" v-if="uploading">
@@ -27,6 +36,7 @@
             :status="isPaused ? 'exception' : 'success'"></el-progress>
           <div class="progress-info">
             已上传: {{ uploadedChunks }}/{{ totalChunks }} 分片
+            <span v-if="isUsingConcurrent"> | 并发数: {{ concurrentLimit }}</span>
           </div>
           <div class="progress-time" v-if="uploadedChunks > 0">
             已用时间: {{ formatTime(uploadingTime) }}
@@ -47,6 +57,7 @@
             <div>文件大小: {{ formatFileSize(file?.size || 0) }}</div>
             <div>上传耗时: {{ formatTime(uploadDuration) }}</div>
             <div>平均速度: {{ formatSpeed(uploadAvgSpeed) }}</div>
+            <div>上传模式: {{ isUsingConcurrent ? `并发(${concurrentLimit}个)` : '顺序' }}</div>
           </div>
           <el-button type="primary" @click="resetUpload" size="small">继续上传</el-button>
         </div>
@@ -75,6 +86,10 @@ const totalChunks = ref(0);
 const uploadSuccess = ref(false);
 const fileUrl = ref('');
 const isFileInputActive = ref(false);
+
+// 并发控制
+const concurrentLimit = ref(3); // 默认并发数量
+const isUsingConcurrent = ref(true); // 是否使用并发上传
 
 // 上传时间相关状态
 const startTime = ref<number>(0);
@@ -276,6 +291,83 @@ const uploadChunk = async (chunk: Blob, index: number, fileName: string) => {
   }
 };
 
+// 并发上传分片
+const uploadChunksConcurrently = async (chunks: Blob[], fileName: string, startIndex: number = 0) => {
+  if (!uploading.value || isPaused.value) return;
+
+  // 从startIndex开始，按照并发限制分批上传
+  for (let batchStart = startIndex; batchStart < chunks.length; batchStart += concurrentLimit.value) {
+    // 检查是否已取消或暂停上传
+    if (!uploading.value || isPaused.value) {
+      console.log('上传已取消或暂停，停止批量上传');
+      break;
+    }
+
+    // 计算当前批次的结束位置
+    const batchEnd = Math.min(batchStart + concurrentLimit.value, chunks.length);
+    currentChunkIndex.value = batchStart; // 更新当前处理的分片索引
+
+    console.log(`并发上传分片 ${batchStart} 到 ${batchEnd - 1}`);
+
+    // 创建Promise数组
+    const uploadPromises = [];
+
+    // 将当前批次的分片添加到Promise数组
+    for (let i = batchStart; i < batchEnd; i++) {
+      uploadPromises.push(
+        uploadChunk(chunks[i], i, fileName).catch(async (error) => {
+          // 忽略暂停导致的错误
+          if (isPaused.value) return false;
+
+          // 如果是取消导致的错误，直接抛出
+          if (error.message === '上传已取消' || !uploading.value) {
+            throw error;
+          }
+
+          // 其他错误尝试重试一次
+          console.warn(`分片 ${i} 上传失败，正在重试...`);
+
+          // 检查是否已取消或暂停
+          if (!uploading.value || isPaused.value) {
+            return false;
+          }
+
+          // 重试上传
+          return await uploadChunk(chunks[i], i, fileName);
+        })
+      );
+    }
+
+    try {
+      // 使用Promise.all并发上传当前批次的分片
+      const results = await Promise.all(uploadPromises);
+
+      // 如果有任何分片上传返回false（表示暂停或取消），则中断后续上传
+      if (results.includes(false)) {
+        console.log('检测到上传中断信号，停止后续分片上传');
+        break;
+      }
+    } catch (error) {
+      // 如果是取消上传导致的错误，中断后续处理
+      if ((error as any).message === '上传已取消' || !uploading.value) {
+        console.log('上传已取消，中断并发上传');
+        break;
+      }
+
+      // 如果是暂停导致的错误，中断后续处理
+      if (isPaused.value) {
+        console.log('上传已暂停，中断并发上传');
+        break;
+      }
+
+      // 其他错误，抛出让外层处理
+      throw error;
+    }
+  }
+
+  return uploadedChunks.value === totalChunks.value; // 返回是否所有分片都已上传完成
+};
+
 // 暂停上传
 const pauseUpload = () => {
   if (!uploading.value || isPaused.value) return;
@@ -307,11 +399,15 @@ const resumeUpload = async () => {
 
   ElMessage.info('继续上传中...');
 
-  // 从当前索引继续上传
-  await continueUploadFromIndex(currentChunkIndex.value);
+  // 根据上传模式选择相应的继续上传方法
+  if (isUsingConcurrent.value) {
+    await continueUploadConcurrently();
+  } else {
+    await continueUploadFromIndex(currentChunkIndex.value);
+  }
 };
 
-// 从指定索引继续上传
+// 从指定索引继续上传（顺序上传）
 const continueUploadFromIndex = async (startIndex: number) => {
   if (!file.value || !uploading.value || isPaused.value) return;
 
@@ -401,42 +497,7 @@ const continueUploadFromIndex = async (startIndex: number) => {
     // 检查是否所有分片都已上传完成
     if (uploadedChunks.value === totalChunks.value) {
       // 请求合并文件
-      const response = await request.post<ApiResponse>('/upload/merge', {
-        filename: fileName,
-        totalChunks: totalChunks.value
-      }, {
-        signal: abortController.value?.signal
-      }) as unknown as ApiResponse;
-
-      console.log('合并文件响应:', response);
-
-      if (response.code === 200) {
-        // 记录结束时间和计算总时间
-        endTime.value = Date.now();
-        uploadDuration.value = endTime.value - startTime.value - totalPausedTime.value;
-
-        // 计算平均速度
-        if (file.value && uploadDuration.value > 0) {
-          uploadAvgSpeed.value = file.value.size / (uploadDuration.value / 1000);
-        }
-
-        // 检查response.data是否存在
-        if (response.data && response.data.url) {
-          fileUrl.value = response.data.url;
-        } else if ((response as any).url) {
-          // 尝试从response直接获取url，使用类型断言
-          fileUrl.value = (response as any).url;
-        } else {
-          // 如果两种方式都无法获取url，设置一个默认值或提示
-          fileUrl.value = '文件已上传，但无法获取URL';
-          console.warn('无法从响应中获取文件URL:', response);
-        }
-
-        uploadSuccess.value = true;
-        ElMessage.success('文件上传成功');
-      } else {
-        throw new Error(response.message || '文件合并失败');
-      }
+      await mergeFile(file.value.name);
     }
   } catch (error: any) {
     // 检查是否是取消上传导致的错误
@@ -453,6 +514,102 @@ const continueUploadFromIndex = async (startIndex: number) => {
 
     ElMessage.error('上传失败: ' + (error.message || '请重试'));
     console.error('上传错误:', error);
+  }
+};
+
+// 从指定索引继续并发上传
+const continueUploadConcurrently = async () => {
+  if (!file.value || !uploading.value || isPaused.value) return;
+
+  try {
+    const fileName = file.value.name;
+    const chunks = createFileChunks(file.value);
+
+    // 使用并发上传方法从当前索引继续上传
+    const allUploaded = await uploadChunksConcurrently(chunks, fileName, currentChunkIndex.value);
+
+    // 如果上传已取消或暂停，直接返回
+    if (!uploading.value) {
+      console.log('上传已取消，不执行合并操作');
+      return;
+    }
+
+    if (isPaused.value) {
+      console.log('上传已暂停，不执行合并操作');
+      return;
+    }
+
+    // 如果所有分片都已上传完成，执行合并操作
+    if (allUploaded) {
+      // 请求合并文件
+      await mergeFile(fileName);
+    }
+  } catch (error: any) {
+    // 检查是否是取消上传导致的错误
+    if (error.name === 'AbortError' || error.message === '上传已取消' || !uploading.value) {
+      console.log('上传已被用户取消');
+      return;
+    }
+
+    // 检查是否是暂停导致的错误
+    if (isPaused.value) {
+      console.log('上传已被用户暂停');
+      return;
+    }
+
+    ElMessage.error('上传失败: ' + (error.message || '请重试'));
+    console.error('上传错误:', error);
+  }
+};
+
+// 合并文件的公共方法
+const mergeFile = async (fileName: string) => {
+  try {
+    // 请求合并文件
+    const response = await request.post<ApiResponse>('/upload/merge', {
+      filename: fileName,
+      totalChunks: totalChunks.value
+    }, {
+      signal: abortController.value?.signal
+    }) as unknown as ApiResponse;
+
+    console.log('合并文件响应:', response);
+
+    if (response.code === 200) {
+      // 记录结束时间和计算总时间
+      endTime.value = Date.now();
+      uploadDuration.value = endTime.value - startTime.value - totalPausedTime.value;
+
+      // 计算平均速度
+      if (file.value && uploadDuration.value > 0) {
+        uploadAvgSpeed.value = file.value.size / (uploadDuration.value / 1000);
+      }
+
+      // 检查response.data是否存在
+      if (response.data && response.data.url) {
+        fileUrl.value = response.data.url;
+      } else if ((response as any).url) {
+        // 尝试从response直接获取url，使用类型断言
+        fileUrl.value = (response as any).url;
+      } else {
+        // 如果两种方式都无法获取url，设置一个默认值或提示
+        fileUrl.value = '文件已上传，但无法获取URL';
+        console.warn('无法从响应中获取文件URL:', response);
+      }
+
+      uploadSuccess.value = true;
+      ElMessage.success('文件上传成功');
+    } else {
+      throw new Error(response.message || '文件合并失败');
+    }
+  } catch (error: any) {
+    // 检查是否是取消上传导致的错误
+    if (error.name === 'AbortError' || error.message === '上传已取消' || !uploading.value) {
+      console.log('合并文件操作被取消');
+      return;
+    }
+
+    throw error; // 将错误继续抛出，让外层处理
   }
 };
 
@@ -478,10 +635,37 @@ const startUpload = async () => {
     // 启动定时器更新上传速度
     uploadTimeTimer.value = setInterval(updateUploadSpeed, 1000);
 
-    // 开始从0上传
-    await continueUploadFromIndex(0);
+    // 根据上传模式选择上传方法
+    if (isUsingConcurrent.value) {
+      // 使用并发上传
+      const fileName = file.value.name;
+      const chunks = createFileChunks(file.value);
+
+      // 开始并发上传
+      const allUploaded = await uploadChunksConcurrently(chunks, fileName);
+
+      // 如果上传已取消或暂停，直接返回
+      if (!uploading.value) {
+        console.log('上传已取消，不执行合并操作');
+        return;
+      }
+
+      if (isPaused.value) {
+        console.log('上传已暂停，不执行合并操作');
+        return;
+      }
+
+      // 如果所有分片都已上传完成，执行合并操作
+      if (allUploaded) {
+        // 请求合并文件
+        await mergeFile(fileName);
+      }
+    } else {
+      // 使用顺序上传
+      await continueUploadFromIndex(0);
+    }
   } catch (error: any) {
-    // 主函数中的错误处理，与continueUploadFromIndex中类似
+    // 检查是否是取消上传导致的错误
     if (error.name === 'AbortError' || error.message === '上传已取消' || !uploading.value) {
       console.log('上传已被用户取消');
       return;
@@ -649,8 +833,22 @@ onUnmounted(() => {
 .upload-actions {
   margin-top: 20px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   gap: 12px;
+
+  .upload-options {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 12px;
+  }
 }
 
 .upload-progress {
