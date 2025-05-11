@@ -220,54 +220,6 @@ export const constantRoutes: RouteRecordRaw[] = [
       },
     ],
   },
-  // 项目管理
-  {
-    path: '/project',
-    component: BasicLayout,
-    redirect: '/project/upload',
-    meta: {
-      title: '项目管理',
-      icon: 'Briefcase',
-    },
-    children: [
-      {
-        path: 'upload',
-        name: 'ProjectUpload',
-        component: () => import('@/views/project/upload.vue'),
-        meta: {
-          title: '大文件上传',
-          icon: 'Upload',
-        },
-      },
-      {
-        path: 'preview',
-        name: 'ProjectPreview',
-        component: () => import('@/views/project/preview.vue'),
-        meta: {
-          title: '多文件预览',
-          icon: 'Files',
-        },
-      },
-      {
-        path: 'typhoon',
-        name: 'ProjectTyphoon',
-        component: () => import('@/views/project/typhoon.vue'),
-        meta: {
-          title: '台风轨迹绘制',
-          icon: 'Map',
-        },
-      },
-      {
-        path: 'i18n',
-        name: 'ProjectI18n',
-        component: () => import('@/views/project/i18n.vue'),
-        meta: {
-          title: '国际化方案',
-          icon: 'Language',
-        },
-      },
-    ],
-  },
   // 将匹配所有路径，放在最后
   {
     path: '/:pathMatch(.*)*',

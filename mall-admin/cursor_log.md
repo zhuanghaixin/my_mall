@@ -8,4 +8,5 @@
   - mall-admin/src/views/project/upload.vue
   - mall-admin/src/views/project/preview.vue
   - mall-admin/src/views/project/typhoon.vue
-  - mall-admin/src/views/project/i18n.vue 
+  - mall-admin/src/views/project/i18n.vue
+- 新增文件：mall-admin/大文件上传.md 

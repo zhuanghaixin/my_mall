@@ -12,4 +12,4 @@
 .project-i18n {
   padding: 24px;
 }
-</style> 
+</style>
