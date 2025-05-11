@@ -180,3 +180,4 @@ docker-compose.override.yml
 # 多文件预览
 多文件预览的简单案例/
 resume*.md
+文件上传测试/

@@ -27,6 +27,10 @@
           <div class="progress-info">
             已上传: {{ uploadedChunks }}/{{ totalChunks }} 分片
           </div>
+          <div class="progress-time" v-if="uploadedChunks > 0">
+            已用时间: {{ formatTime(uploadingTime) }}
+            <span v-if="uploadSpeed > 0"> | 上传速度: {{ formatSpeed(uploadSpeed) }}</span>
+          </div>
           <el-button type="danger" @click="cancelUpload" size="small">取消上传</el-button>
         </div>
 
@@ -34,6 +38,11 @@
           <i class="el-icon-success success-icon"></i>
           <div class="success-text">上传成功</div>
           <div class="file-url">文件地址: {{ fileUrl }}</div>
+          <div class="upload-stats">
+            <div>文件大小: {{ formatFileSize(file?.size || 0) }}</div>
+            <div>上传耗时: {{ formatTime(uploadDuration) }}</div>
+            <div>平均速度: {{ formatSpeed(uploadAvgSpeed) }}</div>
+          </div>
           <el-button type="primary" @click="resetUpload" size="small">继续上传</el-button>
         </div>
       </el-card>
@@ -42,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import request from '@/api/request';
 import type { ApiResponse } from '@/api/request';
@@ -60,6 +69,64 @@ const totalChunks = ref(0);
 const uploadSuccess = ref(false);
 const fileUrl = ref('');
 const isFileInputActive = ref(false);
+
+// 上传时间相关状态
+const startTime = ref<number>(0);
+const endTime = ref<number>(0);
+const uploadDuration = ref<number>(0);
+const uploadAvgSpeed = ref<number>(0); // 单位：字节/秒
+const uploadSpeed = ref<number>(0); // 当前速度
+const uploadTimeTimer = ref<any>(null);
+const lastUploadedSize = ref<number>(0);
+
+// 添加上传控制变量
+const abortController = ref<AbortController | null>(null);
+
+// 计算正在上传的时间
+const uploadingTime = computed(() => {
+  if (!startTime.value || !uploading.value) return 0;
+  return Date.now() - startTime.value;
+});
+
+// 格式化时间为人类可读格式
+const formatTime = (milliseconds: number): string => {
+  if (!milliseconds) return '0秒';
+
+  const seconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  if (hours > 0) {
+    return `${hours}小时${minutes % 60}分钟`;
+  } else if (minutes > 0) {
+    return `${minutes}分钟${seconds % 60}秒`;
+  } else {
+    return `${seconds}秒`;
+  }
+};
+
+// 格式化速度为人类可读格式
+const formatSpeed = (bytesPerSecond: number): string => {
+  if (bytesPerSecond < 1024) {
+    return `${bytesPerSecond.toFixed(2)} B/s`;
+  } else if (bytesPerSecond < 1024 * 1024) {
+    return `${(bytesPerSecond / 1024).toFixed(2)} KB/s`;
+  } else {
+    return `${(bytesPerSecond / (1024 * 1024)).toFixed(2)} MB/s`;
+  }
+};
+
+// 更新上传速度
+const updateUploadSpeed = () => {
+  if (!uploading.value || !file.value) return;
+
+  const currentUploadedSize = uploadedChunks.value * chunkSize;
+  const sizeDiff = currentUploadedSize - lastUploadedSize.value;
+  lastUploadedSize.value = currentUploadedSize;
+
+  // 计算当前速度 (每秒更新一次)
+  uploadSpeed.value = sizeDiff;
+};
 
 // 触发文件选择
 const triggerFileInput = () => {
@@ -141,11 +208,20 @@ const uploadChunk = async (chunk: Blob, index: number, fileName: string) => {
   formData.append('totalChunks', totalChunks.value.toString());
 
   try {
+    // 使用 AbortController 来控制请求
+    const signal = abortController.value?.signal;
+
     const response = await request.post<ApiResponse>('/upload/chunk', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      signal
     }) as unknown as ApiResponse;
+
+    // 检查上传是否已取消
+    if (!uploading.value) {
+      throw new Error('上传已取消');
+    }
 
     if (response.code === 200) {
       uploadedChunks.value++;
@@ -154,6 +230,11 @@ const uploadChunk = async (chunk: Blob, index: number, fileName: string) => {
       throw new Error(response.message || '分片上传失败');
     }
   } catch (error) {
+    // 检查是否是主动取消的请求
+    if ((error as any)?.name === 'AbortError' || !uploading.value) {
+      console.log(`分片 ${index} 上传已取消`);
+      throw new Error('上传已取消');
+    }
     console.error(`分片 ${index} 上传失败:`, error);
     throw error;
   }
@@ -164,38 +245,88 @@ const startUpload = async () => {
   if (!file.value) return;
 
   try {
+    // 重置上传状态和时间
     uploading.value = true;
     uploadedChunks.value = 0;
     uploadProgress.value = 0;
+    startTime.value = Date.now();
+    lastUploadedSize.value = 0;
+
+    // 创建新的 AbortController 用于取消请求
+    abortController.value = new AbortController();
+
+    // 启动定时器更新上传速度
+    uploadTimeTimer.value = setInterval(updateUploadSpeed, 1000);
 
     const fileName = file.value.name;
     const chunks = createFileChunks(file.value);
 
     // 顺序上传分片，添加错误处理和重试逻辑
-    for (let i = 0; i < chunks.length; i++) {
+    for (let i = 0; i < chunks.length && uploading.value; i++) {
       try {
+        // 每次上传前检查上传状态
+        if (!uploading.value) {
+          console.log('上传已取消，中断分片上传循环');
+          break;
+        }
+
         await uploadChunk(chunks[i], i, fileName);
       } catch (error: any) {
+        // 检查是否是取消上传导致的错误
+        if (error.message === '上传已取消' || !uploading.value) {
+          console.log('上传已取消，中断重试');
+          break;
+        }
+
         // 分片上传失败，尝试重试一次
         console.warn(`分片 ${i} 上传失败，正在重试...`);
         try {
+          // 再次检查上传状态
+          if (!uploading.value) {
+            console.log('上传已取消，中断重试');
+            break;
+          }
+
           await uploadChunk(chunks[i], i, fileName);
         } catch (retryError: any) {
+          // 再次检查是否是取消上传
+          if (retryError.message === '上传已取消' || !uploading.value) {
+            console.log('上传已取消，中断后续处理');
+            break;
+          }
+
           // 重试失败，中断上传
           throw new Error(`分片 ${i} 上传失败: ${retryError.message || '请检查网络连接'}`);
         }
       }
     }
 
+    // 如果上传已取消，直接返回
+    if (!uploading.value) {
+      console.log('上传已取消，不执行合并操作');
+      return;
+    }
+
     // 请求合并文件
     const response = await request.post<ApiResponse>('/upload/merge', {
       filename: fileName,
       totalChunks: totalChunks.value
+    }, {
+      signal: abortController.value?.signal
     }) as unknown as ApiResponse;
 
     console.log('合并文件响应:', response); // 添加调试日志，查看响应结构
 
     if (response.code === 200) {
+      // 记录结束时间和计算总时间
+      endTime.value = Date.now();
+      uploadDuration.value = endTime.value - startTime.value;
+
+      // 计算平均速度
+      if (file.value && uploadDuration.value > 0) {
+        uploadAvgSpeed.value = file.value.size / (uploadDuration.value / 1000);
+      }
+
       // 检查response.data是否存在
       if (response.data && response.data.url) {
         fileUrl.value = response.data.url;
@@ -214,18 +345,46 @@ const startUpload = async () => {
       throw new Error(response.message || '文件合并失败');
     }
   } catch (error: any) {
+    // 检查是否是取消上传导致的错误
+    if (error.name === 'AbortError' || error.message === '上传已取消' || !uploading.value) {
+      console.log('上传已被用户取消');
+      return;
+    }
+
     ElMessage.error('上传失败: ' + (error.message || '请重试'));
     console.error('上传错误:', error);
   } finally {
+    // 停止计时器
+    if (uploadTimeTimer.value) {
+      clearInterval(uploadTimeTimer.value);
+      uploadTimeTimer.value = null;
+    }
+
     uploading.value = false;
+    abortController.value = null; // 清理 AbortController
   }
 };
 
 // 取消上传
 const cancelUpload = () => {
+  if (!uploading.value) return;
+
   uploading.value = false;
   uploadProgress.value = 0;
   uploadedChunks.value = 0;
+
+  // 取消所有进行中的网络请求
+  if (abortController.value) {
+    abortController.value.abort();
+    abortController.value = null;
+  }
+
+  // 停止计时器
+  if (uploadTimeTimer.value) {
+    clearInterval(uploadTimeTimer.value);
+    uploadTimeTimer.value = null;
+  }
+
   ElMessage.info('上传已取消');
 };
 
@@ -238,6 +397,17 @@ const resetUpload = () => {
   totalChunks.value = 0;
   uploadSuccess.value = false;
   fileUrl.value = '';
+  startTime.value = 0;
+  endTime.value = 0;
+  uploadDuration.value = 0;
+  uploadAvgSpeed.value = 0;
+  uploadSpeed.value = 0;
+
+  // 停止计时器
+  if (uploadTimeTimer.value) {
+    clearInterval(uploadTimeTimer.value);
+    uploadTimeTimer.value = null;
+  }
 
   if (fileInput.value) {
     fileInput.value.value = '';
@@ -248,6 +418,13 @@ const resetUpload = () => {
 onMounted(() => {
   // 确保初始状态正确
   resetUpload();
+});
+
+// 页面卸载前清理
+onUnmounted(() => {
+  if (uploadTimeTimer.value) {
+    clearInterval(uploadTimeTimer.value);
+  }
 });
 </script>
 
@@ -361,6 +538,24 @@ onMounted(() => {
     color: #606266;
     margin-bottom: 16px;
     word-break: break-all;
+  }
+}
+
+.progress-time,
+.progress-info {
+  margin: 12px 0;
+  text-align: center;
+  color: #606266;
+}
+
+.upload-stats {
+  margin: 16px 0;
+  font-size: 14px;
+  color: #606266;
+  text-align: center;
+
+  >div {
+    margin-bottom: 4px;
   }
 }
 </style>
