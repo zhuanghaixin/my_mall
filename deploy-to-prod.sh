@@ -162,6 +162,13 @@ cd ..
 
 # 启动后端容器
 log_info "启动后端服务..."
+# 创建图片上传持久化目录
+UPLOADS_DATA_DIR="./uploads-prod"
+if [ ! -d "$UPLOADS_DATA_DIR" ]; then
+  log_info "创建图片上传持久化目录..."
+  mkdir -p $UPLOADS_DATA_DIR
+fi
+
 docker run -d \
   --name $SERVER_CONTAINER \
   --network $NETWORK_NAME \
@@ -179,6 +186,7 @@ docker run -d \
   -e JWT_EXPIRES_IN=7d \
   -e ADMIN_USERNAME=dev_admin \
   -e ADMIN_PASSWORD=dev_pass123 \
+  -v $(pwd)/uploads-prod:/app/public/uploads \
   --restart unless-stopped \
   mall-system-${ENV}_mall-server
 
