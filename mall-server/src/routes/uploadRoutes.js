@@ -49,4 +49,57 @@ router.post('/images', upload.array('files', 10), uploadController.uploadImages)
  */
 router.get('/list', uploadController.getUploadList);
 
+/**
+ * @swagger
+ * /api/upload/chunk:
+ *   post:
+ *     summary: 上传文件分片
+ *     tags: [上传]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: formData
+ *         name: chunk
+ *         type: file
+ *         description: 文件分片
+ *       - in: formData
+ *         name: index
+ *         type: string
+ *         description: 分片索引
+ *       - in: formData
+ *         name: filename
+ *         type: string
+ *         description: 原始文件名
+ *       - in: formData
+ *         name: totalChunks
+ *         type: string
+ *         description: 总分片数
+ */
+router.post('/chunk', upload.chunkUpload.single('chunk'), uploadController.uploadChunk);
+
+/**
+ * @swagger
+ * /api/upload/merge:
+ *   post:
+ *     summary: 合并文件分片
+ *     tags: [上传]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: body
+ *         name: mergeInfo
+ *         description: 合并信息
+ *         schema:
+ *           type: object
+ *           required:
+ *             - filename
+ *             - totalChunks
+ *           properties:
+ *             filename:
+ *               type: string
+ *             totalChunks:
+ *               type: number
+ */
+router.post('/merge', uploadController.mergeChunks);
+
 module.exports = router; 

@@ -7,6 +7,7 @@ const fs = require('fs');
 const catchAsync = require('../utils/catchAsync');
 const { ValidationError } = require('../utils/errorTypes');
 const logger = require('../utils/logger');
+const { v4: uuidv4 } = require('uuid');
 
 // 获取配置的服务器基础URL，用于生成访问地址
 const getBaseUrl = (req) => {
@@ -279,5 +280,100 @@ exports.getUploadList = catchAsync(async (req, res) => {
             message: '获取成功',
             data: fileList
         });
+    });
+});
+
+/**
+ * 处理大文件上传的分片
+ * @param {Object} req - 请求对象
+ * @param {Object} res - 响应对象
+ */
+exports.uploadChunk = catchAsync(async (req, res) => {
+    if (!req.file) {
+        throw new ValidationError('没有接收到分片文件');
+    }
+
+    // 获取参数
+    const { index, filename, totalChunks } = req.body;
+
+    if (!index || !filename || !totalChunks) {
+        throw new ValidationError('参数不完整');
+    }
+
+    // 创建临时目录，用于存储分片
+    const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${filename}`);
+    if (!fs.existsSync(chunkDir)) {
+        fs.mkdirSync(chunkDir, { recursive: true });
+    }
+
+    // 移动分片到目标目录
+    const chunkPath = path.join(chunkDir, `${index}`);
+    fs.renameSync(req.file.path, chunkPath);
+
+    res.status(200).json({
+        code: 200,
+        success: true,
+        message: '分片上传成功'
+    });
+});
+
+/**
+ * 合并上传的文件分片
+ * @param {Object} req - 请求对象
+ * @param {Object} res - 响应对象
+ */
+exports.mergeChunks = catchAsync(async (req, res) => {
+    const { filename, totalChunks } = req.body;
+
+    if (!filename || !totalChunks) {
+        throw new ValidationError('参数不完整');
+    }
+
+    const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${filename}`);
+    if (!fs.existsSync(chunkDir)) {
+        throw new ValidationError('没有找到分片文件');
+    }
+
+    // 生成唯一的文件名
+    const fileExt = path.extname(filename);
+    const uniqueFileName = `${Date.now()}-${uuidv4()}${fileExt}`;
+    const filePath = path.join(__dirname, `../../public/uploads/${uniqueFileName}`);
+
+    // 创建写入流
+    const writeStream = fs.createWriteStream(filePath);
+
+    // 按顺序合并分片
+    for (let i = 0; i < parseInt(totalChunks); i++) {
+        const chunkPath = path.join(chunkDir, `${i}`);
+        if (fs.existsSync(chunkPath)) {
+            // 同步读取分片内容并写入
+            const chunkData = fs.readFileSync(chunkPath);
+            writeStream.write(chunkData);
+
+            // 删除已合并的分片
+            fs.unlinkSync(chunkPath);
+        } else {
+            logger.error(`分片 ${i} 不存在`);
+        }
+    }
+
+    // 关闭写入流
+    writeStream.end();
+
+    // 删除分片目录
+    fs.rmdirSync(chunkDir, { recursive: true });
+
+    // 生成文件URL
+    const baseUrl = getBaseUrl(req);
+    const fileUrl = `${baseUrl}/uploads/${uniqueFileName}`;
+
+    // 记录日志
+    logger.info(`大文件上传成功: ${filename} -> ${uniqueFileName}`);
+
+    res.status(200).json({
+        code: 200,
+        success: true,
+        url: fileUrl,
+        message: '文件合并成功'
     });
 }); 
