@@ -18,6 +18,31 @@ router.use(protect);
 
 /**
  * @swagger
+ * /api/upload/verify:
+ *   post:
+ *     summary: 验证文件上传状态及已上传分片
+ *     tags: [上传]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: body
+ *         name: verifyInfo
+ *         description: 验证信息
+ *         schema:
+ *           type: object
+ *           required:
+ *             - filename
+ *             - totalChunks
+ *           properties:
+ *             filename:
+ *               type: string
+ *             totalChunks:
+ *               type: number
+ */
+router.post('/verify', uploadController.verifyUpload);
+
+/**
+ * @swagger
  * /api/upload/image:
  *   post:
  *     summary: 上传单张图片

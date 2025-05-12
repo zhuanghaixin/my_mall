@@ -291,8 +291,38 @@ const uploadChunk = async (chunk: Blob, index: number, fileName: string) => {
   }
 };
 
-// 并发上传分片
-const uploadChunksConcurrently = async (chunks: Blob[], fileName: string, startIndex: number = 0) => {
+// 检查已上传的分片
+const checkExistingChunks = async (fileName: string, totalChunks: number) => {
+  try {
+    const response = await request.post<ApiResponse>('/upload/verify', {
+      filename: fileName,
+      totalChunks
+    }) as unknown as ApiResponse;
+
+    if (response.code === 200 && response.data && response.data.uploadedChunks) {
+      // 确保所有的分片索引都是有效的数字
+      const validChunks = response.data.uploadedChunks.filter(
+        (index: any) => typeof index === 'number' && !isNaN(index) && index >= 0 && index < totalChunks
+      );
+
+      console.log(`检测到有效分片: ${validChunks.length}/${totalChunks}`);
+      return validChunks;
+    }
+
+    return [];
+  } catch (error) {
+    console.error('检查已上传分片失败:', error);
+    return [];
+  }
+};
+
+// 修改并发上传方法，支持已上传分片列表
+const uploadChunksConcurrently = async (
+  chunks: Blob[],
+  fileName: string,
+  startIndex: number = 0,
+  uploadedList: number[] = []
+) => {
   if (!uploading.value || isPaused.value) return;
 
   // 从startIndex开始，按照并发限制分批上传
@@ -312,8 +342,14 @@ const uploadChunksConcurrently = async (chunks: Blob[], fileName: string, startI
     // 创建Promise数组
     const uploadPromises = [];
 
-    // 将当前批次的分片添加到Promise数组
+    // 将当前批次的分片添加到Promise数组，跳过已上传的分片
     for (let i = batchStart; i < batchEnd; i++) {
+      // 如果该分片已经上传，跳过
+      if (uploadedList.includes(i)) {
+        console.log(`分片 ${i} 已上传，跳过`);
+        continue;
+      }
+
       uploadPromises.push(
         uploadChunk(chunks[i], i, fileName).catch(async (error) => {
           // 忽略暂停导致的错误
@@ -336,6 +372,11 @@ const uploadChunksConcurrently = async (chunks: Blob[], fileName: string, startI
           return await uploadChunk(chunks[i], i, fileName);
         })
       );
+    }
+
+    if (uploadPromises.length === 0) {
+      // 如果当前批次没有需要上传的分片，直接继续下一批次
+      continue;
     }
 
     try {
@@ -408,7 +449,7 @@ const resumeUpload = async () => {
 };
 
 // 从指定索引继续上传（顺序上传）
-const continueUploadFromIndex = async (startIndex: number) => {
+const continueUploadFromIndex = async (startIndex: number, uploadedList: number[] = []) => {
   if (!file.value || !uploading.value || isPaused.value) return;
 
   try {
@@ -418,6 +459,12 @@ const continueUploadFromIndex = async (startIndex: number) => {
     // 从保存的索引继续上传
     for (let i = startIndex; i < chunks.length && uploading.value && !isPaused.value; i++) {
       currentChunkIndex.value = i; // 保存当前处理的分片索引
+
+      // 如果该分片已经上传，跳过
+      if (uploadedList.includes(i)) {
+        console.log(`分片 ${i} 已上传，跳过`);
+        continue;
+      }
 
       try {
         // 每次上传前检查上传状态
@@ -525,8 +572,11 @@ const continueUploadConcurrently = async () => {
     const fileName = file.value.name;
     const chunks = createFileChunks(file.value);
 
+    // 重新获取已上传的分片列表
+    const existedChunks = await checkExistingChunks(fileName, chunks.length);
+
     // 使用并发上传方法从当前索引继续上传
-    const allUploaded = await uploadChunksConcurrently(chunks, fileName, currentChunkIndex.value);
+    const allUploaded = await uploadChunksConcurrently(chunks, fileName, currentChunkIndex.value, existedChunks);
 
     // 如果上传已取消或暂停，直接返回
     if (!uploading.value) {
@@ -635,14 +685,24 @@ const startUpload = async () => {
     // 启动定时器更新上传速度
     uploadTimeTimer.value = setInterval(updateUploadSpeed, 1000);
 
+    // 检查是否有已上传的分片
+    const fileName = file.value.name;
+    const chunks = createFileChunks(file.value);
+
+    // 请求已上传的分片列表
+    const existedChunks = await checkExistingChunks(fileName, chunks.length);
+
+    // 如果有已上传的分片，更新进度
+    if (existedChunks && existedChunks.length > 0) {
+      uploadedChunks.value = existedChunks.length;
+      uploadProgress.value = Math.floor((uploadedChunks.value / totalChunks.value) * 100);
+      ElMessage.info(`检测到已上传 ${existedChunks.length} 个分片，继续上传剩余部分`);
+    }
+
     // 根据上传模式选择上传方法
     if (isUsingConcurrent.value) {
-      // 使用并发上传
-      const fileName = file.value.name;
-      const chunks = createFileChunks(file.value);
-
-      // 开始并发上传
-      const allUploaded = await uploadChunksConcurrently(chunks, fileName);
+      // 使用并发上传，传入已上传的分片列表
+      const allUploaded = await uploadChunksConcurrently(chunks, fileName, 0, existedChunks);
 
       // 如果上传已取消或暂停，直接返回
       if (!uploading.value) {
@@ -661,8 +721,8 @@ const startUpload = async () => {
         await mergeFile(fileName);
       }
     } else {
-      // 使用顺序上传
-      await continueUploadFromIndex(0);
+      // 使用顺序上传，传入已上传的分片列表
+      await continueUploadFromIndex(0, existedChunks);
     }
   } catch (error: any) {
     // 检查是否是取消上传导致的错误

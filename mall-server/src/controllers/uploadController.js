@@ -284,6 +284,46 @@ exports.getUploadList = catchAsync(async (req, res) => {
 });
 
 /**
+ * 验证文件上传状态及已上传分片
+ * @param {Object} req - 请求对象
+ * @param {Object} res - 响应对象
+ */
+exports.verifyUpload = catchAsync(async (req, res) => {
+    const { filename, totalChunks } = req.body;
+
+    if (!filename || !totalChunks) {
+        throw new ValidationError('参数不完整');
+    }
+
+    // 检查分片目录是否存在
+    const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${filename}`);
+    const uploadedChunks = [];
+
+    // 如果目录存在，检查已上传的分片
+    if (fs.existsSync(chunkDir)) {
+        // 读取目录中的所有文件
+        const files = fs.readdirSync(chunkDir);
+
+        // 检查每个分片是否存在，只处理有效的数字索引文件
+        for (let i = 0; i < parseInt(totalChunks); i++) {
+            const indexStr = i.toString();
+            if (files.includes(indexStr)) {
+                uploadedChunks.push(i);
+            }
+        }
+    }
+
+    res.status(200).json({
+        code: 200,
+        success: true,
+        message: '验证成功',
+        data: {
+            uploadedChunks
+        }
+    });
+});
+
+/**
  * 处理大文件上传的分片
  * @param {Object} req - 请求对象
  * @param {Object} res - 响应对象
@@ -300,20 +340,38 @@ exports.uploadChunk = catchAsync(async (req, res) => {
         throw new ValidationError('参数不完整');
     }
 
+    // 验证索引是有效的数字
+    const chunkIndex = parseInt(index);
+    if (isNaN(chunkIndex) || chunkIndex < 0 || chunkIndex >= parseInt(totalChunks)) {
+        throw new ValidationError(`无效的分片索引: ${index}`);
+    }
+
     // 创建临时目录，用于存储分片
     const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${filename}`);
     if (!fs.existsSync(chunkDir)) {
         fs.mkdirSync(chunkDir, { recursive: true });
     }
 
-    // 移动分片到目标目录
-    const chunkPath = path.join(chunkDir, `${index}`);
+    // 移动分片到目标目录，确保使用索引作为文件名
+    const chunkPath = path.join(chunkDir, `${chunkIndex}`);
     fs.renameSync(req.file.path, chunkPath);
+
+    // 检查已经上传的分片数量（只计算有效分片）
+    const files = fs.readdirSync(chunkDir);
+    const validFiles = files.filter(file => {
+        const idx = parseInt(file);
+        return !isNaN(idx) && idx >= 0 && idx < parseInt(totalChunks);
+    });
+    const uploadedCount = validFiles.length;
 
     res.status(200).json({
         code: 200,
         success: true,
-        message: '分片上传成功'
+        message: '分片上传成功',
+        data: {
+            uploadedCount,
+            totalChunks: parseInt(totalChunks)
+        }
     });
 });
 
@@ -332,6 +390,33 @@ exports.mergeChunks = catchAsync(async (req, res) => {
     const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${filename}`);
     if (!fs.existsSync(chunkDir)) {
         throw new ValidationError('没有找到分片文件');
+    }
+
+    // 获取目录中的所有文件
+    const allFiles = fs.readdirSync(chunkDir);
+
+    // 过滤出有效的数字索引文件
+    const validFiles = allFiles.filter(file => {
+        // 只保留能转换为有效数字的文件名，且数字在有效范围内
+        const index = parseInt(file);
+        return !isNaN(index) && index >= 0 && index < parseInt(totalChunks);
+    });
+
+    // 检查所有分片是否都已上传
+    if (validFiles.length !== parseInt(totalChunks)) {
+        // 记录日志，帮助排查问题
+        logger.warn(`分片数量不匹配：目录中有 ${allFiles.length} 个文件，其中有效分片 ${validFiles.length}，预期分片 ${totalChunks}`);
+        logger.warn(`目录中的所有文件: ${JSON.stringify(allFiles)}`);
+
+        return res.status(200).json({
+            code: 400,
+            success: false,
+            message: `分片数量不匹配，有效分片 ${validFiles.length}/${totalChunks}`,
+            data: {
+                uploadedChunks: validFiles.map(file => parseInt(file)),
+                allFiles: allFiles // 返回所有文件，帮助前端调试
+            }
+        });
     }
 
     // 生成唯一的文件名
@@ -354,6 +439,19 @@ exports.mergeChunks = catchAsync(async (req, res) => {
             fs.unlinkSync(chunkPath);
         } else {
             logger.error(`分片 ${i} 不存在`);
+            // 关闭写入流，清理已生成的文件
+            writeStream.end();
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+            return res.status(200).json({
+                code: 400,
+                success: false,
+                message: `合并失败，分片 ${i} 不存在`,
+                data: {
+                    uploadedChunks: validFiles.map(file => parseInt(file))
+                }
+            });
         }
     }
 
