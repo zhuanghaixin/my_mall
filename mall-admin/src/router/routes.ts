@@ -231,6 +231,15 @@ export const constantRoutes: RouteRecordRaw[] = [
     },
     children: [
       {
+        path: 'baseUpload',
+        name: 'ProjectBaseUpload',
+        component: () => import('@/views/project/baseUpload.vue'),
+        meta: {
+          title: '大文件上传基础版',
+          icon: 'Upload',
+        },
+      },
+      {
         path: 'upload',
         name: 'ProjectUpload',
         component: () => import('@/views/project/upload.vue'),
@@ -240,11 +249,29 @@ export const constantRoutes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'fullupload',
-        name: 'ProjectFullUpload',
-        component: () => import('@/views/project/fullUpload.vue'),
+        path: 'MD5Upload',
+        name: 'ProjectMD5Upload',
+        component: () => import('@/views/project/md5Upload.vue'),
         meta: {
-          title: '大文件上传',
+          title: '大文件上传MD5版',
+          icon: 'Upload',
+        },
+      },
+      {
+        path: 'WebWorkerUpload',
+        name: 'ProjectWebWorkerUpload',
+        component: () => import('@/views/project/webWorkerUpload.vue'),
+        meta: {
+          title: '大文件上传WebWorker版',
+          icon: 'Upload',
+        },
+      },
+      {
+        path: 'uploadComponent',
+        name: 'ProjectUploadComponent',
+        component: () => import('@/views/project/uploadComponent.vue'),
+        meta: {
+          title: '大文件上传封装版',
           icon: 'Upload',
         },
       },
