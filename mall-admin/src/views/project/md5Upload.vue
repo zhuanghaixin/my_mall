@@ -1,6 +1,6 @@
 <template>
     <div class="project-upload">
-        <h1>大文件上传</h1>
+        <h1>基于MD5的大文件上传</h1>
 
         <div class="upload-container">
             <el-card class="upload-card">
@@ -9,15 +9,22 @@
                     <i class="el-icon-upload" v-if="!file"></i>
                     <div v-if="!file" class="upload-text">
                         <div>点击或拖拽文件到此处上传</div>
-                        <div class="upload-hint">支持大文件上传</div>
+                        <div class="upload-hint">支持大文件上传与秒传</div>
+                    </div>
+                    <div v-else-if="showHashProgress" class="hash-progress">
+                        <div class="hash-title">正在计算文件特征值</div>
+                        <el-progress :percentage="hashPercent"></el-progress>
                     </div>
                     <div v-else class="file-info">
                         <div class="file-name">{{ file.name }}</div>
                         <div class="file-size">{{ formatFileSize(file.size) }}</div>
+                        <div v-if="fileHash" class="file-hash">
+                            <small>特征值: {{ fileHash }}</small>
+                        </div>
                     </div>
                 </div>
 
-                <div class="upload-actions" v-if="file && !uploading && !uploadSuccess">
+                <div class="upload-actions" v-if="file && !uploading && !uploadSuccess && !isCalculatingHash">
                     <div class="upload-options">
                         <el-switch v-model="isUsingConcurrent" inline-prompt active-text="并发" inactive-text="顺序"
                             size="large" style="margin-right: 10px;" />
@@ -57,6 +64,7 @@
                         <div>文件大小: {{ formatFileSize(file?.size || 0) }}</div>
                         <div>上传耗时: {{ formatTime(uploadDuration) }}</div>
                         <div>平均速度: {{ formatSpeed(uploadAvgSpeed) }}</div>
+                        <div v-if="fileHash">特征值: {{ fileHash }}</div>
                         <div>上传模式: {{ isUsingConcurrent ? `并发(${concurrentLimit}个)` : '顺序' }}</div>
                     </div>
                     <el-button type="primary" @click="resetUpload" size="small">继续上传</el-button>
@@ -71,11 +79,15 @@ import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import request from '@/api/request';
 import type { ApiResponse } from '@/api/request';
+import SparkMD5 from 'spark-md5';
 
 // 文件相关状态
 const file = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const chunkSize = 2 * 1024 * 1024; // 2MB分片大小
+const fileHash = ref<string>(''); // 存储文件的MD5哈希值
+const hashPercent = ref<number>(0); // MD5计算进度
+const isCalculatingHash = ref<boolean>(false); // 是否正在计算MD5
 
 // 上传状态
 const uploading = ref(false);
@@ -175,20 +187,118 @@ const triggerFileInput = () => {
     }
 };
 
-// 处理文件选择
-const handleFileChange = (e: Event) => {
+// 计算文件的MD5哈希值
+/**
+ * 计算文件的MD5哈希值
+ *
+ * @param file 文件对象
+ * @returns 返回一个Promise，resolve参数为计算得到的MD5哈希值字符串
+ */
+const calculateFileHash = (file: File): Promise<string> => {
+    console.log('file----', file)
+    // 创建一个新的 Promise
+    return new Promise((resolve, reject) => {
+        // 计算文件需要分割成多少块
+        const chunks = Math.ceil(file.size / chunkSize);
+        // 创建一个 SparkMD5 实例
+        const spark = new SparkMD5.ArrayBuffer();
+        // 创建一个 FileReader 实例
+        const fileReader = new FileReader();
+
+        // 当前处理的块索引
+        let currentChunk = 0;
+        // 设置正在计算哈希的标志为 true
+        isCalculatingHash.value = true;
+        // 设置哈希计算进度的百分比为 0
+        hashPercent.value = 0;
+
+        // 定义加载下一个块的函数
+        const loadNext = () => {
+            // 计算当前块的起始和结束位置
+            const start = currentChunk * chunkSize;
+            const end = Math.min(start + chunkSize, file.size);
+            // 读取文件的当前块
+            fileReader.readAsArrayBuffer(file.slice(start, end));
+        };
+
+        // 文件读取完成时的处理
+        fileReader.onload = (e) => {
+            // 如果读取结果存在
+            if (e.target?.result) {
+                // 将读取结果追加到 SparkMD5 实例中
+                spark.append(e.target.result as ArrayBuffer);
+                // 当前块索引加 1
+                currentChunk++;
+                // 更新哈希计算进度的百分比
+                hashPercent.value = Math.floor((currentChunk / chunks) * 100);
+
+                // 如果还有未处理的块，则加载下一个块
+                if (currentChunk < chunks) {
+                    loadNext();
+                } else {
+                    // 计算文件的 MD5 哈希值
+                    const hash = spark.end();
+                    // 设置正在计算哈希的标志为 false
+                    isCalculatingHash.value = false;
+                    // 打印文件的 MD5 哈希值
+                    console.log('文件MD5计算完成:', hash);
+                    // 解析 Promise
+                    resolve(hash);
+                }
+            }
+        };
+
+        // 文件读取错误时的处理
+        fileReader.onerror = (error) => {
+            // 设置正在计算哈希的标志为 false
+            isCalculatingHash.value = false;
+            // 打印错误信息
+            console.error('文件MD5计算失败:', error);
+            // 拒绝 Promise
+            reject(error);
+        };
+
+        // 加载第一个块
+        loadNext();
+    });
+};
+
+// 处理文件选择（修改以添加MD5计算）
+const handleFileChange = async (e: Event) => {
     const target = e.target as HTMLInputElement;
     if (target.files && target.files.length > 0) {
         file.value = target.files[0];
         calculateTotalChunks();
+
+        // 计算文件MD5
+        try {
+            ElMessage.info('正在计算文件特征值，请稍候...');
+            fileHash.value = await calculateFileHash(file.value);
+            ElMessage.success('文件特征值计算完成');
+        } catch (error) {
+            console.error('计算文件特征值失败:', error);
+            ElMessage.error('计算文件特征值失败，将使用文件名作为标识');
+            fileHash.value = '';
+        }
     }
 };
 
-// 处理拖拽上传
-const handleDrop = (e: DragEvent) => {
+// 处理拖拽上传（修改以添加MD5计算）
+const handleDrop = async (e: DragEvent) => {
     if (e.dataTransfer && e.dataTransfer.files.length > 0) {
         file.value = e.dataTransfer.files[0];
         calculateTotalChunks();
+
+        // 计算文件MD5
+        try {
+            ElMessage.info('正在计算文件特征值，请稍候...');
+            fileHash.value = await calculateFileHash(file.value);
+            ElMessage.success('文件特征值计算完成');
+        } catch (error) {
+            console.error('计算文件特征值失败:', error);
+            ElMessage.error('计算文件特征值失败，将使用文件名作为标识');
+            fileHash.value = '';
+        }
     }
 };
 
@@ -237,13 +347,18 @@ const createFileChunks = (file: File) => {
     return chunks;
 };
 
-// 上传单个分片
+// 修改上传单个分片，添加fileHash参数
 const uploadChunk = async (chunk: Blob, index: number, fileName: string) => {
     const formData = new FormData();
     formData.append('chunk', chunk, `${fileName}.part${index}`);
     formData.append('index', index.toString());
     formData.append('filename', fileName);
     formData.append('totalChunks', totalChunks.value.toString());
+
+    // 添加文件哈希值（如果有）
+    if (fileHash.value) {
+        formData.append('fileHash', fileHash.value);
+    }
 
     try {
         // 使用 AbortController 来控制请求
@@ -291,13 +406,37 @@ const uploadChunk = async (chunk: Blob, index: number, fileName: string) => {
     }
 };
 
-// 检查已上传的分片
+// 修改检查已上传的分片，添加fileHash参数
 const checkExistingChunks = async (fileName: string, totalChunks: number) => {
     try {
-        const response = await request.post<ApiResponse>('/upload/verify', {
+        const requestData: Record<string, any> = {
             filename: fileName,
             totalChunks
-        }) as unknown as ApiResponse;
+        };
+
+        // 添加文件哈希值（如果有）
+        if (fileHash.value) {
+            requestData.fileHash = fileHash.value;
+        }
+
+        const response = await request.post<ApiResponse>('/upload/verify', requestData) as unknown as ApiResponse;
+
+        // 检查是否可以秒传
+        if (response.code === 200 && response.data && response.data.uploaded === true) {
+            // 文件已存在，可以秒传
+            fileUrl.value = response.data.url;
+            uploadSuccess.value = true;
+            uploading.value = false;
+            uploadProgress.value = 100;
+
+            // 记录结束时间和计算总时间
+            endTime.value = Date.now();
+            uploadDuration.value = 0; // 秒传几乎不耗时
+            uploadAvgSpeed.value = file.value ? file.value.size : 0; // 显示为"无限快"
+
+            ElMessage.success('文件秒传成功！');
+            return 'INSTANT_UPLOAD'; // 特殊标记，表示可以秒传
+        }
 
         if (response.code === 200 && response.data && response.data.uploadedChunks) {
             // 确保所有的分片索引都是有效的数字
@@ -612,14 +751,21 @@ const continueUploadConcurrently = async () => {
     }
 };
 
-// 合并文件的公共方法
+// 修改合并文件的公共方法，添加fileHash参数
 const mergeFile = async (fileName: string) => {
     try {
         // 请求合并文件
-        const response = await request.post<ApiResponse>('/upload/merge', {
+        const requestData: Record<string, any> = {
             filename: fileName,
             totalChunks: totalChunks.value
-        }, {
+        };
+
+        // 添加文件哈希值（如果有）
+        if (fileHash.value) {
+            requestData.fileHash = fileHash.value;
+        }
+
+        const response = await request.post<ApiResponse>('/upload/merge', requestData, {
             signal: abortController.value?.signal
         }) as unknown as ApiResponse;
 
@@ -663,7 +809,7 @@ const mergeFile = async (fileName: string) => {
     }
 };
 
-// 开始上传
+// 修改开始上传方法
 const startUpload = async () => {
     if (!file.value) return;
 
@@ -691,6 +837,16 @@ const startUpload = async () => {
 
         // 请求已上传的分片列表
         const existedChunks = await checkExistingChunks(fileName, chunks.length);
+
+        // 检查是否可以秒传
+        if (existedChunks === 'INSTANT_UPLOAD') {
+            // 停止计时器和清理上传状态
+            if (uploadTimeTimer.value) {
+                clearInterval(uploadTimeTimer.value);
+                uploadTimeTimer.value = null;
+            }
+            return; // 秒传成功，直接返回
+        }
 
         // 如果有已上传的分片，更新进度
         if (existedChunks && existedChunks.length > 0) {
@@ -774,9 +930,10 @@ const cancelUpload = () => {
     ElMessage.info('上传已取消');
 };
 
-// 重置上传
+// 修改重置上传，清除hash值
 const resetUpload = () => {
     file.value = null;
+    fileHash.value = '';
     uploading.value = false;
     isPaused.value = false;
     uploadProgress.value = 0;
@@ -792,6 +949,8 @@ const resetUpload = () => {
     pausedTime.value = 0;
     totalPausedTime.value = 0;
     currentChunkIndex.value = 0;
+    isCalculatingHash.value = false;
+    hashPercent.value = 0;
 
     // 停止计时器
     if (uploadTimeTimer.value) {
@@ -803,6 +962,11 @@ const resetUpload = () => {
         fileInput.value.value = '';
     }
 };
+
+// MD5相关UI状态
+const showHashProgress = computed(() => {
+    return isCalculatingHash.value && file.value && hashPercent.value > 0 && hashPercent.value < 100;
+});
 
 // 页面加载后修正UI状态
 onMounted(() => {
@@ -968,5 +1132,24 @@ onUnmounted(() => {
     >div {
         margin-bottom: 4px;
     }
+}
+
+.hash-progress {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+
+    .hash-title {
+        font-size: 16px;
+        color: #606266;
+        margin-bottom: 16px;
+    }
+}
+
+.file-hash {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #909399;
+    word-break: break-all;
 }
 </style>

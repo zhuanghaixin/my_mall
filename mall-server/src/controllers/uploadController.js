@@ -35,6 +35,33 @@ const getBaseUrl = (req) => {
 };
 
 /**
+ * 获取文件唯一标识，优先使用fileHash，如果没有则使用filename
+ * 以保持向后兼容性
+ * @param {Object} req - 请求对象
+ * @returns {string} - 文件唯一标识
+ */
+const getFileKey = (req) => {
+    return req.body.fileHash || req.body.filename;
+};
+
+/**
+ * 获取最终文件名，使用fileHash+扩展名或自动生成唯一名称
+ * @param {Object} req - 请求对象 
+ * @returns {string} - 最终文件名
+ */
+const getFinalFileName = (req) => {
+    const fileExt = path.extname(req.body.filename);
+
+    if (req.body.fileHash) {
+        // 如果有文件哈希，直接使用哈希作为文件名
+        return `${req.body.fileHash}${fileExt}`;
+    } else {
+        // 否则使用时间戳+UUID生成唯一文件名
+        return `${Date.now()}-${uuidv4()}${fileExt}`;
+    }
+};
+
+/**
  * @swagger
  * /api/upload/image:
  *   post:
@@ -289,14 +316,39 @@ exports.getUploadList = catchAsync(async (req, res) => {
  * @param {Object} res - 响应对象
  */
 exports.verifyUpload = catchAsync(async (req, res) => {
-    const { filename, totalChunks } = req.body;
+    const { filename, totalChunks, fileHash } = req.body;
 
     if (!filename || !totalChunks) {
         throw new ValidationError('参数不完整');
     }
 
+    // 获取文件唯一标识（fileHash或filename）
+    const fileKey = getFileKey(req);
+
+    // 如果有fileHash，先检查是否可以秒传（完整文件是否已存在）
+    if (fileHash) {
+        const fileExt = path.extname(filename);
+        const finalFilePath = path.join(__dirname, `../../public/uploads/${fileHash}${fileExt}`);
+
+        if (fs.existsSync(finalFilePath)) {
+            // 文件已存在，可以秒传
+            const baseUrl = getBaseUrl(req);
+            const fileUrl = `${baseUrl}/uploads/${fileHash}${fileExt}`;
+
+            return res.status(200).json({
+                code: 200,
+                success: true,
+                message: '文件已存在，可以秒传',
+                data: {
+                    uploaded: true,
+                    url: fileUrl
+                }
+            });
+        }
+    }
+
     // 检查分片目录是否存在
-    const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${filename}`);
+    const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${fileKey}`);
     const uploadedChunks = [];
 
     // 如果目录存在，检查已上传的分片
@@ -318,6 +370,7 @@ exports.verifyUpload = catchAsync(async (req, res) => {
         success: true,
         message: '验证成功',
         data: {
+            uploaded: false,
             uploadedChunks
         }
     });
@@ -334,7 +387,7 @@ exports.uploadChunk = catchAsync(async (req, res) => {
     }
 
     // 获取参数
-    const { index, filename, totalChunks } = req.body;
+    const { index, filename, totalChunks, fileHash } = req.body;
 
     if (!index || !filename || !totalChunks) {
         throw new ValidationError('参数不完整');
@@ -346,8 +399,11 @@ exports.uploadChunk = catchAsync(async (req, res) => {
         throw new ValidationError(`无效的分片索引: ${index}`);
     }
 
+    // 获取文件唯一标识（fileHash或filename）
+    const fileKey = getFileKey(req);
+
     // 创建临时目录，用于存储分片
-    const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${filename}`);
+    const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${fileKey}`);
     if (!fs.existsSync(chunkDir)) {
         fs.mkdirSync(chunkDir, { recursive: true });
     }
@@ -381,13 +437,16 @@ exports.uploadChunk = catchAsync(async (req, res) => {
  * @param {Object} res - 响应对象
  */
 exports.mergeChunks = catchAsync(async (req, res) => {
-    const { filename, totalChunks } = req.body;
+    const { filename, totalChunks, fileHash } = req.body;
 
     if (!filename || !totalChunks) {
         throw new ValidationError('参数不完整');
     }
 
-    const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${filename}`);
+    // 获取文件唯一标识（fileHash或filename）
+    const fileKey = getFileKey(req);
+
+    const chunkDir = path.join(__dirname, `../../public/uploads/chunks/${fileKey}`);
     if (!fs.existsSync(chunkDir)) {
         throw new ValidationError('没有找到分片文件');
     }
@@ -419,9 +478,11 @@ exports.mergeChunks = catchAsync(async (req, res) => {
         });
     }
 
-    // 生成唯一的文件名
-    const fileExt = path.extname(filename);
-    const uniqueFileName = `${Date.now()}-${uuidv4()}${fileExt}`;
+    // 生成最终文件名
+    const uniqueFileName = fileHash ?
+        `${fileHash}${path.extname(filename)}` :
+        `${Date.now()}-${uuidv4()}${path.extname(filename)}`;
+
     const filePath = path.join(__dirname, `../../public/uploads/${uniqueFileName}`);
 
     // 创建写入流

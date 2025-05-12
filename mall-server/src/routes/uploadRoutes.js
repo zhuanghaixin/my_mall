@@ -38,6 +38,9 @@ router.use(protect);
  *               type: string
  *             totalChunks:
  *               type: number
+ *             fileHash:
+ *               type: string
+ *               description: 文件的MD5哈希值，用于唯一标识文件和秒传功能
  */
 router.post('/verify', uploadController.verifyUpload);
 
@@ -99,6 +102,10 @@ router.get('/list', uploadController.getUploadList);
  *         name: totalChunks
  *         type: string
  *         description: 总分片数
+ *       - in: formData
+ *         name: fileHash
+ *         type: string
+ *         description: 文件的MD5哈希值，用于唯一标识文件
  */
 router.post('/chunk', upload.chunkUpload.single('chunk'), uploadController.uploadChunk);
 
@@ -124,6 +131,9 @@ router.post('/chunk', upload.chunkUpload.single('chunk'), uploadController.uploa
  *               type: string
  *             totalChunks:
  *               type: number
+ *             fileHash:
+ *               type: string
+ *               description: 文件的MD5哈希值，用于唯一标识文件
  */
 router.post('/merge', uploadController.mergeChunks);
 

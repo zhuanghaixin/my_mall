@@ -18,6 +18,7 @@
     "verify:env:prod": "node scripts/verify-env.js production"
   },
   "dependencies": {
+    "@types/spark-md5": "^3.0.5",
     "@wangeditor/editor": "^5.0.1",
     "@wangeditor/editor-for-vue": "^5.1.11",
     "axios": "^1.8.4",
