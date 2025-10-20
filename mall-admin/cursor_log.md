@@ -79,7 +79,7 @@
   - **解决方案**：
     1. 删除重复文件，减少构建负担
     2. 设置 NODE_OPTIONS="--max-old-space-size=4096" 增加内存限制
-    3. 优化 Rollup 配置，手动分包（element-plus、vue-vendor）
+    3. 优化 Rollup 配置，手动分包（element-plus、vue-vendor、editor）
     4. 关闭 build.watch 减少性能开销
     5. 添加 optimizeDeps 配置，优化依赖预构建
 - 使用的技术栈：
