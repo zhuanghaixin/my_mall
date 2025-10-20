@@ -20,6 +20,9 @@ COPY . .
 ARG BUILD_MODE=production
 ENV BUILD_MODE=${BUILD_MODE}
 
+# 增加 Node.js 内存限制，避免构建大型项目时内存溢出
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # 验证环境配置
 RUN if [ -f ".env.${BUILD_MODE}" ]; then \
       echo "使用环境配置: .env.${BUILD_MODE}"; \

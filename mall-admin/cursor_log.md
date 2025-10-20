@@ -61,3 +61,30 @@
   - 新增：mall-admin/public/mysql/index.html
   - 新增：mall-admin/public/mysql/questions.json
   - 新增：mall-admin/public/mysql/questions/ (122个JSON文件)
+
+---
+
+## 会话总结 - 部署优化
+
+- 会话日期和时间：2025-10-20 23:00
+- 主要目的：修复生产环境部署时的构建失败问题
+- 完成的主要任务：
+  1. 删除了重复的 public/questions.json 文件（328KB）
+  2. 优化了 vite.config.ts 的构建配置
+  3. 在 Dockerfile 中增加了 Node.js 内存限制（4GB）
+  4. 添加了手动分包配置，优化构建性能
+- 关键决策和解决方案：
+  - **问题**：部署时 Vite 构建过程中 SSH 连接断开（client_loop: send disconnect: Broken pipe）
+  - **原因**：构建大型项目时内存不足，导致进程被杀死
+  - **解决方案**：
+    1. 删除重复文件，减少构建负担
+    2. 设置 NODE_OPTIONS="--max-old-space-size=4096" 增加内存限制
+    3. 优化 Rollup 配置，手动分包（element-plus、vue-vendor）
+    4. 关闭 build.watch 减少性能开销
+    5. 添加 optimizeDeps 配置，优化依赖预构建
+- 使用的技术栈：
+  - Vite、Rollup、Docker、Node.js
+- 修改的文件：
+  - 修改：mall-admin/vite.config.ts
+  - 修改：mall-admin/Dockerfile
+  - 删除：mall-admin/public/questions.json

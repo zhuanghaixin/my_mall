@@ -44,6 +44,26 @@ export default defineConfig(({ mode }) => {
       reportCompressedSize: false,
       // 规定触发警告的 chunk 大小
       chunkSizeWarningLimit: 2000,
+      // 优化构建性能
+      rollupOptions: {
+        output: {
+          // 静态资源分类打包
+          chunkFileNames: 'js/[name]-[hash].js',
+          entryFileNames: 'js/[name]-[hash].js',
+          assetFileNames: '[ext]/[name]-[hash].[ext]',
+          // 手动分包，将大型库分离
+          manualChunks: {
+            'element-plus': ['element-plus'],
+            'vue-vendor': ['vue', 'vue-router', 'pinia'],
+          },
+        },
+      },
+      // 关闭文件监听可以显著减少性能开销
+      watch: null,
+    },
+    // 优化依赖预构建
+    optimizeDeps: {
+      include: ['vue', 'vue-router', 'pinia', 'element-plus', 'axios'],
     },
   }
 }) 
