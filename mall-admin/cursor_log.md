@@ -35,4 +35,29 @@
   - mall-admin/src/views/project/typhoon.vue
   - mall-admin/src/views/project/i18n.vue
 - 新增文件：mall-admin/大文件上传.md
-- 新增文件：mall-admin/cursor_log.md 
+- 新增文件：mall-admin/cursor_log.md
+
+---
+
+## 会话总结
+
+- 会话日期和时间：2025-10-20 22:40
+- 主要目的：将 MySQL-OCP-Brush-Questions-CN 刷题系统集成到 mall-admin 项目中
+- 完成的主要任务：
+  1. 复制了 MySQL-OCP-Brush-Questions-CN 项目的所有文件到 mall-admin/public/mysql/ 目录
+  2. 创建了 Vue 组件（mysql.vue）使用 iframe 嵌入原始 HTML 页面
+  3. 在路由配置中添加了 /project/mysql 路由
+  4. 在项目管理菜单下自动显示"MySQL OCP 刷题"入口
+- 关键决策和解决方案：
+  - 采用 iframe 嵌入方案，保持原项目代码完整性，无需修改
+  - 将静态文件放置在 public 目录下，确保构建后可以正常访问
+  - 将刷题系统作为项目管理模块的子功能集成
+  - 使用 Vue Router 的动态导入，保持代码分割
+- 使用的技术栈：
+  - Vue 3、TypeScript、Vue Router、iframe
+- 修改的文件：
+  - 新增：mall-admin/src/views/project/mysql.vue
+  - 修改：mall-admin/src/router/routes.ts
+  - 新增：mall-admin/public/mysql/index.html
+  - 新增：mall-admin/public/mysql/questions.json
+  - 新增：mall-admin/public/mysql/questions/ (122个JSON文件)

@@ -302,6 +302,15 @@ export const constantRoutes: RouteRecordRaw[] = [
           icon: 'Language',
         },
       },
+      {
+        path: 'mysql',
+        name: 'ProjectMySQL',
+        component: () => import('@/views/project/mysql.vue'),
+        meta: {
+          title: 'MySQL OCP 刷题',
+          icon: 'Coin',
+        },
+      },
     ],
   },
   // 将匹配所有路径，放在最后
