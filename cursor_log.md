@@ -3166,3 +3166,143 @@ npm run dev
 ### 修改的文件
 - mall-admin/大文件上传.md（新增技术文档）
 - cursor_log.md（新增会话记录）
+
+---
+
+## 2025-10-20 - 修复 GitHub Actions 部署超时问题
+
+### 会话日期和时间
+2025-10-20 周一
+
+### 会话的主要目的
+解决 GitHub Actions 部署生产环境时 SSH 连接断开导致部署失败的问题，并理清项目中部署相关文件的关系。
+
+### 遇到的问题
+在使用 GitHub Actions 自动部署时，部署脚本在前端构建阶段（vite build）时 SSH 连接超时断开：
+```
+client_loop: send disconnect: Broken pipe
+Error: Process completed with exit code 255.
+```
+
+**问题原因：**
+1. 前端构建耗时长（npm install 2分钟 + vite build 数分钟）
+2. GitHub Actions 的 SSH 会话在长时间无输出时会超时
+3. SSH 断开后前台进程被终止，导致部署失败
+
+### 完成的主要任务
+1. **创建 GitHub Actions 工作流配置**
+   - 创建 `.github/workflows/deploy-prod.yml`
+   - 配置自动部署到生产环境
+   - 添加 SSH 保活设置（ServerAliveInterval=60, ServerAliveCountMax=120）
+   - 使用 nohup 在服务器后台运行部署脚本
+   - 添加部署状态监控和日志输出
+   - 设置超时时间为 30 分钟
+
+2. **优化前端 Dockerfile**
+   - 优化依赖安装：添加 `--no-audit --no-fund` 参数
+   - 改进 Docker 层缓存策略（先复制 package.json，后复制源码）
+   - 调整 COPY 顺序以更好利用缓存
+   - 添加构建进度提示和完成确认
+   - 设置 `CI=true` 环境变量优化输出
+   - 添加 npm 镜像加速配置（可选启用）
+
+3. **创建部署监控脚本**
+   - 创建 `monitor-deploy.sh` 用于实时监控部署进度
+   - 可在本地运行，SSH 到服务器查看部署日志
+   - 添加执行权限和颜色输出
+   - 支持指定服务器 IP 参数
+
+4. **编写详细的部署文档**
+   - 创建 `DEPLOYMENT.md` 完整部署指南
+   - 说明 Dockerfile、docker-compose.prod.yml、deploy-to-prod.sh 三者关系
+   - 提供多种部署方式（GitHub Actions、服务器直接部署、本地触发）
+   - 包含常见问题和解决方案
+   - 添加性能优化建议和监控维护指南
+
+### 关键决策和解决方案
+1. **后台部署策略**
+   - 使用 `nohup bash deploy-to-prod.sh > deploy.log 2>&1 &` 在后台运行
+   - 部署脚本不受 SSH 连接断开影响
+   - 输出重定向到日志文件便于追踪
+   - GitHub Actions 在启动部署后等待 10 秒检查状态
+
+2. **SSH 连接优化**
+   - 设置 `ServerAliveInterval=60` 每分钟发送心跳保持连接活跃
+   - 设置 `ServerAliveCountMax=120` 允许最多 2 小时的静默时间
+   - 避免长时间无数据传输导致连接断开
+
+3. **Docker 构建优化**
+   - 利用 Docker 层缓存，只在 package.json 变化时重新安装依赖
+   - 跳过 npm audit 和 funding 检查节省时间
+   - 先复制 package.json，后复制源码，提高缓存命中率
+   - 第二次构建时可跳过依赖安装，大幅缩短构建时间
+
+4. **文件关系梳理**
+   - **Dockerfile**: 定义如何构建前端镜像（被两个部署方式引用）
+   - **docker-compose.prod.yml**: 声明式配置，定义所有服务（目前作为参考）
+   - **deploy-to-prod.sh**: 命令式部署脚本，使用原生 Docker 命令（实际使用）
+   - **.github/workflows/deploy-prod.yml**: CI/CD 自动化流程
+   - **monitor-deploy.sh**: 本地监控工具
+
+### 使用的技术栈
+- **CI/CD**: GitHub Actions
+- **容器化**: Docker, Docker Compose
+- **部署脚本**: Bash Shell
+- **前端构建**: Vite, Node.js 18
+- **Web 服务器**: Nginx Alpine
+- **SSL/TLS**: HTTPS 证书配置
+- **版本控制**: Git
+
+### 修改了哪些文件
+1. **新增文件**
+   - `.github/workflows/deploy-prod.yml` - GitHub Actions 工作流配置
+   - `monitor-deploy.sh` - 部署监控脚本（添加可执行权限）
+   - `DEPLOYMENT.md` - 完整的部署指南文档
+
+2. **修改文件**
+   - `mall-admin/Dockerfile` - 优化构建配置和层缓存策略
+   - `cursor_log.md` - 添加本次会话总结
+
+### 部署方式对比
+
+| 方式 | 优点 | 缺点 | 适用场景 |
+|-----|------|------|---------|
+| GitHub Actions | 全自动化，push 即部署 | 需要配置 Secrets | 日常开发部署（推荐） |
+| 服务器直接部署 | 简单直接，立即执行 | 需要手动登录 | 紧急修复 |
+| 本地触发远程 | 灵活控制，可监控 | 需要 SSH 权限 | 测试验证 |
+
+### 项目效果
+- ✅ 解决了 SSH 超时导致的部署失败问题
+- ✅ 实现了完全自动化的 CI/CD 流程
+- ✅ 优化了 Docker 构建速度（利用层缓存）
+- ✅ 提供了实时部署监控工具
+- ✅ 完善了部署文档和最佳实践
+- ✅ 理清了项目中部署相关文件的关系和用途
+
+### 验证部署成功的方法
+1. 检查容器状态：`docker ps | grep mall`（应看到 4 个容器）
+2. 访问前端：https://js101.fun
+3. 访问后端 API：https://js101.fun:8443/api
+4. 查看部署日志：`ssh root@SERVER_IP "tail -f /root/my_mall/deploy.log"`
+5. 使用监控脚本：`./monitor-deploy.sh`
+
+### 后续优化建议
+1. **性能优化**
+   - 启用 npm 镜像加速（国内服务器，修改 Dockerfile）
+   - 使用 Docker BuildKit 进一步加速构建
+   - 考虑预构建镜像并推送到 Docker Hub
+
+2. **CI/CD 增强**
+   - 添加自动化测试在部署前运行
+   - 配置 webhook 通知部署结果（钉钉/企业微信）
+   - 实现蓝绿部署或金丝雀发布策略
+
+3. **监控与维护**
+   - 定期清理 Docker 日志和无用镜像
+   - 配置数据库自动备份
+   - 添加服务健康检查和告警
+
+4. **配置统一**
+   - 考虑将 deploy-to-prod.sh 改为调用 docker-compose
+   - 或完全废弃 docker-compose.prod.yml，统一使用脚本
+   - 避免维护两套配置

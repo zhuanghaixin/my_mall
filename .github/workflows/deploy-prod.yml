@@ -1,0 +1,89 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # 设置超时时间为 30 分钟
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to Server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: root
+        run: |
+          ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=120 ${SERVER_USER}@${SERVER_IP} << 'ENDSSH'
+            set -e
+            
+            # 进入项目目录
+            cd /root/my_mall || exit 1
+            
+            # 拉取最新代码
+            echo "=== 拉取最新代码 ==="
+            git pull origin main
+            
+            # 在后台运行部署脚本，并将输出重定向到日志文件
+            echo "=== 开始后台部署 ==="
+            nohup bash deploy-to-prod.sh > deploy.log 2>&1 &
+            
+            # 记录进程 ID
+            DEPLOY_PID=$!
+            echo "部署进程 ID: $DEPLOY_PID"
+            
+            # 等待一段时间，确保脚本开始执行
+            sleep 5
+            
+            # 检查进程是否还在运行
+            if kill -0 $DEPLOY_PID 2>/dev/null; then
+              echo "✓ 部署脚本已在后台启动"
+              echo "可以通过以下命令查看部署日志："
+              echo "  ssh ${SERVER_USER}@${SERVER_IP} 'tail -f /root/my_mall/deploy.log'"
+            else
+              echo "✗ 部署脚本启动失败"
+              cat deploy.log
+              exit 1
+            fi
+            
+            echo "=== 部署已启动，将在后台继续执行 ==="
+          ENDSSH
+      
+      - name: Wait for deployment (optional)
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: root
+        run: |
+          echo "等待 10 秒后检查部署状态..."
+          sleep 10
+          
+          ssh -o ServerAliveInterval=60 ${SERVER_USER}@${SERVER_IP} << 'ENDSSH'
+            cd /root/my_mall
+            
+            # 显示最后 30 行日志
+            echo "=== 部署日志（最后 30 行）==="
+            tail -n 30 deploy.log
+            
+            echo ""
+            echo "=== 容器状态 ==="
+            docker ps | grep mall || echo "未找到运行中的容器"
+          ENDSSH
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/id_rsa
+
