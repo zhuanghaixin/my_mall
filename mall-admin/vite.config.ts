@@ -39,7 +39,8 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: mode === 'development',
-      // minify: 'terser',
+      // 使用 esbuild 压缩，速度更快
+      minify: 'esbuild',
       // 禁用 gzip 压缩大小报告，可略微提升构建速度
       reportCompressedSize: false,
       // 规定触发警告的 chunk 大小
@@ -48,15 +49,38 @@ export default defineConfig(({ mode }) => {
       watch: null,
       rollupOptions: {
         output: {
-          // 手动分包，优化构建性能和加载速度
-          manualChunks: {
-            // 将 Element Plus 单独打包
-            'element-plus': ['element-plus'],
-            // 将 Vue 生态相关的库打包到一起
-            'vue-vendor': ['vue', 'vue-router', 'pinia'],
-            // 将编辑器相关库单独打包
-            'editor': ['@wangeditor/editor', '@wangeditor/editor-for-vue'],
+          // 优化后的分包策略，避免循环依赖问题
+          manualChunks(id) {
+            // node_modules 中的包按包名分割
+            if (id.includes('node_modules')) {
+              // Element Plus 相关（包括它的依赖和图标）
+              if (id.includes('element-plus') || id.includes('@element-plus')) {
+                return 'element-plus';
+              }
+              // 编辑器相关
+              if (id.includes('@wangeditor')) {
+                return 'editor';
+              }
+              // marked 单独分包
+              if (id.includes('marked')) {
+                return 'marked';
+              }
+              // Vue 核心库放在一起
+              if (id.includes('vue/') || id.includes('vue-router') || id.includes('pinia') || id.includes('@vue/')) {
+                return 'vue-vendor';
+              }
+              // axios 等工具库
+              if (id.includes('axios')) {
+                return 'utils';
+              }
+              // 其他第三方库
+              return 'vendor';
+            }
           },
+          // 使用更稳定的文件名生成策略
+          chunkFileNames: 'js/[name]-[hash].js',
+          entryFileNames: 'js/[name]-[hash].js',
+          assetFileNames: '[ext]/[name]-[hash].[ext]',
         },
       },
     },
